@@ -10,7 +10,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 const tree = generateTree()
-console.log(tree);
+//console.log(tree);
 
 const store = createStore(reducer, tree)
 

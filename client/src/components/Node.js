@@ -24,6 +24,10 @@ const Node = ({id, parentId}) => {
     dispatch(Actions.deleteNode(id))
   }
 
+  const toggleExpand = e => {
+    dispatch(Actions.toggleExpand(id));
+  }
+
   const renderChild = childId => {
     return (
       <li key={childId}>
@@ -34,7 +38,7 @@ const Node = ({id, parentId}) => {
 
   return (
     <div>
-      Counter: {node.counter}
+      <span onClick={toggleExpand}>Counter: {node.counter}</span>
       {' '}
       <button onClick={handleIncrementClick}>
         +
@@ -47,7 +51,7 @@ const Node = ({id, parentId}) => {
         </a>
       }
       <ul>
-        {node.childIds.map(renderChild)}
+        {node.expanded ? node.childIds.map(renderChild) : ""}
         <li key="add">
           <a href="#" // eslint-disable-line jsx-a11y/anchor-is-valid
             onClick={handleAddChildClick}
