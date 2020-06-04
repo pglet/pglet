@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 
 const App = () => {
 
-  const root = useSelector(state => state[0]);
+  const root = useSelector(state => state.controls[0]);
 
   return (
   <div>

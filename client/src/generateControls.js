@@ -1,7 +1,8 @@
-export default function generateTree() {
-    let tree = {
+export default function generateControls() {
+    let controls = {
       0: {
         id: 0,
+        parentId: null,
         type: 'Page',
         counter: 0,
         expanded: true,
@@ -9,18 +10,19 @@ export default function generateTree() {
       }
     }
   
-    for (let i = 1; i < 10; i++) {
+    for (let i = 1; i < 100; i++) {
       let parentId = Math.floor(Math.pow(Math.random(), 2) * i)
-      tree[i] = {
+      controls[i] = {
         id: i,
+        parentId: parentId,
         type: 'Node',
         counter: 0,
         expanded: true,
         childIds: []
       }
-      tree[parentId].childIds.push(i)
+      controls[parentId].childIds.push(i)
     }
   
-    return tree
+    return controls
   }
   

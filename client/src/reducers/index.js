@@ -16,6 +16,7 @@ const node = (state, action) => {
     case CREATE_NODE:
       return {
         id: action.nodeId,
+        parentId: action.parentId,
         type: 'Node',
         counter: 0,
         expanded: true,
@@ -50,23 +51,29 @@ const getAllDescendantIds = (state, nodeId) => (
 
 const deleteMany = (state, ids) => {
   state = { ...state }
-  ids.forEach(id => delete state[id])
+  ids.forEach(id => delete state.controls[id])
   return state
 }
 
 export default (state = {}, action) => {
+
+  // console.log(action);
+  // console.log(state);
+
   const { nodeId } = action
   if (typeof nodeId === 'undefined') {
     return state
   }
 
   if (action.type === DELETE_NODE) {
-    const descendantIds = getAllDescendantIds(state, nodeId)
+    const descendantIds = getAllDescendantIds(state.controls, nodeId)
+    //console.log(descendantIds);
     return deleteMany(state, [ nodeId, ...descendantIds ])
   }
 
-  return {
-    ...state,
-    [nodeId]: node(state[nodeId], action)
-  }
+  state.controls[nodeId] = node(state.controls[nodeId], action);
+
+  //console.log(state);
+
+  return state;
 }

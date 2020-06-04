@@ -4,15 +4,18 @@ import ReactDOM from 'react-dom';
 import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import reducer from './reducers'
-import generateTree from './generateTree'
+import generateControls from './generateControls'
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-const tree = generateTree()
-//console.log(tree);
+const state = {
+  controls: generateControls()
+}
 
-const store = createStore(reducer, tree)
+console.log(state);
+
+const store = createStore(reducer, state)
 
 ReactDOM.render(
   <React.StrictMode>

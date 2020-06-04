@@ -3,7 +3,7 @@ import Node from './Node'
 
 const NodeList = React.memo(({ id, controls }) => {
 
-    console.log(`render NodeList: ${id}`);
+    //console.log(`render NodeList: ${id}`);
 
     const controlTypes = {
         'Node': Node

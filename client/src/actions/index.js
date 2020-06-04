@@ -16,8 +16,9 @@ export const toggleExpand = (nodeId) => ({
 })
 
 let nextId = 0
-export const createNode = () => ({
+export const createNode = (parentId) => ({
   type: CREATE_NODE,
+  parentId,
   nodeId: `new_${nextId++}`
 })
 

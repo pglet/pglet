@@ -5,12 +5,12 @@ import NodeList from './NodeList'
 
 const Node = React.memo(({control}) => {
 
-  console.log(`render node: ${control.id}`);
+  //console.log(`render node: ${control.id}`);
 
   const id = control.id;
   const parentId = control.parentId;
 
-  const childControls = useSelector(state => control.childIds.map(childId => state[childId]), shallowEqual);
+  const childControls = useSelector(state => control.childIds.map(childId => state.controls[childId]), shallowEqual);
   
   //console.log(childControls);
 
@@ -23,7 +23,7 @@ const Node = React.memo(({control}) => {
   const handleAddChildClick = e => {
     e.preventDefault()
 
-    const childId = dispatch(Actions.createNode()).nodeId
+    const childId = dispatch(Actions.createNode(id)).nodeId
     dispatch(Actions.addChild(id, childId));
   }
 
@@ -46,7 +46,7 @@ const Node = React.memo(({control}) => {
         +
       </button>
       {' '}
-      {typeof parentId !== 'undefined' &&
+      {parentId !== null &&
         <a href="#" onClick={handleRemoveClick} // eslint-disable-line jsx-a11y/anchor-is-valid
            style={{ color: 'lightgray', textDecoration: 'none' }}>
           ×
