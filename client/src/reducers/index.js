@@ -16,6 +16,7 @@ const node = (state, action) => {
     case CREATE_NODE:
       return {
         id: action.nodeId,
+        type: 'Node',
         counter: 0,
         expanded: true,
         childIds: []

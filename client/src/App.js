@@ -5,11 +5,15 @@ import './App.css';
 import './pglet.scss';
 
 import LoadingButton from './components/LoadingButton';
+import { useSelector } from 'react-redux';
 
 const App = () => {
+
+  const root = useSelector(state => state[0]);
+
   return (
   <div>
-    <Node id={0} />
+    <Node control={root} />
     <LoadingButton />
   </div>);
 }

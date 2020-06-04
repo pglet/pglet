@@ -1,12 +1,19 @@
 import React from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import * as Actions from '../actions'
+import NodeList from './NodeList'
 
-const Node = ({id, parentId}) => {
+const Node = React.memo(({control}) => {
 
-  //console.log(`render node: ${id}`);
+  console.log(`render node: ${control.id}`);
 
-  const node = useSelector(state => state[id]);
+  const id = control.id;
+  const parentId = control.parentId;
+
+  const childControls = useSelector(state => control.childIds.map(childId => state[childId]), shallowEqual);
+  
+  //console.log(childControls);
+
   const dispatch = useDispatch();
 
   const handleIncrementClick = () => {
@@ -31,17 +38,9 @@ const Node = ({id, parentId}) => {
     dispatch(Actions.toggleExpand(id));
   }
 
-  const renderChild = childId => {
-    return (
-      <li key={childId}>
-        <Node id={childId} parentId={id} />
-      </li>
-    )
-  }
-
   return (
     <div>
-      <span onClick={toggleExpand}>Counter: {node.counter}</span>
+      <span onClick={toggleExpand}>Counter: {control.counter}</span>
       {' '}
       <button onClick={handleIncrementClick}>
         +
@@ -54,7 +53,7 @@ const Node = ({id, parentId}) => {
         </a>
       }
       <ul>
-        {node.expanded ? node.childIds.map(renderChild) : ""}
+        {control.expanded ? <NodeList id={id} controls={childControls} /> : ""}
         <li key="add">
           <a href="#" // eslint-disable-line jsx-a11y/anchor-is-valid
             onClick={handleAddChildClick}
@@ -65,6 +64,6 @@ const Node = ({id, parentId}) => {
       </ul>
     </div>
   )
-}
+})
 
 export default Node
