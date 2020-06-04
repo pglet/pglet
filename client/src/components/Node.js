@@ -3,6 +3,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import * as Actions from '../actions'
 
 const Node = ({id, parentId}) => {
+
+  //console.log(`render node: ${id}`);
+
   const node = useSelector(state => state[id]);
   const dispatch = useDispatch();
 

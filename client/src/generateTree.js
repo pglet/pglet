@@ -8,7 +8,7 @@ export default function generateTree() {
       }
     }
   
-    for (let i = 1; i < 5000; i++) {
+    for (let i = 1; i < 1000; i++) {
       let parentId = Math.floor(Math.pow(Math.random(), 2) * i)
       tree[i] = {
         id: i,
