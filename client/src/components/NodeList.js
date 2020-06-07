@@ -1,9 +1,9 @@
 import React from 'react'
 import Node from './Node'
 
-const NodeList = React.memo(({ id, controls }) => {
+const NodeList = ({ id, controls }) => {
 
-    //console.log(`render NodeList: ${id}`);
+    console.log(`render NodeList: ${id}`);
 
     const controlTypes = {
         'Node': Node
@@ -11,14 +11,10 @@ const NodeList = React.memo(({ id, controls }) => {
 
     const renderChild = control => {
         const ControlType = controlTypes[control.type];
-        return (
-            <li key={control.id}>
-                <ControlType control={control} />
-            </li>
-        )
+        return <ControlType key={control.id} control={control} />
     }
 
     return controls.map(renderChild);
-})
+}
 
 export default NodeList

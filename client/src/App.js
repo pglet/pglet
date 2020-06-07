@@ -1,7 +1,6 @@
 import React from 'react';
 //import logo from './logo.svg';
 import Node from './components/Node'
-import './App.css';
 import './pglet.scss';
 
 import LoadingButton from './components/LoadingButton';

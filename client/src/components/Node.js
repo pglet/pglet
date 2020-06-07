@@ -5,7 +5,7 @@ import NodeList from './NodeList'
 
 const Node = React.memo(({control}) => {
 
-  //console.log(`render node: ${control.id}`);
+  console.log(`render node: ${control.id}`);
 
   const id = control.id;
   const parentId = control.parentId;
