@@ -1,20 +1,16 @@
 import './pglet.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import rootReducer from './rootReducer'
 import { Provider } from 'react-redux'
-import reducer from './reducers'
-import generateControls from './generateControls'
+import thunk from "redux-thunk";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-const state = {
-  controls: generateControls()
-}
+const store = createStore(rootReducer, applyMiddleware(thunk));
 
-console.log(state);
-
-const store = createStore(reducer, state)
+console.log(store.getState());
 
 ReactDOM.render(
   <React.StrictMode>

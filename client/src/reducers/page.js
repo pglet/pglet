@@ -1,4 +1,9 @@
-import { INCREMENT, TOGGLE_EXPAND, ADD_CHILD, REMOVE_CHILD, CREATE_NODE, DELETE_NODE } from '../actions'
+import { INCREMENT, TOGGLE_EXPAND, ADD_CHILD, REMOVE_CHILD, CREATE_NODE, DELETE_NODE } from '../actions/pageActions'
+import generateControls from '../generateControls'
+
+const initialState = {
+  controls: generateControls()
+}
 
 const childIds = (state, action) => {
   switch (action.type) {
@@ -55,9 +60,9 @@ const deleteMany = (state, ids) => {
   return state
 }
 
-export default (state = {}, action) => {
+export default (state = initialState, action) => {
 
-  // console.log(action);
+  console.log(action);
   // console.log(state);
 
   const { nodeId } = action

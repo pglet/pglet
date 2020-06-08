@@ -1,16 +1,16 @@
 import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
-import * as Actions from '../actions'
+import * as Actions from '../actions/pageActions'
 import NodeList from './NodeList'
 
 const Node = React.memo(({control}) => {
 
-  console.log(`render node: ${control.id}`);
+  //console.log(`render node: ${control.id}`);
 
   const id = control.id;
   const parentId = control.parentId;
 
-  const childControls = useSelector(state => control.childIds.map(childId => state.controls[childId]), shallowEqual);
+  const childControls = useSelector(state => control.childIds.map(childId => state.page.controls[childId]), shallowEqual);
   
   //console.log(childControls);
 
