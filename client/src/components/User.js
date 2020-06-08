@@ -8,13 +8,13 @@ const User = ({userId}) => {
     const loading = useSelector(state => state.user.loading);
     const error = useSelector(state => state.user.error);
 
-    console.log(user);
+    //console.log(user);
 
     const dispatch = useDispatch();
 
     useEffect(() => {
         dispatch(Actions.fetchUser(userId));
-    }, [userId]);
+    }, [userId, dispatch]);
 
     if (error) {
         return <div>Error! {error.message}</div>;

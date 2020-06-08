@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,7 @@ func main() {
 	api := router.Group(apiRoutePrefix)
 	{
 		api.GET("/", func(c *gin.Context) {
+			time.Sleep(4 * time.Second)
 			c.JSON(http.StatusOK, gin.H{
 				"message": "pong",
 			})
