@@ -16,24 +16,23 @@ export const fetchUserError = error => ({
   payload: { error }
 });
 
-export function fetchUser(userId) {
-  return dispatch => {
-    console.log("fetchUser()");
-    dispatch(fetchUserBegin());
-    fetch("/api")
-      .then(handleErrors)
-      .then(res => res.json())
-      .then(json => {
-        console.log(json);
-        dispatch(fetchUserSuccess(json));
-        return json;
-      })
-      .catch(error => dispatch(fetchUserError));
-  }
+export const fetchUser = (userId) => dispatch => {
+  console.log("fetchUser()");
+  dispatch(fetchUserBegin());
+  fetch(`/api/user/${userId}`)
+    .then(handleErrors)
+    .then(res => res.json())
+    .then(json => {
+      console.log(json);
+      dispatch(fetchUserSuccess(json));
+      return json;
+    })
+    .catch(error => { dispatch(fetchUserError(error)) });
 }
 
 // Handle HTTP errors since fetch won't.
 function handleErrors(response) {
+  console.log(response);
   if (!response.ok) {
     throw Error(response.statusText);
   }

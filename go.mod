@@ -1,4 +1,4 @@
-module appveyor.com/pglet/pglet
+module github.com/pglet/pglet
 
 go 1.14
 
