@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// Control is an element of a page.
 type Control map[string]interface{}
 
 // func (ctl Control) Id() (string, error) {
@@ -14,15 +15,17 @@ type Control map[string]interface{}
 //   return id, nil
 // }
 
-func NewControl(controlType string, parentId string, id string) Control {
+// NewControl initializes a new control object.
+func NewControl(controlType string, parentID string, id string) Control {
 	ctl := Control{}
 	ctl["t"] = controlType
 	ctl["i"] = id
-	ctl["p"] = parentId
+	ctl["p"] = parentID
 	return ctl
 }
 
-func NewControlFromJson(jsonCtrl string) (Control, error) {
+// NewControlFromJSON initializes a new control instance from JSON.
+func NewControlFromJSON(jsonCtrl string) (Control, error) {
 	ctrl := Control{}
 	err := json.Unmarshal([]byte(jsonCtrl), &ctrl)
 	if err != nil {
@@ -31,19 +34,22 @@ func NewControlFromJson(jsonCtrl string) (Control, error) {
 	return ctrl, nil
 }
 
-func (ctl Control) Id() string {
+// ID returns control's ID.
+func (ctl Control) ID() string {
 	return ctl["i"].(string)
 }
 
-func (ctl Control) ParentId() string {
+// ParentID returns the ID of parent control.
+func (ctl Control) ParentID() string {
 	return ctl["p"].(string)
 }
 
-func (ctl Control) AddChildId(childId string) {
+// AddChildID appends the child to the parent control.
+func (ctl Control) AddChildID(childID string) {
 	childIds, _ := ctl["c"].([]string)
 	// if !ok {
 	// 	childIds = make([]string, 0, 1)
 	// 	ctl["c"] = childIds
 	// }
-	ctl["c"] = append(childIds, childId)
+	ctl["c"] = append(childIds, childID)
 }

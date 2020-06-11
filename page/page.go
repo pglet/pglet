@@ -5,12 +5,14 @@ import (
 	"sync"
 )
 
+// Page represents a single page.
 type Page struct {
 	sync.RWMutex                    //`json:"-:`
 	Name         string             `json:"name"`
 	Controls     map[string]Control `json:"controls"`
 }
 
+// New creates a new instance of Page.
 func New(name string) (*Page, error) {
 	p := &Page{}
 	p.Name = name
@@ -18,9 +20,10 @@ func New(name string) (*Page, error) {
 	return p, Pages().AddPage(p)
 }
 
-func (page Page) AddControl(ctl Control) error {
+// AddControl adds a control to a page
+func (page *Page) AddControl(ctl Control) error {
 	// find parent
-	parentID := ctl.ParentId()
+	parentID := ctl.ParentID()
 	if parentID != "" {
 		page.RLock()
 		parentCtl, ok := page.Controls[parentID]
@@ -32,12 +35,12 @@ func (page Page) AddControl(ctl Control) error {
 
 		// update parent's childIds
 		page.Lock()
-		parentCtl.AddChildId(ctl.Id())
+		parentCtl.AddChildID(ctl.ID())
 		page.Unlock()
 	}
 
 	page.Lock()
-	page.Controls[ctl.Id()] = ctl
+	page.Controls[ctl.ID()] = ctl
 	page.Unlock()
 	return nil
 }

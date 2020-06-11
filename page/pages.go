@@ -11,13 +11,20 @@ type pages struct {
 	items map[string]*Page
 }
 
+// Index represents the index of all pages.
+type Index interface {
+	AddPage(p *Page) error
+	GetPage(name string) *Page
+	RemovePage(name string)
+}
+
 var (
 	pr   *pages
 	once sync.Once
 )
 
-// Pages holds the index of all pages.
-func Pages() *pages {
+// Pages returns an a global instance of PageIndex.
+func Pages() Index {
 	once.Do(func() {
 		pr = &pages{
 			items: make(map[string]*Page),

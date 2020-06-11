@@ -43,7 +43,7 @@ func createPage() *page.Page {
 	ctl4["text"] = "Click me!"
 	p.AddControl(ctl4)
 
-	ctl5, err := page.NewControlFromJson(`{
+	ctl5, err := page.NewControlFromJSON(`{
 		"i": "myBtn",
 		"p": "2",
 		"t": "Button",
@@ -88,9 +88,9 @@ func main() {
 
 	fmt.Println(page.Pages())
 
-	p2 := page.Page{}
+	p2 := &page.Page{}
 
-	err = json.Unmarshal([]byte(jsonPage), &p2)
+	err = json.Unmarshal([]byte(jsonPage), p2)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
