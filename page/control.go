@@ -1,7 +1,7 @@
-package pglet
+package page
 
 import (
-	"fmt"
+	"encoding/json"
 )
 
 type Control map[string]interface{}
@@ -22,6 +22,15 @@ func NewControl(controlType string, parentId string, id string) Control {
 	return ctl
 }
 
+func NewControlFromJson(jsonCtrl string) (Control, error) {
+	ctrl := Control{}
+	err := json.Unmarshal([]byte(jsonCtrl), &ctrl)
+	if err != nil {
+		return nil, err
+	}
+	return ctrl, nil
+}
+
 func (ctl Control) Id() string {
 	return ctl["i"].(string)
 }
@@ -31,27 +40,10 @@ func (ctl Control) ParentId() string {
 }
 
 func (ctl Control) AddChildId(childId string) {
-	childIds, ok := ctl["c"].([]string)
-	if !ok {
-		childIds = make([]string, 0, 1)
-		ctl["c"] = childIds
-	}
+	childIds, _ := ctl["c"].([]string)
+	// if !ok {
+	// 	childIds = make([]string, 0, 1)
+	// 	ctl["c"] = childIds
+	// }
 	ctl["c"] = append(childIds, childId)
-}
-
-func (page Page) AddControl(ctl Control) error {
-	// find parent
-	parentId := ctl.ParentId()
-	if parentId != "" {
-		parentCtl, ok := page.Controls[parentId]
-		if !ok {
-			return fmt.Errorf("Parent control with id '%s' not found.", parentId)
-		}
-
-		// update parent's childIds
-		parentCtl.AddChildId(ctl.Id())
-	}
-
-	page.Controls[ctl.Id()] = ctl
-	return nil
 }

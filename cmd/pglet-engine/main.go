@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/pglet/pglet"
+	"github.com/pglet/pglet/page"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -25,43 +26,69 @@ func removeElementAt(source []int, pos int) []int {
 	return source[:len(source)-1]      // Truncate slice.
 }
 
-func createPage() pglet.Page {
-	page := pglet.Page{}
-	page.Name = "test page 1"
-	page.Controls = make(map[string]pglet.Control)
+func createPage() *page.Page {
+	p, err := page.New("test page 1")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	page.AddControl(pglet.NewControl("Row", "", "0"))
-	page.AddControl(pglet.NewControl("Column", "0", "1"))
-	page.AddControl(pglet.NewControl("Column", "0", "2"))
+	p.AddControl(page.NewControl("Row", "", "0"))
+	p.AddControl(page.NewControl("Column", "0", "1"))
+	p.AddControl(page.NewControl("Column", "0", "2"))
 
-	ctl3 := pglet.NewControl("Text", "1", "3")
-	page.AddControl(ctl3)
+	ctl3 := page.NewControl("Text", "1", "3")
+	p.AddControl(ctl3)
 
-	ctl4 := pglet.NewControl("Button", "2", "4")
+	ctl4 := page.NewControl("Button", "2", "4")
 	ctl4["text"] = "Click me!"
-	page.AddControl(ctl4)
-	return page
+	p.AddControl(ctl4)
+
+	ctl5, err := page.NewControlFromJson(`{
+		"i": "myBtn",
+		"p": "2",
+		"t": "Button",
+		"text": "Cancel"
+	  }`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//fmt.Println(ctl5)
+
+	p.AddControl(ctl5)
+
+	return p
 }
 
 func main() {
 
-	page := createPage()
+	//fmt.Printf("string: %s", "sss")
+
+	p := createPage()
 
 	//fmt.Println(ctl3)
 
 	//ctl1 := page.controls["ctl_1"]
 
 	var jsonPage string
-	j, err := json.MarshalIndent(&page, "", "  ")
+	j, err := json.MarshalIndent(&p, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	jsonPage = string(j)
 
-	fmt.Printf("%+v\n\n\n", jsonPage)
+	fmt.Printf("----------------\n%+v\n--------------\n", jsonPage)
 
-	p2 := pglet.Page{}
+	_, err1 := page.New("test page 2")
+	if err1 != nil {
+		log.Fatal(err1)
+	}
+
+	fmt.Println(page.Pages())
+
+	p2 := page.Page{}
 
 	err = json.Unmarshal([]byte(jsonPage), &p2)
 	if err != nil {
