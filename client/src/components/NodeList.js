@@ -10,8 +10,8 @@ const NodeList = ({ id, controls }) => {
     }
 
     const renderChild = control => {
-        const ControlType = controlTypes[control.type];
-        return <ControlType key={control.id} control={control} />
+        const ControlType = controlTypes[control.t];
+        return <ControlType key={control.i} control={control} />
     }
 
     return controls.map(renderChild);

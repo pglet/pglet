@@ -20,12 +20,12 @@ const node = (state, action) => {
   switch (action.type) {
     case CREATE_NODE:
       return {
-        id: action.nodeId,
-        parentId: action.parentId,
-        type: 'Node',
+        i: action.nodeId,
+        p: action.parentId,
+        t: 'Node',
+        c: [],
         counter: 0,
-        expanded: true,
-        childIds: []
+        expanded: true
       }
     case INCREMENT:
       return {
@@ -41,7 +41,7 @@ const node = (state, action) => {
     case REMOVE_CHILD:
       return {
         ...state,
-        childIds: childIds(state.childIds, action)
+        c: childIds(state.c, action)
       }
     default:
       return state
@@ -49,7 +49,7 @@ const node = (state, action) => {
 }
 
 const getAllDescendantIds = (state, nodeId) => (
-  state[nodeId].childIds.reduce((acc, childId) => (
+  state[nodeId].c.reduce((acc, childId) => (
     [ ...acc, childId, ...getAllDescendantIds(state, childId) ]
   ), [])
 )

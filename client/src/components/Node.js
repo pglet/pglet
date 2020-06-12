@@ -7,10 +7,10 @@ const Node = React.memo(({control}) => {
 
   //console.log(`render node: ${control.id}`);
 
-  const id = control.id;
-  const parentId = control.parentId;
+  const id = control.i;
+  const parentId = control.p;
 
-  const childControls = useSelector(state => control.childIds.map(childId => state.page.controls[childId]), shallowEqual);
+  const childControls = useSelector(state => control.c.map(childId => state.page.controls[childId]), shallowEqual);
   
   //console.log(childControls);
 
