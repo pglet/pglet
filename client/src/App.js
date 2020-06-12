@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import Node from './components/Node'
 import LoadingButton from './components/LoadingButton';
 import User from './components/User'
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const App = () => {
 
@@ -12,7 +13,7 @@ const App = () => {
 
   useEffect(() => {
     console.log("Connecting WebSockets...");
-    const conn = new WebSocket(`ws://${document.location.host}/ws`);
+    const conn = new ReconnectingWebSocket(`ws://${document.location.host}/ws`);
         conn.onopen = function (evt) {
           console.log("WebSocket connection opened");
           console.log(evt);
