@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 //import logo from './logo.svg';
 import './pglet.scss';
 import { useSelector } from 'react-redux';
@@ -9,6 +9,19 @@ import User from './components/User'
 const App = () => {
 
   const root = useSelector(state => state.page.controls[0]);
+
+  useEffect(() => {
+    console.log("Connecting WebSockets...");
+    const conn = new WebSocket(`ws://${document.location.host}/ws`);
+        conn.onclose = function (evt) {
+            console.log("WebSocket connection closed");
+            console.log(evt);
+        };
+        conn.onmessage = function (evt) {
+          console.log("WebSocket onmessage");
+          console.log(evt);
+        };
+  })
 
   return (
   <div>

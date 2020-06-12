@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pglet/pglet/page"
+	"github.com/pglet/pglet/ws"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func removeElementAt(source []int, pos int) []int {
 	return source[:len(source)-1]      // Truncate slice.
 }
 
-func createPage() *page.Page {
+func createTestPage() *page.Page {
 	p, err := page.New("test-1")
 	if err != nil {
 		log.Fatal(err)
@@ -85,7 +86,7 @@ func main() {
 
 	//fmt.Printf("string: %s", "sss")
 
-	p := createPage()
+	p := createTestPage()
 
 	//fmt.Println(ctl3)
 
@@ -128,6 +129,11 @@ func main() {
 
 	// Serve frontend static files
 	router.Use(static.Serve("/", static.LocalFile(contentRootFolder, true)))
+
+	// WebSockets
+	router.GET("/ws", func(c *gin.Context) {
+		ws.WebsocketHandler(c.Writer, c.Request)
+	})
 
 	// Setup route group for the API
 	api := router.Group(apiRoutePrefix)
