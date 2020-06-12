@@ -2,14 +2,16 @@ package page
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 )
 
 // Page represents a single page.
 type Page struct {
 	sync.RWMutex
-	Name     string             `json:"name"`
-	Controls map[string]Control `json:"controls"`
+	Name          string             `json:"name"`
+	Controls      map[string]Control `json:"controls"`
+	nextControlID int
 }
 
 // New creates a new instance of Page.
@@ -17,7 +19,17 @@ func New(name string) (*Page, error) {
 	p := &Page{}
 	p.Name = name
 	p.Controls = make(map[string]Control)
+	p.AddControl(NewControl("Page", "", p.NextControlID()))
 	return p, Pages().Add(p)
+}
+
+// NextControlID returns the next auto-generated control ID
+func (page *Page) NextControlID() string {
+	page.Lock()
+	defer page.Unlock()
+	nextID := strconv.Itoa(page.nextControlID)
+	page.nextControlID++
+	return nextID
 }
 
 // AddControl adds a control to a page
@@ -40,8 +52,8 @@ func (page *Page) AddControl(ctl Control) error {
 	}
 
 	page.Lock()
+	defer page.Unlock()
 	page.Controls[ctl.ID()] = ctl
-	page.Unlock()
 	return nil
 }
 

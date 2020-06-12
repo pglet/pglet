@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 //import logo from './logo.svg';
 import './pglet.scss';
 import { useSelector } from 'react-redux';
-import Node from './components/Node'
+import Page from './components/Page'
 import LoadingButton from './components/LoadingButton';
 import User from './components/User'
 import ReconnectingWebSocket from 'reconnecting-websocket';
@@ -30,10 +30,14 @@ const App = () => {
   })
 
   return (
-  <div>
-    <Node control={root} />
-    <LoadingButton />
-    <User userId="42" />
+  <div className="container-fluid">
+    <Page control={root} />
+    <div className="row">
+      <div className="col">
+        <LoadingButton />
+        <User userId="42" />
+      </div>
+    </div>
   </div>);
 }
 

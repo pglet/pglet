@@ -11,8 +11,8 @@ type Control map[string]interface{}
 func NewControl(controlType string, parentID string, id string) Control {
 	ctl := Control{}
 	ctl["t"] = controlType
-	ctl["i"] = id
 	ctl["p"] = parentID
+	ctl["i"] = id
 	return ctl
 }
 

@@ -34,14 +34,14 @@ func createTestPage() *page.Page {
 		log.Fatal(err)
 	}
 
-	p.AddControl(page.NewControl("Row", "", "0"))
-	p.AddControl(page.NewControl("Column", "0", "1"))
-	p.AddControl(page.NewControl("Column", "0", "2"))
+	p.AddControl(page.NewControl("Row", "0", "1"))
+	p.AddControl(page.NewControl("Column", "1", "2"))
+	p.AddControl(page.NewControl("Column", "1", "3"))
 
-	ctl3 := page.NewControl("Text", "1", "3")
+	ctl3 := page.NewControl("Text", "2", "4")
 	p.AddControl(ctl3)
 
-	ctl4 := page.NewControl("Button", "2", "4")
+	ctl4 := page.NewControl("Button", "3", "5")
 	ctl4["text"] = "Click me!"
 	p.AddControl(ctl4)
 

@@ -1,8 +1,61 @@
 import { INCREMENT, TOGGLE_EXPAND, ADD_CHILD, REMOVE_CHILD, CREATE_NODE, DELETE_NODE } from '../actions/pageActions'
-import generateControls from '../generateControls'
 
 const initialState = {
-  controls: generateControls()
+  "name": "test-1",
+  "controls": {
+    "0": {
+      "c": [
+        "1"
+      ],
+      "i": "0",
+      "p": "",
+      "t": "Page"
+    },
+    "1": {
+      "c": [
+        "2",
+        "3"
+      ],
+      "i": "1",
+      "p": "0",
+      "t": "Row"
+    },
+    "2": {
+      "c": [
+        "4",
+        "myBtn"
+      ],
+      "i": "2",
+      "p": "1",
+      "t": "Column"
+    },
+    "3": {
+      "c": [
+        "5"
+      ],
+      "i": "3",
+      "p": "1",
+      "t": "Column"
+    },
+    "4": {
+      "i": "4",
+      "p": "2",
+      "t": "Text",
+      "text": "Hello, world!"
+    },
+    "5": {
+      "i": "5",
+      "p": "3",
+      "t": "Button",
+      "text": "Click me!"
+    },
+    "myBtn": {
+      "i": "myBtn",
+      "p": "2",
+      "t": "Button",
+      "text": "Cancel"
+    }
+  }
 }
 
 const childIds = (state, action) => {
