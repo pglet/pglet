@@ -13,6 +13,11 @@ const App = () => {
   useEffect(() => {
     console.log("Connecting WebSockets...");
     const conn = new WebSocket(`ws://${document.location.host}/ws`);
+        conn.onopen = function (evt) {
+          console.log("WebSocket connection opened");
+          console.log(evt);
+          conn.send("Hello!");
+        };
         conn.onclose = function (evt) {
             console.log("WebSocket connection closed");
             console.log(evt);
