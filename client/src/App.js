@@ -14,7 +14,7 @@ const App = () => {
   <div>
     <Node control={root} />
     <LoadingButton />
-    <User userId="1" />
+    <User userId="42" />
   </div>);
 }
 

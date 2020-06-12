@@ -19,7 +19,7 @@ export const fetchUserError = error => ({
 export const fetchUser = (userId) => dispatch => {
   console.log("fetchUser()");
   dispatch(fetchUserBegin());
-  fetch(`/api/user/${userId}`)
+  fetch(`/api/users/${userId}`)
     .then(handleErrors)
     .then(res => res.json())
     .then(json => {

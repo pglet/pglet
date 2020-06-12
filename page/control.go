@@ -7,14 +7,6 @@ import (
 // Control is an element of a page.
 type Control map[string]interface{}
 
-// func (ctl Control) Id() (string, error) {
-//   id, ok := ctl["id"].(string)
-//   if !ok {
-//     return "", errors.New("id must be a string")
-//   }
-//   return id, nil
-// }
-
 // NewControl initializes a new control object.
 func NewControl(controlType string, parentID string, id string) Control {
 	ctl := Control{}

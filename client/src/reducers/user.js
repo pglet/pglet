@@ -11,7 +11,7 @@ import {
   };
   
   export default function userReducer(state = initialState, action) {
-    console.log(action);
+    //console.log(action);
     switch(action.type) {
       case FETCH_USER_BEGIN:
         // Mark the state as "loading" so we can show a spinner or something

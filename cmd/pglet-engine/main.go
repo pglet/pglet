@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,7 +28,7 @@ func removeElementAt(source []int, pos int) []int {
 }
 
 func createPage() *page.Page {
-	p, err := page.New("test page 1")
+	p, err := page.New("test-1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,6 +60,25 @@ func createPage() *page.Page {
 	p.AddControl(ctl5)
 
 	return p
+}
+
+func userHandler(c *gin.Context) {
+
+	if userID, err := strconv.Atoi(c.Param("userID")); err == nil {
+		c.Header("Content-Type", "application/json")
+		c.JSON(http.StatusOK, gin.H{
+			"id":       userID,
+			"username": "admin",
+		})
+	} else {
+		// Joke ID is invalid
+		c.AbortWithStatus(http.StatusNotFound)
+	}
+}
+
+func pageHandler(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
+	c.JSON(http.StatusOK, page.Pages().Get("test-1"))
 }
 
 func main() {
@@ -101,7 +121,7 @@ func main() {
 	arr = removeElementAt(arr, 1)
 	fmt.Println(arr)
 
-	return
+	//return
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -119,6 +139,9 @@ func main() {
 			})
 		})
 	}
+
+	api.GET("/users/:userID", userHandler)
+	api.GET("/pages/:pageID", pageHandler)
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {

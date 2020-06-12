@@ -7,9 +7,9 @@ import (
 
 // Page represents a single page.
 type Page struct {
-	sync.RWMutex                    //`json:"-:`
-	Name         string             `json:"name"`
-	Controls     map[string]Control `json:"controls"`
+	sync.RWMutex
+	Name     string             `json:"name"`
+	Controls map[string]Control `json:"controls"`
 }
 
 // New creates a new instance of Page.
@@ -17,7 +17,7 @@ func New(name string) (*Page, error) {
 	p := &Page{}
 	p.Name = name
 	p.Controls = make(map[string]Control)
-	return p, Pages().AddPage(p)
+	return p, Pages().Add(p)
 }
 
 // AddControl adds a control to a page

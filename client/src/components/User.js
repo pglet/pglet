@@ -24,7 +24,7 @@ const User = ({userId}) => {
         return <div>Loading...</div>;
     }
 
-    return <div>User: {user.message}</div>;
+    return <div>User: {user.username}</div>;
 }
 
 export default User

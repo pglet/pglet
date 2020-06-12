@@ -13,9 +13,9 @@ type pages struct {
 
 // Index represents the index of all pages.
 type Index interface {
-	AddPage(p *Page) error
-	GetPage(name string) *Page
-	RemovePage(name string)
+	Add(p *Page) error
+	Get(name string) *Page
+	Remove(name string)
 }
 
 var (
@@ -34,7 +34,7 @@ func Pages() Index {
 	return pr
 }
 
-func (pr *pages) AddPage(p *Page) error {
+func (pr *pages) Add(p *Page) error {
 	pr.Lock()
 	defer pr.Unlock()
 
@@ -46,13 +46,13 @@ func (pr *pages) AddPage(p *Page) error {
 	return nil
 }
 
-func (pr *pages) GetPage(name string) *Page {
+func (pr *pages) Get(name string) *Page {
 	pr.RLock()
 	defer pr.RUnlock()
 	return pr.items[name]
 }
 
-func (pr *pages) RemovePage(name string) {
+func (pr *pages) Remove(name string) {
 	pr.Lock()
 	defer pr.Lock()
 	delete(pr.items, name)
