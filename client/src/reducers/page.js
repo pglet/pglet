@@ -1,4 +1,12 @@
-import { INCREMENT, TOGGLE_EXPAND, ADD_CHILD, REMOVE_CHILD, CREATE_NODE, DELETE_NODE } from '../actions/pageActions'
+import {
+  INCREMENT,
+  TOGGLE_EXPAND,
+  ADD_CHILD,
+  REMOVE_CHILD,
+  CREATE_NODE,
+  DELETE_NODE,
+  CHANGE_PROPS
+} from '../actions/pageActions'
 
 const initialState = {
   "name": "test-1",
@@ -22,7 +30,7 @@ const initialState = {
     },
     "2": {
       "c": [
-        "4",
+        "myTxt",
         "myBtn"
       ],
       "i": "2",
@@ -37,8 +45,8 @@ const initialState = {
       "p": "1",
       "t": "Column"
     },
-    "4": {
-      "i": "4",
+    "myTxt": {
+      "i": "myTxt",
       "p": "2",
       "t": "Text",
       "text": "Hello, world!"
@@ -96,6 +104,11 @@ const node = (state, action) => {
         ...state,
         c: childIds(state.c, action)
       }
+    case CHANGE_PROPS:
+      return {
+        ...state,
+        ...action.newProps
+      }
     default:
       return state
   }
@@ -116,7 +129,6 @@ const deleteMany = (state, ids) => {
 export default (state = initialState, action) => {
 
   console.log(action);
-  // console.log(state);
 
   const { nodeId } = action
   if (typeof nodeId === 'undefined') {
@@ -130,8 +142,6 @@ export default (state = initialState, action) => {
   }
 
   state.controls[nodeId] = node(state.controls[nodeId], action);
-
-  //console.log(state);
 
   return state;
 }

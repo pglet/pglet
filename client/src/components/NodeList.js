@@ -5,7 +5,7 @@ import Column from './Column'
 import Text from './Text'
 import Button from './Button'
 
-const NodeList = ({ id, controls }) => {
+const NodeList = ({ controls }) => {
 
     //console.log(`render NodeList: ${id}`);
 

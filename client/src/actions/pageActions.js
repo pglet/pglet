@@ -4,6 +4,7 @@ export const CREATE_NODE = 'CREATE_NODE'
 export const DELETE_NODE = 'DELETE_NODE'
 export const ADD_CHILD = 'ADD_CHILD'
 export const REMOVE_CHILD = 'REMOVE_CHILD'
+export const CHANGE_PROPS = 'CHANGE_PROPS'
 
 export const increment = (nodeId) => ({
   type: INCREMENT,
@@ -37,4 +38,10 @@ export const removeChild = (nodeId, childId) => ({
   type: REMOVE_CHILD,
   nodeId,
   childId
+})
+
+export const changeProps = (nodeId, newProps) => ({
+  type: CHANGE_PROPS,
+  nodeId,
+  newProps
 })
