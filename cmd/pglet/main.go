@@ -2,14 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/pglet/pglet/page"
+	"github.com/pglet/pglet/utils"
 	"github.com/pglet/pglet/ws"
 
 	"github.com/gin-gonic/contrib/static"
@@ -21,6 +28,31 @@ const (
 	contentRootFolder   string = "./client/build"
 	siteDefaultDocument string = "index.html"
 )
+
+var (
+	isServer   bool
+	serverPort int
+	serverAddr string
+	pageName   string
+	sessionID  string
+)
+
+func main() {
+
+	fmt.Println(utils.GenerateRandomString(16))
+	sha1 := utils.SHA1(strings.ToLower("Hello, world!"))
+	pipeName := fmt.Sprintf("pglet_pipe_%s", sha1)
+
+	fmt.Println(path.Join(os.TempDir(), pipeName))
+
+	if sessionID != "" {
+		runProxy()
+	} else if isServer {
+		runServer()
+	} else {
+		runClient()
+	}
+}
 
 func removeElementAt(source []int, pos int) []int {
 	copy(source[pos:], source[pos+1:]) // Shift a[i+1:] left one index.
@@ -82,8 +114,24 @@ func pageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, page.Pages().Get("test-1"))
 }
 
-func main() {
+func init() {
+	flag.StringVar(&pageName, "page", "", "Page name to create and connect to.")
+	flag.StringVar(&serverAddr, "server", "", "Pglet server address.")
+	flag.StringVar(&sessionID, "session-id", "", "Client session ID.")
+	flag.IntVar(&serverPort, "port", 5000, "The port number to run pglet server on.")
+	flag.Parse()
 
+	if pageName == "" {
+		isServer = true
+	}
+
+	if serverPort < 0 || serverPort > 65535 {
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+}
+
+func createTestPages() {
 	//fmt.Printf("string: %s", "sss")
 
 	p := createTestPage()
@@ -121,8 +169,62 @@ func main() {
 
 	arr = removeElementAt(arr, 1)
 	fmt.Println(arr)
+}
 
-	//return
+func runProxy() {
+	fmt.Printf("Running in proxy mode: %s...\n", sessionID)
+	time.Sleep(1 * time.Minute)
+}
+
+func runClient() {
+	fmt.Printf("Running in client mode: %s...\n", pageName)
+	u := url.URL{Scheme: "ws", Host: *&serverAddr, Path: "/ws"}
+	log.Printf("connecting to %s", u.String())
+
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		log.Fatal("dial:", err)
+	}
+	defer c.Close()
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		defer func() {
+			fmt.Println("Closing...")
+		}()
+
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("read:", err)
+				return
+			}
+			log.Printf("recv: %s", message)
+		}
+	}()
+
+	c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Hello from Go: %s", pageName)))
+
+	time.Sleep(5 * time.Second)
+
+	// run proxy
+	execPath, _ := os.Executable()
+	fmt.Println(execPath)
+
+	cmd := exec.Command(execPath, "--session-id=12345")
+	err = cmd.Start()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Println(cmd.Process.Pid)
+}
+
+func runServer() {
+	createTestPages()
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -158,5 +260,5 @@ func main() {
 	})
 
 	// Start and run the server
-	router.Run(":5000")
+	router.Run(fmt.Sprintf(":%d", serverPort))
 }

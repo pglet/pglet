@@ -144,7 +144,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		send: make(chan []byte, 256),
 	}
 
-	fmt.Printf("New Client %s is connected, total: %d", client.id, 0)
+	fmt.Printf("New Client %s is connected, total: %d\n", client.id, 0)
 
 	// register client
 
@@ -156,6 +156,7 @@ func readHandler(c *Client, message []byte) error {
 	fmt.Printf("Message from %s: %v\n", c.id, string(message))
 
 	// echo back
+	time.Sleep(2 * time.Second)
 	c.send <- message
 
 	return nil
