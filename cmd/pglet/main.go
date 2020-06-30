@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pglet/pglet/page"
 	"github.com/pglet/pglet/utils"
-	"github.com/pglet/pglet/ws"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -40,10 +38,17 @@ var (
 func main() {
 
 	fmt.Println(utils.GenerateRandomString(16))
-	sha1 := utils.SHA1(strings.ToLower("Hello, world!"))
-	pipeName := fmt.Sprintf("pglet_pipe_%s", sha1)
+	//sha1 := utils.SHA1(strings.ToLower("Hello, world!"))
+	//pipeName := fmt.Sprintf("pglet_pipe_%s", sha1)
 
-	fmt.Println(path.Join(os.TempDir(), pipeName))
+	// fi, err := os.Stat(pipeName)
+	// if os.IsNotExist(err) {
+	// 	// create pipe
+	// 	// check for IsExist
+	// 	// start sub-process with WS client
+	// }
+
+	// send command to a named pipe
 
 	if sessionID != "" {
 		runProxy()
@@ -61,7 +66,7 @@ func removeElementAt(source []int, pos int) []int {
 }
 
 func createTestPage() *page.Page {
-	p, err := page.New("test-1")
+	p, err := page.NewPage("test-1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -150,7 +155,7 @@ func createTestPages() {
 
 	fmt.Printf("----------------\n%+v\n--------------\n", jsonPage)
 
-	_, err1 := page.New("test page 2")
+	_, err1 := page.NewPage("test page 2")
 	if err1 != nil {
 		log.Fatal(err1)
 	}
@@ -234,7 +239,7 @@ func runServer() {
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		ws.WebsocketHandler(c.Writer, c.Request)
+		page.WebsocketHandler(c.Writer, c.Request)
 	})
 
 	// Setup route group for the API

@@ -12,14 +12,18 @@ type Page struct {
 	Name          string             `json:"name"`
 	Controls      map[string]Control `json:"controls"`
 	nextControlID int
+	webClients    map[*Client]bool
+	hostClients   map[*Client]bool
 }
 
-// New creates a new instance of Page.
-func New(name string) (*Page, error) {
+// NewPage creates a new instance of Page.
+func NewPage(name string) (*Page, error) {
 	p := &Page{}
 	p.Name = name
 	p.Controls = make(map[string]Control)
 	p.AddControl(NewControl("Page", "", p.NextControlID()))
+	p.webClients = make(map[*Client]bool)
+	p.hostClients = make(map[*Client]bool)
 	return p, Pages().Add(p)
 }
 
@@ -55,6 +59,22 @@ func (page *Page) AddControl(ctl Control) error {
 	defer page.Unlock()
 	page.Controls[ctl.ID()] = ctl
 	return nil
+}
+
+func (p *Page) RegisterHostClient(client *Client) {
+	// TODO
+}
+
+func (p *Page) RegisterWebClient(client *Client) {
+	// TODO
+}
+
+func (p *Page) UnregisterHostClient(client *Client) {
+	// TODO
+}
+
+func (p *Page) UnregisterWebClient(client *Client) {
+	// TODO
 }
 
 // func (p Page) MarshalJSON() ([]byte, error) {

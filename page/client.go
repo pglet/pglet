@@ -1,4 +1,4 @@
-package ws
+package page
 
 import (
 	"encoding/json"
@@ -15,6 +15,18 @@ const (
 	PUBLISH     = "publish"
 	SUBSCRIBE   = "subscribe"
 	UNSUBSCRIBE = "unsubscribe"
+
+	// register WS client as web (browser) client
+	ActionRegisterWebClientRequest = "registerWebClientRequest"
+
+	// register WS client as host (script) client
+	ActionRegisterHostClientRequest = "registerHostClientRequest"
+
+	// add, set, get, disconnect or other page-related command from host
+	ActionPageCommandFromHostRequest = "pageCommandFromHostRequest"
+
+	// click, change, expand/collapse and other events from browser
+	ActionPageEventFromWebRequest = "pageEventFromWebRequest"
 )
 
 const (
@@ -34,13 +46,17 @@ const (
 type Client struct {
 	id   string
 	conn *websocket.Conn
+	page *Page
 	send chan []byte
 }
 
 type Message struct {
 	Action  string          `json:"action"`
-	Channel string          `json:"channel"`
-	Message json.RawMessage `json:"message"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type RegisterClientActionRequestPayload struct {
+	PageName string `json:"pageName"`
 }
 
 type readPumpHandler = func(*Client, []byte) error
@@ -51,7 +67,6 @@ var upgrader = websocket.Upgrader{
 }
 
 func autoID() string {
-
 	return uuid.New().String()
 }
 
@@ -155,9 +170,58 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 func readHandler(c *Client, message []byte) error {
 	fmt.Printf("Message from %s: %v\n", c.id, string(message))
 
+	// decode message
+	msg := &Message{}
+	err := json.Unmarshal(message, msg)
+	if err != nil {
+		return err
+	}
+
+	switch msg.Action {
+	case ActionRegisterWebClientRequest:
+		fmt.Println("Registering as web client")
+		payload := new(RegisterClientActionRequestPayload)
+		json.Unmarshal(msg.Payload, payload)
+
+		// subscribe as web client
+		page := Pages().Get(payload.PageName)
+		page.RegisterWebClient(c)
+
+	case ActionRegisterHostClientRequest:
+		fmt.Println("Registering as host client")
+		payload := new(RegisterClientActionRequestPayload)
+		json.Unmarshal(msg.Payload, payload)
+
+		// subscribe as host client
+		page := Pages().Get(payload.PageName)
+		page.RegisterHostClient(c)
+
+	case ActionPageCommandFromHostRequest:
+		fmt.Println("Page command from host client")
+		// TODO
+
+	case ActionPageEventFromWebRequest:
+		fmt.Println("Page event from browser")
+		// TODO
+	}
+
 	// echo back
 	time.Sleep(2 * time.Second)
 	c.send <- message
 
 	return nil
+}
+
+func webClientHandler() {
+	// read event (click, change, etc.)
+
+	// send event to all subscribed page host clients
+}
+
+func hostClientHandler() {
+	// read command
+
+	// update page structure
+
+	// write update to subscribed web clients
 }
