@@ -16,17 +16,17 @@ const (
 	SUBSCRIBE   = "subscribe"
 	UNSUBSCRIBE = "unsubscribe"
 
-	// register WS client as web (browser) client
-	ActionRegisterWebClientRequest = "registerWebClientRequest"
+	// RegisterWebClientAction registers WS client as web (browser) client
+	RegisterWebClientAction = "registerWebClient"
 
-	// register WS client as host (script) client
-	ActionRegisterHostClientRequest = "registerHostClientRequest"
+	// RegisterHostClientAction registers WS client as host (script) client
+	RegisterHostClientAction = "registerHostClient"
 
-	// add, set, get, disconnect or other page-related command from host
-	ActionPageCommandFromHostRequest = "pageCommandFromHostRequest"
+	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
+	PageCommandFromHostAction = "pageCommandFromHost"
 
-	// click, change, expand/collapse and other events from browser
-	ActionPageEventFromWebRequest = "pageEventFromWebRequest"
+	// PageEventFromWebAction receives click, change, expand/collapse and other events from browser
+	PageEventFromWebAction = "pageEventFromWeb"
 )
 
 const (
@@ -43,8 +43,17 @@ const (
 	maxMessageSize = 512
 )
 
+type ClientRole int
+
+const (
+	None ClientRole = iota
+	WebClient
+	HostClient
+)
+
 type Client struct {
 	id   string
+	role ClientRole
 	conn *websocket.Conn
 	page *Page
 	send chan []byte
@@ -57,6 +66,10 @@ type Message struct {
 
 type RegisterClientActionRequestPayload struct {
 	PageName string `json:"pageName"`
+}
+
+type RegisterClientActionResponsePayload struct {
+	Error string `json:"error"`
 }
 
 type readPumpHandler = func(*Client, []byte) error
@@ -178,31 +191,17 @@ func readHandler(c *Client, message []byte) error {
 	}
 
 	switch msg.Action {
-	case ActionRegisterWebClientRequest:
-		fmt.Println("Registering as web client")
-		payload := new(RegisterClientActionRequestPayload)
-		json.Unmarshal(msg.Payload, payload)
+	case RegisterWebClientAction:
+		registerWebClient(c, msg)
 
-		// subscribe as web client
-		page := Pages().Get(payload.PageName)
-		page.RegisterWebClient(c)
+	case RegisterHostClientAction:
+		registerHostClient(c, msg)
 
-	case ActionRegisterHostClientRequest:
-		fmt.Println("Registering as host client")
-		payload := new(RegisterClientActionRequestPayload)
-		json.Unmarshal(msg.Payload, payload)
+	case PageCommandFromHostAction:
+		executeCommandFromHostClient(c, msg)
 
-		// subscribe as host client
-		page := Pages().Get(payload.PageName)
-		page.RegisterHostClient(c)
-
-	case ActionPageCommandFromHostRequest:
-		fmt.Println("Page command from host client")
-		// TODO
-
-	case ActionPageEventFromWebRequest:
-		fmt.Println("Page event from browser")
-		// TODO
+	case PageEventFromWebAction:
+		processPageEventFromWebClient(c, msg)
 	}
 
 	// echo back
@@ -210,6 +209,55 @@ func readHandler(c *Client, message []byte) error {
 	c.send <- message
 
 	return nil
+}
+
+func registerWebClient(client *Client, message *Message) {
+	fmt.Println("Registering as web client")
+	payload := new(RegisterClientActionRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	// assign client role
+	client.role = WebClient
+
+	// subscribe as host client
+	page := Pages().Get(payload.PageName)
+	// create page if not found
+	page.registerClient(client)
+
+	// TODO - send response
+}
+
+func registerHostClient(client *Client, message *Message) {
+	fmt.Println("Registering as host client")
+	payload := new(RegisterClientActionRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	// assign client role
+	client.role = HostClient
+
+	// subscribe as host client
+	page := Pages().Get(payload.PageName)
+	// create page if not found
+	page.registerClient(client)
+
+	// TODO - send response
+}
+
+func executeCommandFromHostClient(client *Client, message *Message) {
+	fmt.Println("Page command from host client")
+	// TODO
+	// parse command
+	// send response if parsing error
+	// update page tree
+	// if it's "shared" page - broadcast page change event to all web clients
+	// if it's "app" page - send page change event to a web client with matching web client ID
+}
+
+func processPageEventFromWebClient(client *Client, message *Message) {
+	fmt.Println("Page event from browser")
+	// TODO
+	// if it's "shared" page - broadcast event to all host clients
+	// if it's "app" page - broadcast event to all host clients, event payload contains web client ID
 }
 
 func webClientHandler() {

@@ -12,8 +12,8 @@ type Page struct {
 	Name          string             `json:"name"`
 	Controls      map[string]Control `json:"controls"`
 	nextControlID int
-	webClients    map[*Client]bool
-	hostClients   map[*Client]bool
+	clients       map[string]*Client
+	clientsMutex  sync.RWMutex
 }
 
 // NewPage creates a new instance of Page.
@@ -22,8 +22,7 @@ func NewPage(name string) (*Page, error) {
 	p.Name = name
 	p.Controls = make(map[string]Control)
 	p.AddControl(NewControl("Page", "", p.NextControlID()))
-	p.webClients = make(map[*Client]bool)
-	p.hostClients = make(map[*Client]bool)
+	p.clients = make(map[string]*Client)
 	return p, Pages().Add(p)
 }
 
@@ -61,20 +60,16 @@ func (page *Page) AddControl(ctl Control) error {
 	return nil
 }
 
-func (p *Page) RegisterHostClient(client *Client) {
-	// TODO
+func (page *Page) registerClient(client *Client) {
+	page.clientsMutex.Lock()
+	defer page.clientsMutex.Unlock()
+	page.clients[client.id] = client
 }
 
-func (p *Page) RegisterWebClient(client *Client) {
-	// TODO
-}
-
-func (p *Page) UnregisterHostClient(client *Client) {
-	// TODO
-}
-
-func (p *Page) UnregisterWebClient(client *Client) {
-	// TODO
+func (page *Page) unregisterClient(client *Client) {
+	page.clientsMutex.Lock()
+	defer page.clientsMutex.Unlock()
+	delete(page.clients, client.id)
 }
 
 // func (p Page) MarshalJSON() ([]byte, error) {
