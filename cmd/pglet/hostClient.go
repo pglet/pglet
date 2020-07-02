@@ -8,5 +8,5 @@ type hostClient struct {
 	conn *websocket.Conn
 
 	// clients by client ID
-	clients map[string]*client
+	clients map[string]*pipeClient
 }

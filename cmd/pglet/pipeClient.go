@@ -1,6 +1,6 @@
 package main
 
-type client struct {
+type pipeClient struct {
 	id              string
 	pageName        string
 	commandPipeName string
