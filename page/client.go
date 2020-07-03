@@ -73,6 +73,16 @@ type RegisterClientActionResponsePayload struct {
 	Error string `json:"error"`
 }
 
+type PageCommandActionRequestPayload struct {
+	PageName string `json:"pageName"`
+	Command  string `json:"command"`
+}
+
+type PageCommandActionResponsePayload struct {
+	Result string `json:"result"`
+	Error  string `json:"error"`
+}
+
 type readPumpHandler = func(*Client, []byte) error
 
 var upgrader = websocket.Upgrader{
@@ -259,6 +269,27 @@ func registerHostClient(client *Client, message *Message) {
 
 func executeCommandFromHostClient(client *Client, message *Message) {
 	fmt.Println("Page command from host client")
+
+	payload := new(PageCommandActionRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	// process command
+	// TODO
+	fmt.Println("Command for page:", payload.PageName)
+
+	// send response
+	responsePayload, _ := json.Marshal(&PageCommandActionResponsePayload{
+		Result: "Good",
+		Error:  "",
+	})
+
+	response, _ := json.Marshal(&Message{
+		ID:      message.ID,
+		Payload: responsePayload,
+	})
+
+	client.send <- response
+
 	// TODO
 	// parse command
 	// send response if parsing error

@@ -69,7 +69,16 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 		log.Fatalln("Error calling ConnectSharedPage:", err)
 	}
 
-	*pipeName = fmt.Sprintf("/tmp/%s-aaa", *pageURI)
+	// create new pipeClient
+	pc, err := newPipeClient(*pageURI, hc)
+	if err != nil {
+		return err
+	}
+
+	pc.start()
+
+	*pipeName = pc.commandPipeName
+
 	return nil
 }
 

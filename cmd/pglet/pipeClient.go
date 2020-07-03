@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"path"
 	"syscall"
 
+	"github.com/pglet/pglet/page"
 	"github.com/pglet/pglet/utils"
 )
 
@@ -37,6 +39,8 @@ func newPipeClient(pageName string, hc *hostClient) (*pipeClient, error) {
 		events:          make(chan string),
 		hostClient:      hc,
 	}
+
+	hc.clients[id] = pc
 
 	return pc, nil
 }
@@ -69,10 +73,23 @@ func (pc *pipeClient) startCommandLoop() {
 		command := pc.read()
 
 		// TODO send command to hostClient
-		fmt.Println(command)
+		fmt.Print(command)
+
+		result := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandActionRequestPayload{
+			PageName: pc.pageName,
+			Command:  command,
+		})
+
+		// parse response
+		payload := &page.PageCommandActionResponsePayload{}
+		err := json.Unmarshal(*result, payload)
+
+		if err != nil {
+			log.Fatalln("Error calling PageCommandFromHostAction:", err)
+		}
 
 		// reply back to pipe with command results
-		pc.write("OK")
+		pc.write(fmt.Sprintf("%s\n", payload.Result))
 	}
 }
 
