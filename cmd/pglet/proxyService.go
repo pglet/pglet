@@ -26,7 +26,7 @@ type ProxyService struct {
 	hostClients map[string]*hostClient
 }
 
-func NewProxyService() *ProxyService {
+func newProxyService() *ProxyService {
 	ps := &ProxyService{}
 	ps.hostClients = make(map[string]*hostClient)
 	return ps
@@ -56,10 +56,12 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 
 	hc := ps.getHostClient(*pageURI)
 
+	// call server
 	result := hc.call(page.RegisterHostClientAction, &page.RegisterClientActionRequestPayload{
 		PageName: *pageURI,
 	})
 
+	// parse response
 	payload := &page.RegisterClientActionResponsePayload{}
 	err := json.Unmarshal(*result, payload)
 
@@ -102,7 +104,7 @@ func runProxyService() {
 		log.Fatal(err)
 	}
 
-	proxySvc := NewProxyService()
+	proxySvc := newProxyService()
 	rpc.Register(proxySvc)
 	rpc.HandleHTTP()
 	l, e := net.Listen("unix", sockAddr)
@@ -114,8 +116,8 @@ func runProxyService() {
 	log.Println(err)
 }
 
-func buildWSEndPointURL(pageUrl string) string {
-	u, err := url.Parse(pageUrl)
+func buildWSEndPointURL(pageURI string) string {
+	u, err := url.Parse(pageURI)
 	if err != nil {
 		log.Fatalln("Cannot parse page URL:", err)
 	}
