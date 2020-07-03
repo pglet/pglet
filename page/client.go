@@ -60,6 +60,7 @@ type Client struct {
 }
 
 type Message struct {
+	ID      string          `json:"id"`
 	Action  string          `json:"action"`
 	Payload json.RawMessage `json:"payload"`
 }
@@ -205,8 +206,8 @@ func readHandler(c *Client, message []byte) error {
 	}
 
 	// echo back
-	time.Sleep(2 * time.Second)
-	c.send <- message
+	// time.Sleep(2 * time.Second)
+	// c.send <- message
 
 	return nil
 }
@@ -237,10 +238,23 @@ func registerHostClient(client *Client, message *Message) {
 
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
+	if page == nil {
+		page, _ = NewPage(payload.PageName)
+		Pages().Add(page)
+	}
 	// create page if not found
 	page.registerClient(client)
 
-	// TODO - send response
+	responsePayload, _ := json.Marshal(&RegisterClientActionResponsePayload{
+		Error: "",
+	})
+
+	response, _ := json.Marshal(&Message{
+		ID:      message.ID,
+		Payload: responsePayload,
+	})
+
+	client.send <- response
 }
 
 func executeCommandFromHostClient(client *Client, message *Message) {
