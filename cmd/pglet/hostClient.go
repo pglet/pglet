@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 
@@ -20,8 +21,8 @@ type hostClient struct {
 	// active WebSocket connection
 	conn *websocket.Conn
 
-	// clients by client ID
-	clients map[string]*pipeClient
+	// pageSessionClients by "pageName:sessionID"
+	pageSessionClients map[string][]*pipeClient
 
 	// async calls registry
 	calls map[string]chan *json.RawMessage
@@ -36,7 +37,7 @@ type hostClient struct {
 func newHostClient(wsURL string) *hostClient {
 	hc := &hostClient{}
 	hc.wsURL = wsURL
-	hc.clients = make(map[string]*pipeClient)
+	hc.pageSessionClients = make(map[string][]*pipeClient)
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.send = make(chan []byte)
 	hc.done = make(chan bool)
@@ -82,9 +83,9 @@ func (hc *hostClient) readLoop() {
 					delete(hc.calls, message.ID)
 					result <- &message.Payload
 				}
-			} else {
-				// broadcast message
-				// TODO
+			} else if message.Action == page.PageEventFromWebAction {
+				// event
+				hc.broadcastPageEvent(&message.Payload)
 			}
 		} else {
 			log.Printf("Unsupported message received: %s", bytesMessage)
@@ -146,4 +147,36 @@ func (hc *hostClient) call(action string, payload interface{}) *json.RawMessage 
 	// wait for result to arrive
 	// TODO - implement timeout
 	return <-result
+}
+
+func (hc *hostClient) registerPipeClient(pc *pipeClient) {
+	key := getPageSessionKey(pc.pageName, pc.sessionID)
+	clients, ok := hc.pageSessionClients[key]
+	if !ok {
+		clients = make([]*pipeClient, 1)
+	}
+	hc.pageSessionClients[key] = append(clients, pc)
+}
+
+func (hc *hostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
+	// parse event
+	payload := &page.PageEventActionPayload{}
+	err := json.Unmarshal(*rawPayload, payload)
+	if err != nil {
+		return err
+	}
+
+	// iterate through all pipe clients
+	key := getPageSessionKey(payload.PageName, payload.SessionID)
+	clients, ok := hc.pageSessionClients[key]
+	if ok {
+		for _, client := range clients {
+			client.emitEvent(fmt.Sprintf("%s %s", payload.EventName, payload.EventData))
+		}
+	}
+	return nil
+}
+
+func getPageSessionKey(pageName string, sessionID string) string {
+	return fmt.Sprintf("%s:%s", pageName, sessionID)
 }

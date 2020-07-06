@@ -3,19 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"net/url"
 	"os"
-	"os/exec"
-	"time"
-
-	"github.com/gorilla/websocket"
-)
-
-const (
-	apiRoutePrefix      string = "/api"
-	contentRootFolder   string = "./client/build"
-	siteDefaultDocument string = "index.html"
 )
 
 var (
@@ -66,54 +54,10 @@ func runClient() {
 		pipeName, _ := client.connectSharedPage(pageName)
 		fmt.Println(pipeName)
 	} else if appName != "" {
-		pipeName, _ := client.connectAppPage(appName)
-		fmt.Println(pipeName)
-	}
-}
-
-func runClient2() {
-	fmt.Printf("Running in client mode: %s...\n", pageName)
-	u := url.URL{Scheme: "ws", Host: *&serverAddr, Path: "/ws"}
-	log.Printf("connecting to %s", u.String())
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		log.Fatal("dial:", err)
-	}
-	defer c.Close()
-
-	done := make(chan struct{})
-
-	go func() {
-		defer close(done)
-		defer func() {
-			fmt.Println("Closing...")
-		}()
-
+		// continuously wait for new client connections
 		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-			log.Printf("recv: %s", message)
+			pipeName, _ := client.connectAppPage(appName)
+			fmt.Println(pipeName)
 		}
-	}()
-
-	c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Hello from Go: %s", pageName)))
-
-	time.Sleep(5 * time.Second)
-
-	// run proxy
-	execPath, _ := os.Executable()
-	fmt.Println(execPath)
-
-	cmd := exec.Command(execPath, "--session-id=12345")
-	err = cmd.Start()
-
-	if err != nil {
-		log.Fatalln(err)
 	}
-
-	fmt.Println(cmd.Process.Pid)
 }

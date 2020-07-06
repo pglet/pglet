@@ -20,6 +20,7 @@ const (
 type pipeClient struct {
 	id              string
 	pageName        string
+	sessionID       string
 	commandPipeName string
 	eventPipeName   string
 	events          chan string
@@ -27,20 +28,19 @@ type pipeClient struct {
 	done            chan bool
 }
 
-func newPipeClient(pageName string, hc *hostClient) (*pipeClient, error) {
+func newPipeClient(pageName string, sessionID string, hc *hostClient) (*pipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
 	pc := &pipeClient{
 		id:              id,
 		pageName:        pageName,
+		sessionID:       sessionID,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
 		events:          make(chan string),
 		hostClient:      hc,
 	}
-
-	hc.clients[id] = pc
 
 	return pc, nil
 }
@@ -70,14 +70,16 @@ func (pc *pipeClient) startCommandLoop() {
 	defer os.Remove(pc.commandPipeName)
 
 	for {
+		// read next command fro pipeline
 		command := pc.read()
 
 		// TODO send command to hostClient
 		fmt.Print(command)
 
 		result := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandActionRequestPayload{
-			PageName: pc.pageName,
-			Command:  command,
+			PageName:  pc.pageName,
+			SessionID: pc.sessionID,
+			Command:   command,
 		})
 
 		// parse response

@@ -52,11 +52,11 @@ const (
 )
 
 type Client struct {
-	id   string
-	role ClientRole
-	conn *websocket.Conn
-	page *Page
-	send chan []byte
+	id      string
+	role    ClientRole
+	conn    *websocket.Conn
+	session *Session
+	send    chan []byte
 }
 
 type Message struct {
@@ -67,20 +67,30 @@ type Message struct {
 
 type RegisterClientActionRequestPayload struct {
 	PageName string `json:"pageName"`
+	IsApp    bool   `json:"isApp"`
 }
 
 type RegisterClientActionResponsePayload struct {
-	Error string `json:"error"`
+	SessionID string `json:"sessionID"`
+	Error     string `json:"error"`
 }
 
 type PageCommandActionRequestPayload struct {
-	PageName string `json:"pageName"`
-	Command  string `json:"command"`
+	PageName  string `json:"pageName"`
+	SessionID string `json:"sessionID"`
+	Command   string `json:"command"`
 }
 
 type PageCommandActionResponsePayload struct {
 	Result string `json:"result"`
 	Error  string `json:"error"`
+}
+
+type PageEventActionPayload struct {
+	PageName  string `json:"pageName"`
+	SessionID string `json:"sessionID"`
+	EventName string `json:"eventName"`
+	EventData string `json:"eventData"`
 }
 
 type readPumpHandler = func(*Client, []byte) error
@@ -96,7 +106,7 @@ func autoID() string {
 
 func (c *Client) readPump(readHandler readPumpHandler) {
 	defer func() {
-		//c.hub.unregister <- c
+		c.session.unregisterClient(c)
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -232,10 +242,32 @@ func registerWebClient(client *Client, message *Message) {
 
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
-	// create page if not found
-	page.registerClient(client)
 
-	// TODO - send response
+	var session *Session
+
+	if !page.IsApp {
+		// shared page
+		// retrieve zero session
+		session = page.sessions[ZeroSession]
+	} else {
+		// app page
+		// TODO
+	}
+
+	// create page if not found
+	session.registerClient(client)
+
+	responsePayload, _ := json.Marshal(&RegisterClientActionResponsePayload{
+		SessionID: session.ID,
+		Error:     "",
+	})
+
+	response, _ := json.Marshal(&Message{
+		ID:      message.ID,
+		Payload: responsePayload,
+	})
+
+	client.send <- response
 }
 
 func registerHostClient(client *Client, message *Message) {
@@ -249,14 +281,22 @@ func registerHostClient(client *Client, message *Message) {
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
 	if page == nil {
-		page, _ = NewPage(payload.PageName)
+		page = NewPage(payload.PageName, payload.IsApp)
 		Pages().Add(page)
 	}
-	// create page if not found
-	page.registerClient(client)
+
+	// retrieve zero session
+	session := page.GetSession(ZeroSession)
+	if session == nil {
+		session = NewSession(page, ZeroSession)
+		page.AddSession(session)
+	}
+
+	session.registerClient(client)
 
 	responsePayload, _ := json.Marshal(&RegisterClientActionResponsePayload{
-		Error: "",
+		SessionID: session.ID,
+		Error:     "",
 	})
 
 	response, _ := json.Marshal(&Message{
@@ -303,18 +343,4 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 	// TODO
 	// if it's "shared" page - broadcast event to all host clients
 	// if it's "app" page - broadcast event to all host clients, event payload contains web client ID
-}
-
-func webClientHandler() {
-	// read event (click, change, etc.)
-
-	// send event to all subscribed page host clients
-}
-
-func hostClientHandler() {
-	// read command
-
-	// update page structure
-
-	// write update to subscribed web clients
 }

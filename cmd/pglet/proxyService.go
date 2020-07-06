@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/alexflint/go-filemutex"
@@ -55,10 +55,14 @@ func (ps *ProxyService) getHostClient(pageURI string) *hostClient {
 func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
+	pageName := getPageNameFromURI(*pageURI)
+
+	log.Println("Connecting to shared page:", pageName)
 
 	// call server
 	result := hc.call(page.RegisterHostClientAction, &page.RegisterClientActionRequestPayload{
-		PageName: *pageURI,
+		PageName: pageName,
+		IsApp:    false,
 	})
 
 	// parse response
@@ -70,12 +74,15 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 	}
 
 	// create new pipeClient
-	pc, err := newPipeClient(*pageURI, hc)
+	pc, err := newPipeClient(pageName, payload.SessionID, hc)
 	if err != nil {
 		return err
 	}
 
 	pc.start()
+
+	// register pipe client, so it can receive events from pages/sessions
+	hc.registerPipeClient(pc)
 
 	*pipeName = pc.commandPipeName
 
@@ -86,9 +93,37 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
-	hc.send <- []byte("hello!")
+	pageName := getPageNameFromURI(*pageURI)
 
-	*pipeName = fmt.Sprintf("%s", *pageURI)
+	log.Println("Connecting to app page:", pageName)
+
+	// call server
+	result := hc.call(page.RegisterHostClientAction, &page.RegisterClientActionRequestPayload{
+		PageName: pageName,
+		IsApp:    true,
+	})
+
+	// parse response
+	payload := &page.RegisterClientActionResponsePayload{}
+	err := json.Unmarshal(*result, payload)
+
+	if err != nil {
+		log.Fatalln("Error calling ConnectSharedPage:", err)
+	}
+
+	// create new pipeClient
+	pc, err := newPipeClient(pageName, payload.SessionID, hc)
+	if err != nil {
+		return err
+	}
+
+	pc.start()
+
+	// register pipe client, so it can receive events from pages/sessions
+	hc.registerPipeClient(pc)
+
+	*pipeName = pc.commandPipeName
+
 	return nil
 }
 
@@ -128,7 +163,7 @@ func runProxyService() {
 func buildWSEndPointURL(pageURI string) string {
 	u, err := url.Parse(pageURI)
 	if err != nil {
-		log.Fatalln("Cannot parse page URL:", err)
+		log.Fatalln("Cannot parse page URI:", err)
 	}
 
 	u.Scheme = "ws"
@@ -136,4 +171,13 @@ func buildWSEndPointURL(pageURI string) string {
 	u.RawQuery = ""
 
 	return u.String()
+}
+
+func getPageNameFromURI(pageURI string) string {
+	u, err := url.Parse(pageURI)
+	if err != nil {
+		log.Fatalln("Cannot parse page URI:", err)
+	}
+
+	return strings.Trim(u.Path, "/")
 }
