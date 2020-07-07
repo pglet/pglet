@@ -83,7 +83,7 @@ func (hc *hostClient) readLoop() {
 					delete(hc.calls, message.ID)
 					result <- &message.Payload
 				}
-			} else if message.Action == page.PageEventFromWebAction {
+			} else if message.Action == page.PageEventToHostAction {
 				// event
 				hc.broadcastPageEvent(&message.Payload)
 			}
@@ -153,7 +153,7 @@ func (hc *hostClient) registerPipeClient(pc *pipeClient) {
 	key := getPageSessionKey(pc.pageName, pc.sessionID)
 	clients, ok := hc.pageSessionClients[key]
 	if !ok {
-		clients = make([]*pipeClient, 1)
+		clients = make([]*pipeClient, 0, 1)
 	}
 	hc.pageSessionClients[key] = append(clients, pc)
 }
@@ -169,11 +169,14 @@ func (hc *hostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 	// iterate through all pipe clients
 	key := getPageSessionKey(payload.PageName, payload.SessionID)
 	clients, ok := hc.pageSessionClients[key]
+
 	if ok {
 		for _, client := range clients {
-			client.emitEvent(fmt.Sprintf("%s %s", payload.EventName, payload.EventData))
+			client.emitEvent(fmt.Sprintf("%s %s %s",
+				payload.EventTarget, payload.EventName, payload.EventData))
 		}
 	}
+
 	return nil
 }
 

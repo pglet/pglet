@@ -82,7 +82,17 @@ func pageHandler(c *gin.Context) {
 	fmt.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-	c.JSON(http.StatusOK, page.Pages().Get(fullPageName))
+	page := page.Pages().Get(fullPageName)
+	if page == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
+		return
+	}
+	session := page.GetSession(sessionID)
+	if session == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found"})
+		return
+	}
+	c.JSON(http.StatusOK, session)
 }
 
 func removeElementAt(source []int, pos int) []int {

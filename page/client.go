@@ -27,6 +27,9 @@ const (
 
 	// PageEventFromWebAction receives click, change, expand/collapse and other events from browser
 	PageEventFromWebAction = "pageEventFromWeb"
+
+	// PageEventToHostAction redirects events from web to host clients
+	PageEventToHostAction = "pageEventToHost"
 )
 
 const (
@@ -87,10 +90,11 @@ type PageCommandActionResponsePayload struct {
 }
 
 type PageEventActionPayload struct {
-	PageName  string `json:"pageName"`
-	SessionID string `json:"sessionID"`
-	EventName string `json:"eventName"`
-	EventData string `json:"eventData"`
+	PageName    string `json:"pageName"`
+	SessionID   string `json:"sessionID"`
+	EventTarget string `json:"eventTarget"`
+	EventName   string `json:"eventName"`
+	EventData   string `json:"eventData"`
 }
 
 type readPumpHandler = func(*Client, []byte) error
@@ -124,8 +128,7 @@ func (c *Client) readPump(readHandler readPumpHandler) {
 			}
 			break
 		}
-		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		//c.hub.broadcast <- message
+
 		err = readHandler(c, message)
 		if err != nil {
 			log.Printf("error processing message: %v", err)
@@ -225,10 +228,6 @@ func readHandler(c *Client, message []byte) error {
 		processPageEventFromWebClient(c, msg)
 	}
 
-	// echo back
-	// time.Sleep(2 * time.Second)
-	// c.send <- message
-
 	return nil
 }
 
@@ -243,31 +242,37 @@ func registerWebClient(client *Client, message *Message) {
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
 
-	var session *Session
-
-	if !page.IsApp {
-		// shared page
-		// retrieve zero session
-		session = page.sessions[ZeroSession]
-	} else {
-		// app page
-		// TODO
+	response := &RegisterClientActionResponsePayload{
+		SessionID: "",
+		Error:     "",
 	}
 
-	// create page if not found
-	session.registerClient(client)
+	if page == nil {
+		response.Error = "Page not found or access denied"
+	} else {
+		var session *Session
 
-	responsePayload, _ := json.Marshal(&RegisterClientActionResponsePayload{
-		SessionID: session.ID,
-		Error:     "",
-	})
+		if !page.IsApp {
+			// shared page
+			// retrieve zero session
+			session = page.sessions[ZeroSession]
+		} else {
+			// app page
+			// TODO
+		}
 
-	response, _ := json.Marshal(&Message{
+		// create page if not found
+		session.registerClient(client)
+	}
+
+	responsePayload, _ := json.Marshal(response)
+
+	responseMsg, _ := json.Marshal(&Message{
 		ID:      message.ID,
 		Payload: responsePayload,
 	})
 
-	client.send <- response
+	client.send <- responseMsg
 }
 
 func registerHostClient(client *Client, message *Message) {
@@ -339,8 +344,31 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 }
 
 func processPageEventFromWebClient(client *Client, message *Message) {
-	fmt.Println("Page event from browser")
-	// TODO
-	// if it's "shared" page - broadcast event to all host clients
-	// if it's "app" page - broadcast event to all host clients, event payload contains web client ID
+
+	fmt.Println("Page event from browser:", message.Payload,
+		"PageName:", client.session.Page.Name, "SessionID:", client.session.ID)
+
+	payload := new(PageEventActionPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	// add page/session information to payload
+	payload.PageName = client.session.Page.Name
+	payload.SessionID = client.session.ID
+
+	// message to host clients
+	msgPayload, _ := json.Marshal(&payload)
+
+	msg, _ := json.Marshal(&Message{
+		Action:  PageEventToHostAction,
+		Payload: msgPayload,
+	})
+
+	fmt.Println(client.session.clients)
+
+	// re-send events to all connected host clients
+	for _, c := range client.session.clients {
+		if c.role == HostClient {
+			c.send <- msg
+		}
+	}
 }

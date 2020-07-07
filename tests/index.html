@@ -3,9 +3,14 @@
 <head>
 <title>Chat Example</title>
 <script type="text/javascript">
+
+var pageName = "account1/page1";
+
 window.onload = function () {
     var conn;
-    var msg = document.getElementById("msg");
+    var eventName = document.getElementById("eventName");
+    var eventData = document.getElementById("eventData");
+    var eventTarget = document.getElementById("eventTarget");
     var log = document.getElementById("log");
 
     function appendLog(item) {
@@ -20,11 +25,20 @@ window.onload = function () {
         if (!conn) {
             return false;
         }
-        if (!msg.value) {
-            return false;
-        }
-        conn.send(msg.value);
-        msg.value = "";
+
+        // send web client event
+        var msg = JSON.stringify({
+            action: "pageEventFromWeb",
+            payload: {
+                eventTarget: eventTarget.value,
+                eventName: eventName.value,
+                eventData: eventData.value
+            }
+        });
+
+        conn.send(msg);
+        eventName.value = "";
+        eventData.value = "";
         return false;
     };
 
@@ -32,6 +46,16 @@ window.onload = function () {
         conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onopen = function (evt) {
             console.log("Connected");
+
+            // register web client
+            var msg = JSON.stringify({
+                action: "registerWebClient",
+                payload: {
+                    pageName: pageName
+                }
+            });
+
+            conn.send(msg);
         };
         conn.onclose = function (evt) {
             var item = document.createElement("div");
@@ -39,12 +63,8 @@ window.onload = function () {
             appendLog(item);
         };
         conn.onmessage = function (evt) {
-            var messages = evt.data.split('\n');
-            for (var i = 0; i < messages.length; i++) {
-                var item = document.createElement("div");
-                item.innerText = messages[i];
-                appendLog(item);
-            }
+            var message = evt.data;
+            console.log(message);
         };
     } else {
         var item = document.createElement("div");
@@ -94,8 +114,10 @@ body {
 <body>
 <div id="log"></div>
 <form id="form">
+    <input type="text" id="eventTarget" placeholder="eventTarget" />
+    <input type="text" id="eventName" placeholder="eventName" />
+    <input type="text" id="eventData" placeholder="eventData" />
     <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64" autofocus />
 </form>
 </body>
 </html>
