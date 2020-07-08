@@ -271,19 +271,39 @@ func registerWebClient(client *Client, message *Message) {
 			// shared page
 			// retrieve zero session
 			session = page.sessions[ZeroSession]
+
+			log.Printf("Connected to zero session of %s page\n", page.Name)
 		} else {
 			// app page
 			// create new session
 			session = NewSession(page, uuid.New().String())
 			page.AddSession(session)
+
+			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
 
 		client.registerSession(session)
 
 		if page.IsApp {
 			// pick connected host client from page pool and notify about new session created
-			// TODO
+			sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+				PageName:  page.Name,
+				SessionID: session.ID,
+			})
 
+			msg, _ := json.Marshal(&Message{
+				Action:  SessionCreatedAction,
+				Payload: sessionCreatedPayloadRaw,
+			})
+
+			// TODO
+			// pick first host client for now
+			for c := range page.clients {
+				if c.role == HostClient {
+					c.registerSession(session)
+					c.send <- msg
+				}
+			}
 		}
 	}
 

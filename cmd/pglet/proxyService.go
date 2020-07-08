@@ -111,8 +111,11 @@ func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error 
 		log.Fatalln("Error calling ConnectSharedPage:", err)
 	}
 
+	// wait for new session
+	sessionID := <-hc.pageNewSessions(pageName)
+
 	// create new pipeClient
-	pc, err := newPipeClient(pageName, payload.SessionID, hc)
+	pc, err := newPipeClient(pageName, sessionID, hc)
 	if err != nil {
 		return err
 	}
@@ -179,5 +182,5 @@ func getPageNameFromURI(pageURI string) string {
 		log.Fatalln("Cannot parse page URI:", err)
 	}
 
-	return strings.Trim(u.Path, "/")
+	return strings.ToLower(strings.Trim(u.Path, "/"))
 }

@@ -29,6 +29,7 @@ type hostClient struct {
 
 	// new page sessions
 	newSessions map[string]chan string
+	nsLock      sync.RWMutex
 
 	// send channel
 	send chan []byte
@@ -43,6 +44,7 @@ func newHostClient(wsURL string) *hostClient {
 	hc.pageSessionClients = make(map[string][]*pipeClient)
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.newSessions = make(map[string]chan string)
+
 	hc.send = make(chan []byte)
 	hc.done = make(chan bool)
 	return hc
@@ -90,6 +92,9 @@ func (hc *hostClient) readLoop() {
 			} else if message.Action == page.PageEventToHostAction {
 				// event
 				hc.broadcastPageEvent(&message.Payload)
+			} else if message.Action == page.SessionCreatedAction {
+				// new session
+				hc.notifySession(&message.Payload)
 			}
 		} else {
 			log.Printf("Unsupported message received: %s", bytesMessage)
@@ -186,4 +191,33 @@ func (hc *hostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 
 func getPageSessionKey(pageName string, sessionID string) string {
 	return fmt.Sprintf("%s:%s", pageName, sessionID)
+}
+
+func (hc *hostClient) notifySession(rawPayload *json.RawMessage) error {
+
+	payload := new(page.SessionCreatedPayload)
+	json.Unmarshal(*rawPayload, payload)
+
+	log.Printf("Notify %s subscribers about new session %s\n", payload.PageName, payload.SessionID)
+	select {
+	case hc.pageNewSessions(payload.PageName) <- payload.SessionID:
+		// Event sent to subscriber
+	default:
+		// No event listeners
+	}
+
+	return nil
+}
+
+func (hc *hostClient) pageNewSessions(pageName string) chan string {
+	hc.nsLock.Lock()
+	defer hc.nsLock.Unlock()
+
+	var ns chan string
+	ns, ok := hc.newSessions[pageName]
+	if !ok {
+		ns = make(chan string)
+		hc.newSessions[pageName] = ns
+	}
+	return ns
 }
