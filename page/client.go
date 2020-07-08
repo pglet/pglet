@@ -55,11 +55,12 @@ const (
 )
 
 type Client struct {
-	id      string
-	role    ClientRole
-	conn    *websocket.Conn
-	session *Session
-	send    chan []byte
+	id       string
+	role     ClientRole
+	conn     *websocket.Conn
+	sessions map[*Session]bool
+	pages    map[*Page]bool
+	send     chan []byte
 }
 
 type Message struct {
@@ -108,9 +109,19 @@ func autoID() string {
 	return uuid.New().String()
 }
 
+func newClient(conn *websocket.Conn) *Client {
+	return &Client{
+		id:       autoID(),
+		conn:     conn,
+		sessions: make(map[*Session]bool),
+		pages:    make(map[*Page]bool),
+		send:     make(chan []byte, 256),
+	}
+}
+
 func (c *Client) readPump(readHandler readPumpHandler) {
 	defer func() {
-		c.session.unregisterClient(c)
+		c.unregister()
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -190,11 +201,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{
-		id:   autoID(),
-		conn: conn,
-		send: make(chan []byte, 256),
-	}
+	client := newClient(conn)
 
 	fmt.Printf("New Client %s is connected, total: %d\n", client.id, 0)
 
@@ -258,11 +265,18 @@ func registerWebClient(client *Client, message *Message) {
 			session = page.sessions[ZeroSession]
 		} else {
 			// app page
-			// TODO
+			// create new session
+			session = NewSession(page, uuid.New().String())
+			page.AddSession(session)
 		}
 
-		// create page if not found
-		session.registerClient(client)
+		client.registerSession(session)
+
+		if page.IsApp {
+			// pick connected host client from the pool and notify about new session created
+			// TODO
+
+		}
 	}
 
 	responsePayload, _ := json.Marshal(response)
@@ -280,33 +294,40 @@ func registerHostClient(client *Client, message *Message) {
 	payload := new(RegisterClientActionRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
+	responsePayload := &RegisterClientActionResponsePayload{
+		SessionID: "",
+		Error:     "",
+	}
+
 	// assign client role
 	client.role = HostClient
 
-	// subscribe as host client
+	// retrieve page and then create if not exists
 	page := Pages().Get(payload.PageName)
 	if page == nil {
 		page = NewPage(payload.PageName, payload.IsApp)
 		Pages().Add(page)
 	}
 
-	// retrieve zero session
-	session := page.GetSession(ZeroSession)
-	if session == nil {
-		session = NewSession(page, ZeroSession)
-		page.AddSession(session)
+	if !page.IsApp {
+		// retrieve zero session
+		session := page.GetSession(ZeroSession)
+		if session == nil {
+			session = NewSession(page, ZeroSession)
+			page.AddSession(session)
+		}
+		client.registerSession(session)
+		responsePayload.SessionID = session.ID
+	} else {
+		// register host client as an app server
+		client.registerPage(page)
 	}
 
-	session.registerClient(client)
-
-	responsePayload, _ := json.Marshal(&RegisterClientActionResponsePayload{
-		SessionID: session.ID,
-		Error:     "",
-	})
+	responsePayloadRaw, _ := json.Marshal(responsePayload)
 
 	response, _ := json.Marshal(&Message{
 		ID:      message.ID,
-		Payload: responsePayload,
+		Payload: responsePayloadRaw,
 	})
 
 	client.send <- response
@@ -345,15 +366,22 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 
 func processPageEventFromWebClient(client *Client, message *Message) {
 
+	// web client can have only one session assigned
+	var session *Session
+	for s := range client.sessions {
+		session = s
+		break
+	}
+
 	fmt.Println("Page event from browser:", message.Payload,
-		"PageName:", client.session.Page.Name, "SessionID:", client.session.ID)
+		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
 	payload := new(PageEventActionPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// add page/session information to payload
-	payload.PageName = client.session.Page.Name
-	payload.SessionID = client.session.ID
+	payload.PageName = session.Page.Name
+	payload.SessionID = session.ID
 
 	// message to host clients
 	msgPayload, _ := json.Marshal(&payload)
@@ -363,12 +391,32 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 		Payload: msgPayload,
 	})
 
-	fmt.Println(client.session.clients)
-
 	// re-send events to all connected host clients
-	for _, c := range client.session.clients {
+	for c := range session.clients {
 		if c.role == HostClient {
 			c.send <- msg
 		}
+	}
+}
+
+func (c *Client) registerPage(page *Page) {
+	page.registerClient(c)
+	c.pages[page] = true
+}
+
+func (c *Client) registerSession(session *Session) {
+	session.registerClient(c)
+	c.sessions[session] = true
+}
+
+func (c *Client) unregister() {
+	// unregister from all sessions
+	for session := range c.sessions {
+		session.unregisterClient(c)
+	}
+
+	// unregister from all pages
+	for page := range c.pages {
+		page.unregisterClient(c)
 	}
 }

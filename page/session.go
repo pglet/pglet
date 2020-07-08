@@ -18,7 +18,7 @@ type Session struct {
 	ID            string             `json:"id"`
 	Controls      map[string]Control `json:"controls"`
 	nextControlID int
-	clients       map[string]*Client
+	clients       map[*Client]bool
 	clientsMutex  sync.RWMutex
 }
 
@@ -29,7 +29,7 @@ func NewSession(page *Page, id string) *Session {
 	s.ID = id
 	s.Controls = make(map[string]Control)
 	s.AddControl(NewControl("Page", "", s.NextControlID()))
-	s.clients = make(map[string]*Client)
+	s.clients = make(map[*Client]bool)
 	return s
 }
 
@@ -71,11 +71,12 @@ func (session *Session) registerClient(client *Client) {
 	session.clientsMutex.Lock()
 	defer session.clientsMutex.Unlock()
 
-	log.Printf("Registering %v client %s to %s:%s",
-		client.role, client.id, session.Page.Name, session.ID)
+	if _, ok := session.clients[client]; !ok {
+		log.Printf("Registering %v client %s to %s:%s",
+			client.role, client.id, session.Page.Name, session.ID)
 
-	session.clients[client.id] = client
-	client.session = session
+		session.clients[client] = true
+	}
 }
 
 func (session *Session) unregisterClient(client *Client) {
@@ -85,5 +86,5 @@ func (session *Session) unregisterClient(client *Client) {
 	log.Printf("Unregistering %v client %s from %s:%s",
 		client.role, client.id, session.Page.Name, session.ID)
 
-	delete(session.clients, client.id)
+	delete(session.clients, client)
 }
