@@ -27,6 +27,9 @@ type hostClient struct {
 	// async calls registry
 	calls map[string]chan *json.RawMessage
 
+	// new page sessions
+	newSessions map[string]chan string
+
 	// send channel
 	send chan []byte
 
@@ -39,6 +42,7 @@ func newHostClient(wsURL string) *hostClient {
 	hc.wsURL = wsURL
 	hc.pageSessionClients = make(map[string][]*pipeClient)
 	hc.calls = make(map[string]chan *json.RawMessage)
+	hc.newSessions = make(map[string]chan string)
 	hc.send = make(chan []byte)
 	hc.done = make(chan bool)
 	return hc
@@ -160,7 +164,7 @@ func (hc *hostClient) registerPipeClient(pc *pipeClient) {
 
 func (hc *hostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 	// parse event
-	payload := &page.PageEventActionPayload{}
+	payload := &page.PageEventPayload{}
 	err := json.Unmarshal(*rawPayload, payload)
 	if err != nil {
 		return err

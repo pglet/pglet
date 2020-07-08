@@ -76,14 +76,14 @@ func (pc *pipeClient) startCommandLoop() {
 		// TODO send command to hostClient
 		fmt.Print(command)
 
-		result := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandActionRequestPayload{
+		result := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 			PageName:  pc.pageName,
 			SessionID: pc.sessionID,
 			Command:   command,
 		})
 
 		// parse response
-		payload := &page.PageCommandActionResponsePayload{}
+		payload := &page.PageCommandResponsePayload{}
 		err := json.Unmarshal(*result, payload)
 
 		if err != nil {

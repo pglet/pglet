@@ -22,6 +22,9 @@ const (
 	// RegisterHostClientAction registers WS client as host (script) client
 	RegisterHostClientAction = "registerHostClient"
 
+	// SessionCreatedAction notifies host clients about new sessions
+	SessionCreatedAction = "sessionCreated"
+
 	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
 	PageCommandFromHostAction = "pageCommandFromHost"
 
@@ -69,28 +72,33 @@ type Message struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-type RegisterClientActionRequestPayload struct {
+type RegisterClientRequestPayload struct {
 	PageName string `json:"pageName"`
 	IsApp    bool   `json:"isApp"`
 }
 
-type RegisterClientActionResponsePayload struct {
+type RegisterClientResponsePayload struct {
 	SessionID string `json:"sessionID"`
 	Error     string `json:"error"`
 }
 
-type PageCommandActionRequestPayload struct {
+type SessionCreatedPayload struct {
+	PageName  string `json:"pageName"`
+	SessionID string `json:"sessionID"`
+}
+
+type PageCommandRequestPayload struct {
 	PageName  string `json:"pageName"`
 	SessionID string `json:"sessionID"`
 	Command   string `json:"command"`
 }
 
-type PageCommandActionResponsePayload struct {
+type PageCommandResponsePayload struct {
 	Result string `json:"result"`
 	Error  string `json:"error"`
 }
 
-type PageEventActionPayload struct {
+type PageEventPayload struct {
 	PageName    string `json:"pageName"`
 	SessionID   string `json:"sessionID"`
 	EventTarget string `json:"eventTarget"`
@@ -240,7 +248,7 @@ func readHandler(c *Client, message []byte) error {
 
 func registerWebClient(client *Client, message *Message) {
 	fmt.Println("Registering as web client")
-	payload := new(RegisterClientActionRequestPayload)
+	payload := new(RegisterClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// assign client role
@@ -249,7 +257,7 @@ func registerWebClient(client *Client, message *Message) {
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
 
-	response := &RegisterClientActionResponsePayload{
+	response := &RegisterClientResponsePayload{
 		SessionID: "",
 		Error:     "",
 	}
@@ -273,7 +281,7 @@ func registerWebClient(client *Client, message *Message) {
 		client.registerSession(session)
 
 		if page.IsApp {
-			// pick connected host client from the pool and notify about new session created
+			// pick connected host client from page pool and notify about new session created
 			// TODO
 
 		}
@@ -291,10 +299,10 @@ func registerWebClient(client *Client, message *Message) {
 
 func registerHostClient(client *Client, message *Message) {
 	fmt.Println("Registering as host client")
-	payload := new(RegisterClientActionRequestPayload)
+	payload := new(RegisterClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
-	responsePayload := &RegisterClientActionResponsePayload{
+	responsePayload := &RegisterClientResponsePayload{
 		SessionID: "",
 		Error:     "",
 	}
@@ -336,7 +344,7 @@ func registerHostClient(client *Client, message *Message) {
 func executeCommandFromHostClient(client *Client, message *Message) {
 	fmt.Println("Page command from host client")
 
-	payload := new(PageCommandActionRequestPayload)
+	payload := new(PageCommandRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// process command
@@ -344,7 +352,7 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 	fmt.Println("Command for page:", payload.PageName)
 
 	// send response
-	responsePayload, _ := json.Marshal(&PageCommandActionResponsePayload{
+	responsePayload, _ := json.Marshal(&PageCommandResponsePayload{
 		Result: "Good",
 		Error:  "",
 	})
@@ -376,7 +384,7 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 	fmt.Println("Page event from browser:", message.Payload,
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
-	payload := new(PageEventActionPayload)
+	payload := new(PageEventPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// add page/session information to payload
