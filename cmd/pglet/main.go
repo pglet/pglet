@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -51,12 +52,18 @@ func runClient() {
 	client.start()
 
 	if pageName != "" {
-		pipeName, _ := client.connectSharedPage(pageName)
+		pipeName, err := client.connectSharedPage(pageName)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		fmt.Println(pipeName)
 	} else if appName != "" {
 		// continuously wait for new client connections
 		for {
-			pipeName, _ := client.connectAppPage(appName)
+			pipeName, err := client.connectAppPage(appName)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			fmt.Println(pipeName)
 		}
 	}

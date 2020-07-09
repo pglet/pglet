@@ -158,6 +158,19 @@ func (hc *hostClient) call(action string, payload interface{}) *json.RawMessage 
 	return <-result
 }
 
+func (hc *hostClient) callAndForget(action string, payload interface{}) {
+
+	// serialize payload
+	jsonPayload, _ := json.Marshal(payload)
+	msg, _ := json.Marshal(&page.Message{
+		Action:  action,
+		Payload: jsonPayload,
+	})
+
+	// send message
+	hc.send <- msg
+}
+
 func (hc *hostClient) registerPipeClient(pc *pipeClient) {
 	key := getPageSessionKey(pc.pageName, pc.sessionID)
 	clients, ok := hc.pageSessionClients[key]

@@ -58,25 +58,25 @@ func (pc *pipeClient) start() error {
 		return err
 	}
 
-	go pc.startCommandLoop()
-	go pc.startEventLoop()
+	go pc.commandLoop()
+	go pc.eventLoop()
 
 	return nil
 }
 
-func (pc *pipeClient) startCommandLoop() {
+func (pc *pipeClient) commandLoop() {
 	log.Println("Starting command loop...")
 
 	defer os.Remove(pc.commandPipeName)
 
 	for {
-		// read next command fro pipeline
+		// read next command from pipeline
 		command := pc.read()
 
 		// TODO send command to hostClient
-		fmt.Print(command)
+		log.Println("Send command:", command)
 
-		result := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+		rawResult := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 			PageName:  pc.pageName,
 			SessionID: pc.sessionID,
 			Command:   command,
@@ -84,14 +84,19 @@ func (pc *pipeClient) startCommandLoop() {
 
 		// parse response
 		payload := &page.PageCommandResponsePayload{}
-		err := json.Unmarshal(*result, payload)
+		err := json.Unmarshal(*rawResult, payload)
 
 		if err != nil {
-			log.Fatalln("Error calling PageCommandFromHostAction:", err)
+			log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
 		}
 
-		// reply back to pipe with command results
-		pc.write(fmt.Sprintf("%s\n", payload.Result))
+		// save command results
+		result := payload.Result
+		if payload.Error != "" {
+			result = fmt.Sprintf("error %s", payload.Error)
+		}
+
+		pc.writeResult(result)
 	}
 }
 
@@ -122,13 +127,16 @@ func (pc *pipeClient) read() string {
 	return ""
 }
 
-func (pc *pipeClient) write(s string) {
+func (pc *pipeClient) writeResult(result string) {
+	log.Println("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer output.Close()
-	output.Write([]byte(s))
+	log.Println("Write result:", result)
+
+	output.WriteString(fmt.Sprintf("%s\n", result))
+	output.Close()
 }
 
 func (pc *pipeClient) emitEvent(evt string) {
@@ -140,7 +148,7 @@ func (pc *pipeClient) emitEvent(evt string) {
 	}
 }
 
-func (pc *pipeClient) startEventLoop() {
+func (pc *pipeClient) eventLoop() {
 
 	log.Println("Starting event loop...")
 

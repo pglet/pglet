@@ -33,6 +33,11 @@ func NewSession(page *Page, id string) *Session {
 	return s
 }
 
+func (session *Session) ExecuteCommand(command string) (result string, err error) {
+	result = "a\nb\n" + command
+	return
+}
+
 // NextControlID returns the next auto-generated control ID
 func (session *Session) NextControlID() string {
 	session.Lock()

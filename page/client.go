@@ -127,7 +127,7 @@ func newClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c *Client) readPump(readHandler readPumpHandler) {
+func (c *Client) readLoop(readHandler readPumpHandler) {
 	defer func() {
 		c.unregister()
 		c.conn.Close()
@@ -156,7 +156,7 @@ func (c *Client) readPump(readHandler readPumpHandler) {
 	}
 }
 
-func (c *Client) writePump() {
+func (c *Client) writeLoop() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -213,10 +213,9 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("New Client %s is connected, total: %d\n", client.id, 0)
 
-	// register client
-
-	go client.readPump(readHandler)
-	go client.writePump()
+	// start read/write loops
+	go client.readLoop(readHandler)
+	go client.writeLoop()
 }
 
 func readHandler(c *Client, message []byte) error {
@@ -369,27 +368,68 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 
 	// process command
 	// TODO
-	fmt.Println("Command for page:", payload.PageName)
+	log.Printf("Command for page %s session %s: %s\n",
+		payload.PageName, payload.SessionID, payload.Command)
 
-	// send response
-	responsePayload, _ := json.Marshal(&PageCommandResponsePayload{
-		Result: "Good",
+	responsePayload := &PageCommandResponsePayload{
+		Result: "",
 		Error:  "",
+	}
+
+	// retrieve page and session
+	page := Pages().Get(payload.PageName)
+	if page != nil {
+		session := page.GetSession(payload.SessionID)
+		if session != nil {
+			// process command
+			result, err := session.ExecuteCommand(payload.Command)
+			responsePayload.Result = result
+			if err == nil {
+				// broadcast command to all connected web clients
+				go client.broadcastCommandToWebClients(session, payload.Command)
+			} else {
+				responsePayload.Error = fmt.Sprint(err)
+			}
+		} else {
+			responsePayload.Error = "Session not found or access denied"
+		}
+	} else {
+		responsePayload.Error = "Page not found or access denied"
+	}
+
+	if responsePayload.Result != "" || responsePayload.Error != "" {
+		// send response
+		responsePayloadRaw, _ := json.Marshal(responsePayload)
+
+		response, _ := json.Marshal(&Message{
+			ID:      message.ID,
+			Payload: responsePayloadRaw,
+		})
+
+		client.send <- response
+	}
+}
+
+func (client *Client) broadcastCommandToWebClients(session *Session, command string) {
+
+	msgPayload := &PageCommandRequestPayload{
+		PageName:  session.Page.Name,
+		SessionID: session.ID,
+		Command:   command,
+	}
+
+	msgPayloadRaw, _ := json.Marshal(msgPayload)
+
+	msg, _ := json.Marshal(&Message{
+		Action:  PageCommandFromHostAction,
+		Payload: msgPayloadRaw,
 	})
 
-	response, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Payload: responsePayload,
-	})
-
-	client.send <- response
-
-	// TODO
-	// parse command
-	// send response if parsing error
-	// update page tree
-	// if it's "shared" page - broadcast page change event to all web clients
-	// if it's "app" page - send page change event to a web client with matching web client ID
+	for c := range session.clients {
+		if c.role == WebClient {
+			c.send <- msg
+		}
+	}
 }
 
 func processPageEventFromWebClient(client *Client, message *Message) {

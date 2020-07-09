@@ -4,6 +4,14 @@ import (
 	"encoding/json"
 )
 
+const (
+	Row     string = "Row"
+	Col     string = "Col"
+	Label   string = "Label"
+	Textbox string = "Textbox"
+	Button  string = "Button"
+)
+
 // Control is an element of a page.
 type Control map[string]interface{}
 
