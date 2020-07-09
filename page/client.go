@@ -88,9 +88,9 @@ type SessionCreatedPayload struct {
 }
 
 type PageCommandRequestPayload struct {
-	PageName  string `json:"pageName"`
-	SessionID string `json:"sessionID"`
-	Command   string `json:"command"`
+	PageName  string  `json:"pageName"`
+	SessionID string  `json:"sessionID"`
+	Command   Command `json:"command"`
 }
 
 type PageCommandResponsePayload struct {
@@ -410,7 +410,7 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 	}
 }
 
-func (client *Client) broadcastCommandToWebClients(session *Session, command string) {
+func (client *Client) broadcastCommandToWebClients(session *Session, command Command) {
 
 	msgPayload := &PageCommandRequestPayload{
 		PageName:  session.Page.Name,

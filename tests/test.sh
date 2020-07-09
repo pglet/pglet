@@ -1,19 +1,24 @@
-echo "command1
-command2" > $1
+echo "get footer:link value" > $1
 
+IFS=''
 while read -r line; do
     echo $line
 done <"$1"
 
 
-echo "command3
-command4" > $1
+echo "add to=\"footer\" controls='
+row
+  col
+row
+  col'" > $1
 
 #sleep 2
 
 while read -r line; do
     echo $line
 done <"$1"
+
+echo "quit" > $1
 
 
 # while true

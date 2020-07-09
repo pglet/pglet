@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const (
@@ -33,8 +34,9 @@ func NewSession(page *Page, id string) *Session {
 	return s
 }
 
-func (session *Session) ExecuteCommand(command string) (result string, err error) {
-	result = "a\nb\n" + command
+func (session *Session) ExecuteCommand(command Command) (result string, err error) {
+	result = fmt.Sprintf("a\nb\n%+v", command)
+	time.Sleep(2 * time.Second)
 	return
 }
 

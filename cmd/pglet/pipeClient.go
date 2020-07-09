@@ -71,20 +71,30 @@ func (pc *pipeClient) commandLoop() {
 
 	for {
 		// read next command from pipeline
-		command := pc.read()
+		cmdText := pc.read()
 
-		// TODO send command to hostClient
-		log.Println("Send command:", command)
+		// parse command
+		command, err := page.ParseCommand(cmdText)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Printf("Send command: %+v", command)
+
+		if command.Name == page.Quit {
+			pc.close()
+			return
+		}
 
 		rawResult := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 			PageName:  pc.pageName,
 			SessionID: pc.sessionID,
-			Command:   command,
+			Command:   *command,
 		})
 
 		// parse response
 		payload := &page.PageCommandResponsePayload{}
-		err := json.Unmarshal(*rawResult, payload)
+		err = json.Unmarshal(*rawResult, payload)
 
 		if err != nil {
 			log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
@@ -170,6 +180,12 @@ func (pc *pipeClient) eventLoop() {
 			}
 		}
 	}
+}
+
+func (pc *pipeClient) close() {
+	log.Println("Closing pipe client...")
+
+	pc.hostClient.unregisterPipeClient(pc)
 }
 
 func createFifo(filename string) (err error) {
