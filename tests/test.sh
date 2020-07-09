@@ -1,5 +1,7 @@
 echo "get footer:link value" > $1
 
+echo "before read line"
+
 IFS=''
 while read -r line; do
     echo $line
@@ -12,13 +14,14 @@ row
 row
   col'" > $1
 
-#sleep 2
+echo "before read line"
+sleep 1
 
 while read -r line; do
     echo $line
 done <"$1"
 
-echo "quit" > $1
+#echo "quit" > $1
 
 
 # while true

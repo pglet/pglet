@@ -71,7 +71,7 @@ func ParseCommand(cmdText string) (*Command, error) {
 			} else if strings.HasPrefix(value, "'") {
 				value = strings.Trim(value, "'")
 			}
-			command.Attrs[key] = value
+			command.Attrs[strings.ToLower(key)] = value
 		}
 		order++
 	}

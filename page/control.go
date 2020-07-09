@@ -6,10 +6,11 @@ import (
 
 const (
 	Row     string = "Row"
-	Col     string = "Col"
-	Label   string = "Label"
-	Textbox string = "Textbox"
-	Button  string = "Button"
+	Col            = "Col"
+	Label          = "Label"
+	Textbox        = "Textbox"
+	Link           = "Link"
+	Button         = "Button"
 )
 
 // Control is an element of a page.

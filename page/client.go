@@ -366,11 +366,6 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 	payload := new(PageCommandRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
-	// process command
-	// TODO
-	log.Printf("Command for page %s session %s: %s\n",
-		payload.PageName, payload.SessionID, payload.Command)
-
 	responsePayload := &PageCommandResponsePayload{
 		Result: "",
 		Error:  "",
@@ -384,10 +379,7 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 			// process command
 			result, err := session.ExecuteCommand(payload.Command)
 			responsePayload.Result = result
-			if err == nil {
-				// broadcast command to all connected web clients
-				go client.broadcastCommandToWebClients(session, payload.Command)
-			} else {
+			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)
 			}
 		} else {
@@ -397,39 +389,15 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 		responsePayload.Error = "Page not found or access denied"
 	}
 
-	if responsePayload.Result != "" || responsePayload.Error != "" {
-		// send response
-		responsePayloadRaw, _ := json.Marshal(responsePayload)
+	// send response
+	responsePayloadRaw, _ := json.Marshal(responsePayload)
 
-		response, _ := json.Marshal(&Message{
-			ID:      message.ID,
-			Payload: responsePayloadRaw,
-		})
-
-		client.send <- response
-	}
-}
-
-func (client *Client) broadcastCommandToWebClients(session *Session, command Command) {
-
-	msgPayload := &PageCommandRequestPayload{
-		PageName:  session.Page.Name,
-		SessionID: session.ID,
-		Command:   command,
-	}
-
-	msgPayloadRaw, _ := json.Marshal(msgPayload)
-
-	msg, _ := json.Marshal(&Message{
-		Action:  PageCommandFromHostAction,
-		Payload: msgPayloadRaw,
+	response, _ := json.Marshal(&Message{
+		ID:      message.ID,
+		Payload: responsePayloadRaw,
 	})
 
-	for c := range session.clients {
-		if c.role == WebClient {
-			c.send <- msg
-		}
-	}
+	client.send <- response
 }
 
 func processPageEventFromWebClient(client *Client, message *Message) {
