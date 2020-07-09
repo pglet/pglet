@@ -33,6 +33,8 @@ const (
 
 	// PageEventToHostAction redirects events from web to host clients
 	PageEventToHostAction = "pageEventToHost"
+
+	AddPageControlsAction = "addPageControls"
 )
 
 const (
@@ -64,12 +66,6 @@ type Client struct {
 	sessions map[*Session]bool
 	pages    map[*Page]bool
 	send     chan []byte
-}
-
-type Message struct {
-	ID      string          `json:"id"`
-	Action  string          `json:"action"`
-	Payload json.RawMessage `json:"payload"`
 }
 
 type RegisterClientRequestPayload struct {
@@ -104,6 +100,10 @@ type PageEventPayload struct {
 	EventTarget string `json:"eventTarget"`
 	EventName   string `json:"eventName"`
 	EventData   string `json:"eventData"`
+}
+
+type AddPageControlsPayload struct {
+	Controls []*Control `json:"controls"`
 }
 
 type readPumpHandler = func(*Client, []byte) error

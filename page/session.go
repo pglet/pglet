@@ -2,14 +2,17 @@ package page
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	"strconv"
+	"strings"
 	"sync"
 )
 
 const (
-	ZeroSession string = ""
+	ZeroSession         string = ""
+	ControlAutoIDPrefix        = "_"
+	ControlIDSeparator         = ":"
 )
 
 type commandHandler = func(*Session, Command) (string, error)
@@ -29,9 +32,9 @@ var (
 // Session represents an instance of a page.
 type Session struct {
 	sync.RWMutex
-	Page          *Page              `json:"page"`
-	ID            string             `json:"id"`
-	Controls      map[string]Control `json:"controls"`
+	Page          *Page               `json:"page"`
+	ID            string              `json:"id"`
+	Controls      map[string]*Control `json:"controls"`
 	nextControlID int
 	clients       map[*Client]bool
 	clientsMutex  sync.RWMutex
@@ -42,8 +45,8 @@ func NewSession(page *Page, id string) *Session {
 	s := &Session{}
 	s.Page = page
 	s.ID = id
-	s.Controls = make(map[string]Control)
-	s.AddControl(NewControl("Page", "", s.NextControlID()))
+	s.Controls = make(map[string]*Control)
+	s.AddControl(NewControl("page", "", s.NextControlID()))
 	s.clients = make(map[*Client]bool)
 	return s
 }
@@ -66,10 +69,53 @@ func (session *Session) ExecuteCommand(command Command) (result string, err erro
 
 func add(session *Session, command Command) (result string, err error) {
 
-	// TODO - implement command
+	controlsFragment := command.Attrs["controls"]
+
+	// first value must be control type
+	if len(command.Values) == 0 && controlsFragment == "" {
+		return "", errors.New("Control type is not specified")
+	}
+
+	controlType := command.Values[0]
+
+	// parent ID
+	parentID := command.Attrs["to"]
+
+	if parentID == "" {
+		parentID = getPageID()
+	}
+
+	// control ID
+	id := command.Attrs["id"]
+	if id == "" {
+		id = session.NextControlID()
+	} else {
+		// generate unique ID
+		parentIDs := getControlParentIDs(parentID)
+		id = strings.Join(append(parentIDs, id), ControlIDSeparator)
+	}
+
+	ctrl := NewControl(controlType, parentID, id)
+
+	for k, v := range command.Attrs {
+		if !IsSystemAttr(k) {
+			ctrl.SetAttr(k, v)
+		}
+	}
+
+	session.AddControl(ctrl)
+
+	// output page
+	pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
+	log.Println(string(pJSON))
+
+	// update controls of all connected web cliens
+	msg := NewMessage(AddPageControlsAction, &AddPageControlsPayload{
+		Controls: []*Control{ctrl},
+	})
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(command)
+	go session.broadcastCommandToWebClients(msg)
 	return "", nil
 }
 
@@ -78,7 +124,7 @@ func set(session *Session, command Command) (result string, err error) {
 	// TODO - implement command
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(command)
+	//go session.broadcastCommandToWebClients(command)
 	return "", nil
 }
 
@@ -94,7 +140,7 @@ func insert(session *Session, command Command) (result string, err error) {
 	// TODO - implement command
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(command)
+	//go session.broadcastCommandToWebClients(command)
 	return "", nil
 }
 
@@ -103,7 +149,7 @@ func clean(session *Session, command Command) (result string, err error) {
 	// TODO - implement command
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(command)
+	//go session.broadcastCommandToWebClients(command)
 	return "", nil
 }
 
@@ -112,7 +158,7 @@ func remove(session *Session, command Command) (result string, err error) {
 	// TODO - implement command
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(command)
+	//go session.broadcastCommandToWebClients(command)
 	return "", nil
 }
 
@@ -120,13 +166,13 @@ func remove(session *Session, command Command) (result string, err error) {
 func (session *Session) NextControlID() string {
 	session.Lock()
 	defer session.Unlock()
-	nextID := strconv.Itoa(session.nextControlID)
+	nextID := fmt.Sprintf("%s%d", ControlAutoIDPrefix, session.nextControlID)
 	session.nextControlID++
 	return nextID
 }
 
 // AddControl adds a control to a page
-func (session *Session) AddControl(ctl Control) error {
+func (session *Session) AddControl(ctl *Control) error {
 	// find parent
 	parentID := ctl.ParentID()
 	if parentID != "" {
@@ -150,24 +196,33 @@ func (session *Session) AddControl(ctl Control) error {
 	return nil
 }
 
-func (session *Session) broadcastCommandToWebClients(command Command) {
-
-	msgPayload := &PageCommandRequestPayload{
-		PageName:  session.Page.Name,
-		SessionID: session.ID,
-		Command:   command,
+func getControlParentIDs(parentID string) []string {
+	var result []string
+	result = make([]string, 0)
+	idParts := strings.Split(parentID, ControlIDSeparator)
+	for _, idPart := range idParts {
+		if !isAutoID(idPart) {
+			result = append(result, idPart)
+		}
 	}
+	return result
+}
 
-	msgPayloadRaw, _ := json.Marshal(msgPayload)
+func getPageID() string {
+	return fmt.Sprintf("%s%d", ControlAutoIDPrefix, 0)
+}
 
-	msg, _ := json.Marshal(&Message{
-		Action:  PageCommandFromHostAction,
-		Payload: msgPayloadRaw,
-	})
+func isAutoID(id string) bool {
+	return strings.HasPrefix(id, ControlAutoIDPrefix)
+}
+
+func (session *Session) broadcastCommandToWebClients(msg *Message) {
+
+	serializedMsg, _ := json.Marshal(msg)
 
 	for c := range session.clients {
 		if c.role == WebClient {
-			c.send <- msg
+			c.send <- serializedMsg
 		}
 	}
 }

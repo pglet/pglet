@@ -38,8 +38,9 @@ var (
 )
 
 type Command struct {
-	Name  string // mandatory command name
-	Attrs map[string]string
+	Name   string // mandatory command name
+	Values []string
+	Attrs  map[string]string
 }
 
 func ParseCommand(cmdText string) (*Command, error) {
@@ -47,7 +48,8 @@ func ParseCommand(cmdText string) (*Command, error) {
 	matches := re.FindAllSubmatch([]byte(cmdText), -1)
 
 	command := &Command{
-		Attrs: make(map[string]string),
+		Attrs:  make(map[string]string),
+		Values: make([]string, 0),
 	}
 
 	order := 1
@@ -64,6 +66,9 @@ func ParseCommand(cmdText string) (*Command, error) {
 			if !utils.ContainsString(supportedCommands, command.Name) {
 				return nil, fmt.Errorf("Unknown command: %s", command.Name)
 			}
+		} else if value == "" {
+			// bare value
+			command.Values = append(command.Values, key)
 		} else {
 			// attr
 			if strings.HasPrefix(value, "\"") {
