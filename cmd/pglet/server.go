@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	defaultServerPort   int    = 5000
 	apiRoutePrefix      string = "/api"
 	contentRootFolder   string = "./tests" //"./client/build"
 	siteDefaultDocument string = "index.html"
