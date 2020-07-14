@@ -1,6 +1,8 @@
 import {
-  INCREMENT,
-  TOGGLE_EXPAND,
+  // INCREMENT,
+  // TOGGLE_EXPAND,
+  increment,
+  toggleExpand,
   ADD_CHILD,
   REMOVE_CHILD,
   CREATE_NODE,
@@ -88,12 +90,12 @@ const node = (state, action) => {
         counter: 0,
         expanded: true
       }
-    case INCREMENT:
+    case increment.type:
       return {
         ...state,
         counter: state.counter + 1
       }
-    case TOGGLE_EXPAND:
+    case toggleExpand.type:
       return {
         ...state,
         expanded: !state.expanded

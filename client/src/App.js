@@ -6,7 +6,7 @@ import Page from './components/Page'
 import LoadingButton from './components/LoadingButton';
 import User from './components/User'
 import ReconnectingWebSocket from 'reconnecting-websocket';
-import * as PageActions from './actions/pageActions'
+import { changeProps, removeChild, deleteNode } from './features/page/pageSlice'
 
 const App = () => {
 
@@ -15,27 +15,37 @@ const App = () => {
   var dispatch = useDispatch();
 
   useEffect(() => {
-    console.log("Connecting WebSockets...");
-    const conn = new ReconnectingWebSocket(`ws://${document.location.host}/ws`);
-        conn.onopen = function (evt) {
-          console.log("WebSocket connection opened");
-          console.log(evt);
-          conn.send("Hello!");
-        };
-        conn.onclose = function (evt) {
-            console.log("WebSocket connection closed");
-            console.log(evt);
-        };
-        conn.onmessage = function (evt) {
-          console.log("WebSocket onmessage");
-          console.log(evt);
-        };
+    // console.log("Connecting WebSockets...");
+    // const conn = new ReconnectingWebSocket(`ws://${document.location.host}/ws`);
+    //     conn.onopen = function (evt) {
+    //       console.log("WebSocket connection opened");
+    //       console.log(evt);
+    //       conn.send("Hello!");
+    //     };
+    //     conn.onclose = function (evt) {
+    //         console.log("WebSocket connection closed");
+    //         console.log(evt);
+    //     };
+    //     conn.onmessage = function (evt) {
+    //       console.log("WebSocket onmessage");
+    //       console.log(evt);
+    //     };
 
     setTimeout(() => {
       console.log("change control prop!");
-      dispatch(PageActions.changeProps("myTxt", {
-        "text": "Another text!"
+      dispatch(changeProps({
+        nodeId: "myTxt",
+        newProps: {
+          "text": "Another text!"
+        }
       }));
+      dispatch(removeChild({
+        nodeId: "1",
+        childId: "3"
+      }))
+      dispatch(deleteNode({
+        nodeId: "3"
+      }))
     }, 4000)
   })
 

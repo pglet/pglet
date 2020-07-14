@@ -1,14 +1,15 @@
 import './pglet.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, applyMiddleware } from 'redux'
+import { configureStore } from '@reduxjs/toolkit'
 import rootReducer from './rootReducer'
 import { Provider } from 'react-redux'
-import thunk from "redux-thunk";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-const store = createStore(rootReducer, applyMiddleware(thunk));
+const store = configureStore({
+  reducer: rootReducer
+});
 
 console.log(store.getState());
 
