@@ -43,9 +43,7 @@ const App = () => {
         nodeId: "1",
         childId: "3"
       }))
-      dispatch(deleteNode({
-        nodeId: "3"
-      }))
+      dispatch(deleteNode("3"))
     }, 4000)
   })
 

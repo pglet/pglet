@@ -75,6 +75,7 @@ const pageSlice = createSlice({
                     counter: 0,
                     expanded: true
                 }
+                return nodeId;
             },
             prepare(parentId) {
                 return {
@@ -109,7 +110,7 @@ const pageSlice = createSlice({
             Object.assign(node, newProps)
         },
         deleteNode(state, action) {
-            const { nodeId } = action.payload
+            const nodeId = action.payload
             const descendantIds = getAllDescendantIds(state.controls, nodeId)
             return deleteMany(state.controls, [nodeId, ...descendantIds])
         }

@@ -60,6 +60,8 @@ func runServer() {
 
 func userHandler(c *gin.Context) {
 
+	time.Sleep(2 * time.Second)
+
 	if userID, err := strconv.Atoi(c.Param("userID")); err == nil {
 		c.Header("Content-Type", "application/json")
 		c.JSON(http.StatusOK, gin.H{

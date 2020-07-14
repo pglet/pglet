@@ -1,8 +1,8 @@
 import { combineReducers } from "redux";
 import pageReducer from './features/page/pageSlice'
-import user from './reducers/user'
+import userReducer from './features/users/userSlice'
 
 export default combineReducers({
   page: pageReducer,
-  user
+  user: userReducer
 });
