@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { configureStore } from '@reduxjs/toolkit'
 import rootReducer from './rootReducer'
+import WebSocketProvider from './WebSocket';
 import { Provider } from 'react-redux'
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -16,7 +17,9 @@ console.log(store.getState());
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <WebSocketProvider>
+        <App />
+      </WebSocketProvider>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')

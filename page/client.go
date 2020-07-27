@@ -304,12 +304,15 @@ func registerWebClient(client *Client, message *Message) {
 				}
 			}
 		}
+
+		response.SessionID = session.ID
 	}
 
 	responsePayload, _ := json.Marshal(response)
 
 	responseMsg, _ := json.Marshal(&Message{
 		ID:      message.ID,
+		Action:  RegisterWebClientAction,
 		Payload: responsePayload,
 	})
 
