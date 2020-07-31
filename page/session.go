@@ -173,26 +173,26 @@ func (session *Session) NextControlID() string {
 
 // AddControl adds a control to a page
 func (session *Session) AddControl(ctl *Control) error {
+	session.Lock()
+	defer session.Unlock()
+	if _, exists := session.Controls[ctl.ID()]; exists {
+		return nil
+	}
+	session.Controls[ctl.ID()] = ctl
+
 	// find parent
 	parentID := ctl.ParentID()
 	if parentID != "" {
-		session.RLock()
 		parentCtl, ok := session.Controls[parentID]
-		session.RUnlock()
 
 		if !ok {
 			return fmt.Errorf("parent control with id '%s' not found", parentID)
 		}
 
 		// update parent's childIds
-		session.Lock()
 		parentCtl.AddChildID(ctl.ID())
-		session.Unlock()
 	}
 
-	session.Lock()
-	defer session.Unlock()
-	session.Controls[ctl.ID()] = ctl
 	return nil
 }
 

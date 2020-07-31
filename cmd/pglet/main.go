@@ -23,7 +23,7 @@ func init() {
 	flag.StringVar(&serverAddr, "server", "", "Pglet server address.")
 	flag.StringVar(&sessionID, "session-id", "", "Client session ID.")
 	flag.BoolVar(&isProxy, "proxy", false, "Start Proxy service.")
-	flag.IntVar(&serverPort, "port", 5000, "The port number to run pglet server on.")
+	flag.IntVar(&serverPort, "port", defaultServerPort, "The port number to run pglet server on.")
 	flag.Parse()
 
 	if !isProxy && pageName == "" && appName == "" {

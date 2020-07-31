@@ -1,21 +1,23 @@
 import './pglet.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, applyMiddleware } from 'redux'
+import { configureStore } from '@reduxjs/toolkit'
 import rootReducer from './rootReducer'
+import WebSocketProvider from './WebSocket';
 import { Provider } from 'react-redux'
-import thunk from "redux-thunk";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-const store = createStore(rootReducer, applyMiddleware(thunk));
-
-console.log(store.getState());
+const store = configureStore({
+  reducer: rootReducer
+});
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <WebSocketProvider>
+        <App />
+      </WebSocketProvider>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import * as Actions from '../actions/userActions'
+import { fetchUser } from '../features/users/userSlice'
 
 const User = ({userId}) => {
 
@@ -13,7 +13,7 @@ const User = ({userId}) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(Actions.fetchUser(userId));
+        dispatch(fetchUser(userId));
     }, [userId, dispatch]);
 
     if (error) {

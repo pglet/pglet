@@ -1,6 +1,6 @@
 import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
-import * as Actions from '../actions/pageActions'
+import { increment, createNode, addChild, removeChild, deleteNode, toggleExpand } from '../features/page/pageSlice'
 import NodeList from './NodeList'
 
 const Node = React.memo(({control}) => {
@@ -17,30 +17,36 @@ const Node = React.memo(({control}) => {
   const dispatch = useDispatch();
 
   const handleIncrementClick = () => {
-    dispatch(Actions.increment(id));
+    dispatch(increment(id));
   }
 
   const handleAddChildClick = e => {
     e.preventDefault()
 
-    const childId = dispatch(Actions.createNode(id)).nodeId
-    dispatch(Actions.addChild(id, childId));
+    const childId = dispatch(createNode(id)).nodeId
+    dispatch(addChild({
+      nodeId: id,
+      childId
+    }));
   }
 
   const handleRemoveClick = e => {
     e.preventDefault()
 
-    dispatch(Actions.removeChild(parentId, id))
-    dispatch(Actions.deleteNode(id))
+    dispatch(removeChild({
+      nodeId: parentId,
+      childId: id
+    }))
+    dispatch(deleteNode(id))
   }
 
-  const toggleExpand = e => {
-    dispatch(Actions.toggleExpand(id));
+  const toggleExpandHandler = e => {
+    dispatch(toggleExpand(id));
   }
 
   return (
     <div>
-      <span onClick={toggleExpand}>Counter: {control.counter}</span>
+      <span onClick={toggleExpandHandler}>Counter: {control.counter}</span>
       {' '}
       <button onClick={handleIncrementClick}>
         +

@@ -1,4 +1,4 @@
-echo "add label id=lbl1" > $1
+echo "add label id=lbl2" > $1
 
 echo "before read line"
 
@@ -8,7 +8,7 @@ while read -r line; do
 done <"$1"
 
 
-echo "add row id=\"footer\" to=lbl1 controls='
+echo "add row id=\"footer\" to=lbl2 controls='
 row
   col
 row

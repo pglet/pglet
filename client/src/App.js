@@ -1,54 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 //import logo from './logo.svg';
 import './pglet.scss';
-import { useSelector, useDispatch } from 'react-redux';
-import Page from './components/Page'
-import LoadingButton from './components/LoadingButton';
-import User from './components/User'
-import ReconnectingWebSocket from 'reconnecting-websocket';
-import * as PageActions from './actions/pageActions'
+import PageLanding from './components/PageLanding'
+import AccountLanding from './components/AccountLanding';
 
 const App = () => {
-
-  const root = useSelector(state => state.page.controls[0]);
-
-  var dispatch = useDispatch();
-
-  useEffect(() => {
-    console.log("Connecting WebSockets...");
-    const conn = new ReconnectingWebSocket(`ws://${document.location.host}/ws`);
-        conn.onopen = function (evt) {
-          console.log("WebSocket connection opened");
-          console.log(evt);
-          conn.send("Hello!");
-        };
-        conn.onclose = function (evt) {
-            console.log("WebSocket connection closed");
-            console.log(evt);
-        };
-        conn.onmessage = function (evt) {
-          console.log("WebSocket onmessage");
-          console.log(evt);
-        };
-
-    setTimeout(() => {
-      console.log("change control prop!");
-      dispatch(PageActions.changeProps("myTxt", {
-        "text": "Another text!"
-      }));
-    }, 4000)
-  })
-
   return (
-  <div className="container-fluid">
-    <Page control={root} />
-    <div className="row">
-      <div className="col">
-        <LoadingButton />
-        <User userId="42" />
-      </div>
+    <div className="container-fluid">
+      <Router>
+        <Switch>
+          <Route path="/p/:accountName/:pageName" children={<PageLanding />} />
+          <Route path="/p/:accountName" children={<AccountLanding />} />
+        </Switch>
+      </Router>
     </div>
-  </div>);
+  );
 }
 
 export default App;
