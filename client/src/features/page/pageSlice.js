@@ -11,7 +11,7 @@ const initialState = {
             ],
             "i": "0",
             "p": "",
-            "t": "Page"
+            "t": "page"
         },
         "1": {
             "c": [
@@ -20,7 +20,7 @@ const initialState = {
             ],
             "i": "1",
             "p": "0",
-            "t": "Row"
+            "t": "row"
         },
         "2": {
             "c": [
@@ -29,7 +29,7 @@ const initialState = {
             ],
             "i": "2",
             "p": "1",
-            "t": "Column"
+            "t": "column"
         },
         "3": {
             "c": [
@@ -37,24 +37,24 @@ const initialState = {
             ],
             "i": "3",
             "p": "1",
-            "t": "Column"
+            "t": "column"
         },
         "myTxt": {
             "i": "myTxt",
             "p": "2",
-            "t": "Text",
+            "t": "label",
             "text": "Hello, world!"
         },
         "5": {
             "i": "5",
             "p": "3",
-            "t": "Button",
+            "t": "button",
             "text": "Click me!"
         },
         "myBtn": {
             "i": "myBtn",
             "p": "2",
-            "t": "Button",
+            "t": "button",
             "text": "Cancel"
         }
     }

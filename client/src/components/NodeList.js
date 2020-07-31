@@ -4,17 +4,19 @@ import Row from './Row'
 import Column from './Column'
 import Text from './Text'
 import Button from './Button'
+import Label from './Label'
 
 const NodeList = ({ controls }) => {
 
     //console.log(`render NodeList: ${id}`);
 
     const controlTypes = {
-        'Node': Node,
-        'Row': Row,
-        'Column': Column,
-        'Text': Text,
-        'Button': Button
+        'node': Node,
+        'row': Row,
+        'column': Column,
+        'text': Text,
+        'label': Label,
+        'button': Button
     }
 
     const renderChild = control => {
