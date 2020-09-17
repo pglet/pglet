@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -15,10 +16,15 @@ import (
 	"github.com/pglet/pglet/page"
 )
 
-const (
-	sockAddr     = "/tmp/pglet.sock"
-	lockFilename = "/tmp/pglet.lock"
+var (
+	sockAddr     string
+	lockFilename string
 )
+
+func init() {
+	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
+	lockFilename = filepath.Join(os.TempDir(), "pglet.lock")
+}
 
 // ProxyService manages connections to a shared page or app.
 type ProxyService struct {
