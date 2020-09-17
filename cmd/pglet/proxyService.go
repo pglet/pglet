@@ -60,13 +60,13 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 	log.Println("Connecting to shared page:", pageName)
 
 	// call server
-	result := hc.call(page.RegisterHostClientAction, &page.RegisterClientRequestPayload{
+	result := hc.call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    false,
 	})
 
 	// parse response
-	payload := &page.RegisterClientResponsePayload{}
+	payload := &page.RegisterHostClientResponsePayload{}
 	err := json.Unmarshal(*result, payload)
 
 	if err != nil {
@@ -98,13 +98,13 @@ func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error 
 	log.Println("Connecting to app page:", pageName)
 
 	// call server
-	result := hc.call(page.RegisterHostClientAction, &page.RegisterClientRequestPayload{
+	result := hc.call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    true,
 	})
 
 	// parse response
-	payload := &page.RegisterClientResponsePayload{}
+	payload := &page.RegisterHostClientResponsePayload{}
 	err := json.Unmarshal(*result, payload)
 
 	if err != nil {

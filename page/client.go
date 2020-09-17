@@ -68,12 +68,22 @@ type Client struct {
 	send     chan []byte
 }
 
-type RegisterClientRequestPayload struct {
+type RegisterHostClientRequestPayload struct {
 	PageName string `json:"pageName"`
 	IsApp    bool   `json:"isApp"`
 }
 
-type RegisterClientResponsePayload struct {
+type RegisterHostClientResponsePayload struct {
+	SessionID string `json:"sessionID"`
+	Error     string `json:"error"`
+}
+
+type RegisterWebClientRequestPayload struct {
+	PageName string `json:"pageName"`
+	IsApp    bool   `json:"isApp"`
+}
+
+type RegisterWebClientResponsePayload struct {
 	SessionID string `json:"sessionID"`
 	Error     string `json:"error"`
 }
@@ -247,7 +257,7 @@ func readHandler(c *Client, message []byte) error {
 
 func registerWebClient(client *Client, message *Message) {
 	fmt.Println("Registering as web client")
-	payload := new(RegisterClientRequestPayload)
+	payload := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// assign client role
@@ -256,7 +266,7 @@ func registerWebClient(client *Client, message *Message) {
 	// subscribe as host client
 	page := Pages().Get(payload.PageName)
 
-	response := &RegisterClientResponsePayload{
+	response := &RegisterWebClientResponsePayload{
 		SessionID: "",
 		Error:     "",
 	}
@@ -321,10 +331,10 @@ func registerWebClient(client *Client, message *Message) {
 
 func registerHostClient(client *Client, message *Message) {
 	fmt.Println("Registering as host client")
-	payload := new(RegisterClientRequestPayload)
+	payload := new(RegisterHostClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
-	responsePayload := &RegisterClientResponsePayload{
+	responsePayload := &RegisterHostClientResponsePayload{
 		SessionID: "",
 		Error:     "",
 	}

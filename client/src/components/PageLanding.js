@@ -10,8 +10,6 @@ const PageLanding = () => {
     let { accountName, pageName } = useParams();
 
     let fullPageName = `${accountName}/${pageName}`;
-    
-    const root = useSelector(state => state.page.controls[0]);
 
     const ws = useContext(WebSocketContext);
 
@@ -38,7 +36,14 @@ const PageLanding = () => {
         }, 4000)
     })
 
-    return <Page control={root} />
+    const err = useSelector(state => state.page.error);
+    const root = useSelector(state => state.page.controls[0]);
+
+    if (err) {
+        return <div>{err}</div>;
+    } else {
+        return <Page control={root} />
+    }
 }
 
 export default PageLanding

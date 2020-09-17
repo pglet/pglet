@@ -1,7 +1,7 @@
 import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { increment, createNode, addChild, removeChild, deleteNode, toggleExpand } from '../features/page/pageSlice'
-import NodeList from './NodeList'
+import ControlsList from './ControlsList'
 
 const Node = React.memo(({control}) => {
 
@@ -59,7 +59,7 @@ const Node = React.memo(({control}) => {
         </a>
       }
       <ul>
-        {control.expanded ? <NodeList id={id} controls={childControls} /> : ""}
+        {control.expanded ? <ControlsList id={id} controls={childControls} /> : ""}
         <li key="add">
           <a href="#" // eslint-disable-line jsx-a11y/anchor-is-valid
             onClick={handleAddChildClick}

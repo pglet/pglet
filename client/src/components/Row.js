@@ -1,6 +1,6 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
-import NodeList from './NodeList'
+import ControlsList from './ControlsList'
 
 const Row = React.memo(({control}) => {
 
@@ -8,7 +8,7 @@ const Row = React.memo(({control}) => {
 
   const childControls = useSelector(state => control.c.map(childId => state.page.controls[childId]), shallowEqual);
 
-  return <div className="row"><NodeList controls={childControls} /></div>;
+  return <div className="row"><ControlsList controls={childControls} /></div>;
 })
 
 export default Row

@@ -1,20 +1,18 @@
 import React from 'react'
-import Node from './Node'
 import Row from './Row'
-import Column from './Column'
-import Text from './Text'
+import Col from './Col'
+import Textbox from './Textbox'
 import Button from './Button'
 import Label from './Label'
 
-const NodeList = ({ controls }) => {
+const ControlsList = ({ controls }) => {
 
-    //console.log(`render NodeList: ${id}`);
+    //console.log(`render ControlsList: ${id}`);
 
     const controlTypes = {
-        'node': Node,
         'row': Row,
-        'column': Column,
-        'text': Text,
+        'col': Col,
+        'textbox': Textbox,
         'label': Label,
         'button': Button
     }
@@ -27,4 +25,4 @@ const NodeList = ({ controls }) => {
     return controls.map(renderChild);
 }
 
-export default NodeList
+export default ControlsList

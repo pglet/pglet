@@ -1,5 +1,6 @@
 import React, { createContext } from 'react'
 import { useDispatch } from 'react-redux';
+import { registerWebClientSuccess, registerWebClientError } from './features/page/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const WebSocketContext = createContext(null)
@@ -37,7 +38,14 @@ export default ({ children }) => {
 
         socket.onmessage = function (evt) {
             console.log("WebSocket onmessage");
-            console.log(evt);
+            var data = JSON.parse(evt.data);
+            console.log(data);
+
+            if (data.action === "registerWebClient") {
+                if (data.payload.error) {
+                    dispatch(registerWebClientError(data.payload.error));
+                }
+            }
         };
 
         ws = {

@@ -4,6 +4,7 @@ let nextId = 0
 
 const initialState = {
     "name": "test-1",
+    "error": null,
     "controls": {
         "0": {
             "c": [
@@ -29,7 +30,7 @@ const initialState = {
             ],
             "i": "2",
             "p": "1",
-            "t": "column"
+            "t": "col"
         },
         "3": {
             "c": [
@@ -37,7 +38,7 @@ const initialState = {
             ],
             "i": "3",
             "p": "1",
-            "t": "column"
+            "t": "col"
         },
         "myTxt": {
             "i": "myTxt",
@@ -64,6 +65,14 @@ const pageSlice = createSlice({
     name: 'page',
     initialState: initialState,
     reducers: {
+        registerWebClientSuccess(state, action) {
+            state.loading = false;
+            state.controls = action.payload;
+        },
+        registerWebClientError(state, action) {
+            state.loading = false;
+            state.error = action.payload;
+        },
         createNode: {
             reducer(state, action) {
                 const { nodeId, parentId } = action.payload
@@ -130,6 +139,16 @@ const deleteMany = (controls, ids) => {
     ids.forEach(id => delete controls[id])
 }
 
-export const { createNode, increment, toggleExpand, addChild, removeChild, changeProps, deleteNode } = pageSlice.actions
+export const {
+    registerWebClientSuccess,
+    registerWebClientError,
+    createNode,
+    increment,
+    toggleExpand,
+    addChild,
+    removeChild,
+    changeProps,
+    deleteNode
+} = pageSlice.actions
 
 export default pageSlice.reducer
