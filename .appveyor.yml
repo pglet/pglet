@@ -1,0 +1,52 @@
+environment:
+  matrix:
+    - job_name: Windows
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+    - job_name: Linux
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+
+init:
+- go version
+- echo %GOPATH%
+
+matrix:
+  fast_finish: true
+  
+  for:
+  
+  # ======================================
+  #      Windows
+  # ======================================
+  
+  -
+    matrix:
+      only:
+        - job_name: Windows
+  
+    init:
+    - go version
+    - echo %GOPATH%
+  
+    build: off
+  
+    test_script:
+    - run-tests.cmd
+
+  # ======================================
+  #      Linux
+  # ======================================
+  
+  -
+    matrix:
+      only:
+        - job_name: Linux
+  
+    init:
+    - go version
+    - echo $GOPATH
+  
+    build: off
+  
+    test_script:
+    - go test -count=1 -v ./...
