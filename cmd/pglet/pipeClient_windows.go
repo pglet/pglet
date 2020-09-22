@@ -14,10 +14,6 @@ import (
 	"github.com/pglet/pglet/utils"
 )
 
-const (
-	readsize = 64 << 10
-)
-
 type pipeClient struct {
 	id              string
 	pageName        string

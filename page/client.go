@@ -263,7 +263,7 @@ func registerWebClient(client *Client, message *Message) {
 	// assign client role
 	client.role = WebClient
 
-	// subscribe as host client
+	// subscribe as web client
 	page := Pages().Get(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
