@@ -13,40 +13,40 @@ init:
 matrix:
   fast_finish: true
   
-  for:
+for:
   
-  # ======================================
-  #      Windows
-  # ======================================
-  
-  -
-    matrix:
-      only:
-        - job_name: Windows
-  
-    init:
-    - go version
-    - echo %GOPATH%
-  
-    build: off
-  
-    test_script:
-    - run-tests.cmd
+# ======================================
+#      Windows
+# ======================================
 
-  # ======================================
-  #      Linux
-  # ======================================
-  
-  -
-    matrix:
-      only:
-        - job_name: Linux
-  
-    init:
-    - go version
-    - echo $GOPATH
-  
-    build: off
-  
-    test_script:
-    - go test -count=1 -v ./...
+-
+  matrix:
+    only:
+    - job_name: Windows
+
+  init:
+  - go version
+  - echo %GOPATH%
+
+  build: off
+
+  test_script:
+  - run-tests.cmd
+
+# ======================================
+#      Linux
+# ======================================
+
+-
+  matrix:
+    only:
+    - job_name: Linux
+
+  init:
+  - go version
+  - echo $GOPATH
+
+  build: off
+
+  test_script:
+  - go test -count=1 -v ./...
