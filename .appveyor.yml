@@ -31,7 +31,7 @@ for:
   - go version
   - echo %GOPATH%
 
-  build:
+  build_script:
   - go install github.com/pglet/pglet/cmd/pglet
   - dir %USERPROFILE%\Go
 
