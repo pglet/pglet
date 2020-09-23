@@ -53,7 +53,7 @@ func (pc *pipeClient) commandLoop() {
 
 	for {
 		// read next command from pipeline
-		cmdText := <-pc.pipe.commands
+		cmdText := pc.pipe.nextCommand()
 
 		// parse command
 		command, err := page.ParseCommand(cmdText)
@@ -88,7 +88,7 @@ func (pc *pipeClient) commandLoop() {
 			result = fmt.Sprintf("error %s", payload.Error)
 		}
 
-		pc.pipe.writeResult(result)
+		pc.pipe.writeResult("aaa" + result)
 	}
 }
 

@@ -21,7 +21,6 @@ type pipeImpl struct {
 	sessionID       string
 	commandPipeName string
 	eventPipeName   string
-	commands        chan string
 	events          chan string
 }
 
@@ -32,7 +31,6 @@ func newPipeImpl(id string) (*pipeImpl, error) {
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
-		commands:        make(chan string),
 		events:          make(chan string),
 	}
 
@@ -52,28 +50,13 @@ func (pc *pipeImpl) start() error {
 		return err
 	}
 
-	go pc.commandLoop()
 	go pc.eventLoop()
 
 	return nil
 }
 
-func (pc *pipeImpl) commandLoop() {
-	log.Println("Starting command loop...")
-
-	defer os.Remove(pc.commandPipeName)
-
-	for {
-		// read next command from pipeline
-		cmdText := pc.read()
-
-		if cmdText == "" {
-			log.Println("Disconnected from command pipe")
-			return
-		}
-
-		pc.commands <- cmdText
-	}
+func (pc *pipeImpl) nextCommand() string {
+	return pc.read()
 }
 
 func (pc *pipeImpl) read() string {
@@ -149,7 +132,8 @@ func (pc *pipeImpl) eventLoop() {
 func (pc *pipeImpl) close() {
 	log.Println("Closing Unix pipe...")
 
-	// TODO: delete temp files
+	os.Remove(pc.commandPipeName)
+	os.Remove(pc.eventPipeName)
 }
 
 func createFifo(filename string) (err error) {

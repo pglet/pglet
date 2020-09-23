@@ -46,6 +46,10 @@ func newPipeImpl(id string) (*pipeImpl, error) {
 	return pc, nil
 }
 
+func (pc *pipeImpl) nextCommand() string {
+	return <-pc.commands
+}
+
 func (pc *pipeImpl) commandLoop() {
 	log.Println("Starting command loop - ", pc.commandPipeName)
 
