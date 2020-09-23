@@ -1,45 +1,42 @@
-// +build windows
+// +build !windows
 
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path"
-
-	"github.com/pglet/pglet/page"
-	"github.com/pglet/pglet/utils"
+	"syscall"
 )
 
-type pipeClient struct {
+const (
+	readsize = 64 << 10
+)
+
+type pipeImpl struct {
 	id              string
 	pageName        string
 	sessionID       string
 	commandPipeName string
 	eventPipeName   string
+	commands        chan string
 	events          chan string
-	hostClient      *hostClient
-	done            chan bool
 }
 
-func newPipeClient(pageName string, sessionID string, hc *hostClient) (*pipeClient, error) {
-	id, _ := utils.GenerateRandomString(10)
+func newPipeImpl(id string) (*pipeImpl, error) {
 	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
 	pc := &pipeClient{
 		id:              id,
-		pageName:        pageName,
-		sessionID:       sessionID,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
+		commands:        make(chan string),
 		events:          make(chan string),
-		hostClient:      hc,
 	}
 
-	return pc, nil
+	return pc, pc.start()
 }
 
 func (pc *pipeClient) start() error {
@@ -70,40 +67,12 @@ func (pc *pipeClient) commandLoop() {
 		// read next command from pipeline
 		cmdText := pc.read()
 
-		// parse command
-		command, err := page.ParseCommand(cmdText)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		log.Printf("Send command: %+v", command)
-
-		if command.Name == page.Quit {
-			pc.close()
+		if cmdText == "" {
+			log.Println("Disconnected from command pipe")
 			return
 		}
 
-		rawResult := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-			PageName:  pc.pageName,
-			SessionID: pc.sessionID,
-			Command:   *command,
-		})
-
-		// parse response
-		payload := &page.PageCommandResponsePayload{}
-		err = json.Unmarshal(*rawResult, payload)
-
-		if err != nil {
-			log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
-		}
-
-		// save command results
-		result := payload.Result
-		if payload.Error != "" {
-			result = fmt.Sprintf("error %s", payload.Error)
-		}
-
-		pc.writeResult(result)
+		pc.commands <- cmdText
 	}
 }
 
@@ -130,7 +99,6 @@ func (pc *pipeClient) read() string {
 		input.Close()
 		return string(result)
 	}
-	log.Fatal(err)
 	return ""
 }
 
@@ -182,11 +150,11 @@ func (pc *pipeClient) eventLoop() {
 func (pc *pipeClient) close() {
 	log.Println("Closing pipe client...")
 
-	pc.hostClient.unregisterPipeClient(pc)
+	// TODO: delete temp files
 }
 
 func createFifo(filename string) (err error) {
-	//err = syscall.Mkfifo(filename, 0660)
+	err = syscall.Mkfifo(filename, 0660)
 	return
 }
 

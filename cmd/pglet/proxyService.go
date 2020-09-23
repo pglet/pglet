@@ -90,7 +90,7 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 	// register pipe client, so it can receive events from pages/sessions
 	hc.registerPipeClient(pc)
 
-	*pipeName = pc.commandPipeName
+	*pipeName = pc.commandPipeName()
 
 	return nil
 }
@@ -131,7 +131,7 @@ func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error 
 	// register pipe client, so it can receive events from pages/sessions
 	hc.registerPipeClient(pc)
 
-	*pipeName = pc.commandPipeName
+	*pipeName = pc.commandPipeName()
 
 	return nil
 }

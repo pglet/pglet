@@ -27,11 +27,10 @@ type pipeImpl struct {
 	eventListener   *npipe.PipeListener
 	commands        chan string
 	events          chan string
-	done            chan bool
 }
 
 func newPipeImpl(id string) (*pipeImpl, error) {
-	pipeName := fmt.Sprintf("pglet_pipe_%s", id)
+	pipeName := fmt.Sprintf(`\\.\pipe\pglet_pipe_%s`, id)
 
 	pc := &pipeImpl{
 		id:              id,
@@ -51,7 +50,7 @@ func (pc *pipeImpl) commandLoop() {
 	log.Println("Starting command loop - ", pc.commandPipeName)
 
 	var err error
-	pc.commandListener, err = npipe.Listen(`\\.\pipe\` + pc.commandPipeName)
+	pc.commandListener, err = npipe.Listen(pc.commandPipeName)
 	if err != nil {
 		// handle error
 	}
@@ -145,7 +144,7 @@ func (pc *pipeImpl) eventLoop() {
 	log.Println("Starting event loop - ", pc.eventPipeName)
 
 	var err error
-	pc.eventListener, err = npipe.Listen(`\\.\pipe\` + pc.eventPipeName)
+	pc.eventListener, err = npipe.Listen(pc.eventPipeName)
 	if err != nil {
 		// handle error
 	}
