@@ -148,7 +148,7 @@ func (pc *pipeClient) eventLoop() {
 }
 
 func (pc *pipeClient) close() {
-	log.Println("Closing pipe client...")
+	log.Println("Closing Unix pipe...")
 
 	// TODO: delete temp files
 }

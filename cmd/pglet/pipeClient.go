@@ -53,7 +53,7 @@ func (pc *pipeClient) commandLoop() {
 
 	for {
 		// read next command from pipeline
-		cmdText := pc.pipe.read()
+		cmdText := <-pc.pipe.commands
 
 		// parse command
 		command, err := page.ParseCommand(cmdText)
