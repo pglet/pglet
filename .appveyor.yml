@@ -53,7 +53,7 @@ for:
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
-  - ls $HOME/go/bin
+  - ls $GOPATH/bin
 
   test_script:
   - ./run-tests.sh
