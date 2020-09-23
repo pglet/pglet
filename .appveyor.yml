@@ -6,8 +6,8 @@ environment:
     - job_name: Windows
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    # - job_name: Linux
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - job_name: Linux
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
 init:
 - go version
@@ -51,7 +51,9 @@ for:
   - go version
   - echo $GOPATH
 
-  build: off
+  build_script:
+  - go install github.com/pglet/pglet/cmd/pglet
+  - ls $HOME\go\bin
 
   test_script:
-  - go test -count=1 -v ./...
+  - ./run-tests.sh
