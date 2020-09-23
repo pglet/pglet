@@ -28,7 +28,7 @@ type pipeImpl struct {
 func newPipeImpl(id string) (*pipeImpl, error) {
 	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
-	pc := &pipeClient{
+	pc := &pipeImpl{
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
@@ -39,7 +39,7 @@ func newPipeImpl(id string) (*pipeImpl, error) {
 	return pc, pc.start()
 }
 
-func (pc *pipeClient) start() error {
+func (pc *pipeImpl) start() error {
 	// create "command" named pipe
 	err := createFifo(pc.commandPipeName)
 	if err != nil {
@@ -58,7 +58,7 @@ func (pc *pipeClient) start() error {
 	return nil
 }
 
-func (pc *pipeClient) commandLoop() {
+func (pc *pipeImpl) commandLoop() {
 	log.Println("Starting command loop...")
 
 	defer os.Remove(pc.commandPipeName)
@@ -76,9 +76,8 @@ func (pc *pipeClient) commandLoop() {
 	}
 }
 
-func (pc *pipeClient) read() string {
+func (pc *pipeImpl) read() string {
 	var bytesRead int
-	var err error
 	buf := make([]byte, readsize)
 	for {
 		var result []byte
@@ -102,7 +101,7 @@ func (pc *pipeClient) read() string {
 	return ""
 }
 
-func (pc *pipeClient) writeResult(result string) {
+func (pc *pipeImpl) writeResult(result string) {
 	log.Println("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
@@ -114,7 +113,7 @@ func (pc *pipeClient) writeResult(result string) {
 	output.Close()
 }
 
-func (pc *pipeClient) emitEvent(evt string) {
+func (pc *pipeImpl) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
 		// Event sent to queue
@@ -123,7 +122,7 @@ func (pc *pipeClient) emitEvent(evt string) {
 	}
 }
 
-func (pc *pipeClient) eventLoop() {
+func (pc *pipeImpl) eventLoop() {
 
 	log.Println("Starting event loop...")
 
@@ -147,7 +146,7 @@ func (pc *pipeClient) eventLoop() {
 	}
 }
 
-func (pc *pipeClient) close() {
+func (pc *pipeImpl) close() {
 	log.Println("Closing Unix pipe...")
 
 	// TODO: delete temp files
