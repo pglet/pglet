@@ -3,7 +3,7 @@ import Row from './Row'
 import Col from './Col'
 import Textbox from './Textbox'
 import Button from './Button'
-import Label from './Label'
+import Text from './Text'
 
 const ControlsList = ({ controls }) => {
 
@@ -13,7 +13,7 @@ const ControlsList = ({ controls }) => {
         'row': Row,
         'col': Col,
         'textbox': Textbox,
-        'label': Label,
+        'text': Text,
         'button': Button
     }
 

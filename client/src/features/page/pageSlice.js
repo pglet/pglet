@@ -43,7 +43,7 @@ const initialState = {
         "myTxt": {
             "i": "myTxt",
             "p": "2",
-            "t": "label",
+            "t": "text",
             "text": "Hello, world!"
         },
         "5": {

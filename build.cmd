@@ -1,0 +1,1 @@
+go install github.com/pglet/pglet/cmd/pglet
