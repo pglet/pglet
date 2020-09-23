@@ -1,3 +1,5 @@
+echo "Command pipe: $1"
+
 echo "add label id=lbl2" > $1
 
 echo "before read line"

@@ -3,63 +3,47 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"os"
-	"path"
-	"syscall"
 
 	"github.com/pglet/pglet/page"
 	"github.com/pglet/pglet/utils"
 )
 
-const (
-	readsize = 64 << 10
-)
-
 type pipeClient struct {
-	id              string
-	pageName        string
-	sessionID       string
-	commandPipeName string
-	eventPipeName   string
-	events          chan string
-	hostClient      *hostClient
-	done            chan bool
+	id         string
+	pageName   string
+	sessionID  string
+	pipe       *pipeImpl
+	hostClient *hostClient
 }
 
 func newPipeClient(pageName string, sessionID string, hc *hostClient) (*pipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
-	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
+
+	pipe, err := newPipeImpl(id)
+
+	if err != nil {
+		return nil, err
+	}
 
 	pc := &pipeClient{
-		id:              id,
-		pageName:        pageName,
-		sessionID:       sessionID,
-		commandPipeName: pipeName,
-		eventPipeName:   pipeName + ".events",
-		events:          make(chan string),
-		hostClient:      hc,
+		id:         id,
+		pageName:   pageName,
+		sessionID:  sessionID,
+		pipe:       pipe,
+		hostClient: hc,
 	}
 
 	return pc, nil
 }
 
-func (pc *pipeClient) start() error {
-	// create "command" named pipe
-	err := createFifo(pc.commandPipeName)
-	if err != nil {
-		return err
-	}
+func (pc *pipeClient) commandPipeName() string {
+	return pc.pipe.commandPipeName
+}
 
-	// create "events" named pipe
-	err = createFifo(pc.eventPipeName)
-	if err != nil {
-		return err
-	}
+func (pc *pipeClient) start() error {
 
 	go pc.commandLoop()
-	go pc.eventLoop()
 
 	return nil
 }
@@ -67,11 +51,9 @@ func (pc *pipeClient) start() error {
 func (pc *pipeClient) commandLoop() {
 	log.Println("Starting command loop...")
 
-	defer os.Remove(pc.commandPipeName)
-
 	for {
 		// read next command from pipeline
-		cmdText := pc.read()
+		cmdText := pc.pipe.nextCommand()
 
 		// parse command
 		command, err := page.ParseCommand(cmdText)
@@ -106,94 +88,18 @@ func (pc *pipeClient) commandLoop() {
 			result = fmt.Sprintf("error %s", payload.Error)
 		}
 
-		pc.writeResult(result)
+		pc.pipe.writeResult("aaa" + result)
 	}
-}
-
-func (pc *pipeClient) read() string {
-	var bytesRead int
-	var err error
-	buf := make([]byte, readsize)
-	for {
-		var result []byte
-		input, err := openFifo(pc.commandPipeName, os.O_RDONLY)
-		if err != nil {
-			break
-		}
-		for err == nil {
-			bytesRead, err = input.Read(buf)
-			result = append(result, buf[0:bytesRead]...)
-
-			if err == io.EOF {
-				break
-			}
-
-			//fmt.Printf("read: %d\n", bytesRead)
-		}
-		input.Close()
-		return string(result)
-	}
-	log.Fatal(err)
-	return ""
-}
-
-func (pc *pipeClient) writeResult(result string) {
-	log.Println("Waiting for result to consume...")
-	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Write result:", result)
-
-	output.WriteString(fmt.Sprintf("%s\n", result))
-	output.Close()
 }
 
 func (pc *pipeClient) emitEvent(evt string) {
-	select {
-	case pc.events <- evt:
-		// Event sent to queue
-	default:
-		// No event listeners
-	}
-}
-
-func (pc *pipeClient) eventLoop() {
-
-	log.Println("Starting event loop...")
-
-	defer os.Remove(pc.eventPipeName)
-
-	for {
-		output, err := openFifo(pc.eventPipeName, os.O_WRONLY)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		select {
-		case evt, more := <-pc.events:
-			output.WriteString(evt + "\n")
-			output.Close()
-
-			if !more {
-				return
-			}
-		}
-	}
+	pc.pipe.emitEvent(evt)
 }
 
 func (pc *pipeClient) close() {
 	log.Println("Closing pipe client...")
 
+	pc.pipe.close()
+
 	pc.hostClient.unregisterPipeClient(pc)
-}
-
-func createFifo(filename string) (err error) {
-	err = syscall.Mkfifo(filename, 0660)
-	return
-}
-
-func openFifo(path string, oflag int) (f *os.File, err error) {
-	f, err = os.OpenFile(path, oflag, os.ModeNamedPipe)
-	return
 }

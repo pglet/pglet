@@ -17,7 +17,8 @@ var (
 	sessionID  string
 )
 
-func init() {
+func main() {
+
 	flag.StringVar(&pageName, "page", "", "Shared page name to create and connect to.")
 	flag.StringVar(&appName, "app", "", "App page name to create and connect to.")
 	flag.StringVar(&serverAddr, "server", "", "Pglet server address.")
@@ -34,9 +35,6 @@ func init() {
 			os.Exit(1)
 		}
 	}
-}
-
-func main() {
 
 	if isProxy {
 		runProxyService()
