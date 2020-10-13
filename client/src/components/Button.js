@@ -4,7 +4,7 @@ const Button = React.memo(({control}) => {
 
   console.log(`render Button: ${control.i}`);
 
-  return <button type="button" class="btn btn-primary">{control.text}</button>;
+  return <button type="button" className="btn btn-primary">{control.text}</button>;
 })
 
 export default Button
