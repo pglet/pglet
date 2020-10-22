@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/pglet/pglet/internal/commands"
+
 	"github.com/pglet/pglet/internal/proxy"
 
 	"github.com/pglet/pglet/internal/server"
@@ -22,6 +24,8 @@ var (
 )
 
 func main() {
+
+	commands.PrintVersion()
 
 	flag.StringVar(&pageName, "page", "", "Shared page name to create and connect to.")
 	flag.StringVar(&appName, "app", "", "App page name to create and connect to.")
