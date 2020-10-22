@@ -27,7 +27,7 @@ for:
     - job_name: Windows
 
   install:
-  - .\install_go.ps1
+  - ps: .\install_go.ps1
   - echo %GOPATH%
 
   build_script:
