@@ -54,6 +54,7 @@ for:
   install:
   - sh: |
       sudo snap install --classic goreleaser
+      goreleaser --version
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
