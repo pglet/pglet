@@ -15,7 +15,7 @@ const (
 	readsize = 64 << 10
 )
 
-type namedPipes struct {
+type namedPipe struct {
 	id              string
 	pageName        string
 	sessionID       string
@@ -24,10 +24,10 @@ type namedPipes struct {
 	events          chan string
 }
 
-func newNamedPipes(id string) (*namedPipes, error) {
+func newNamedPipe(id string) (*namedPipe, error) {
 	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
-	pc := &namedPipes{
+	pc := &namedPipe{
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
@@ -37,11 +37,11 @@ func newNamedPipes(id string) (*namedPipes, error) {
 	return pc, pc.start()
 }
 
-func (pc *namedPipes) getCommandPipeName() string {
+func (pc *namedPipe) getCommandPipeName() string {
 	return pc.commandPipeName
 }
 
-func (pc *namedPipes) start() error {
+func (pc *namedPipe) start() error {
 	// create "command" named pipe
 	err := createFifo(pc.commandPipeName)
 	if err != nil {
@@ -59,11 +59,11 @@ func (pc *namedPipes) start() error {
 	return nil
 }
 
-func (pc *namedPipes) nextCommand() string {
+func (pc *namedPipe) nextCommand() string {
 	return pc.read()
 }
 
-func (pc *namedPipes) read() string {
+func (pc *namedPipe) read() string {
 	var bytesRead int
 	buf := make([]byte, readsize)
 	for {
@@ -88,7 +88,7 @@ func (pc *namedPipes) read() string {
 	return ""
 }
 
-func (pc *namedPipes) writeResult(result string) {
+func (pc *namedPipe) writeResult(result string) {
 	log.Println("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
@@ -100,7 +100,7 @@ func (pc *namedPipes) writeResult(result string) {
 	output.Close()
 }
 
-func (pc *namedPipes) emitEvent(evt string) {
+func (pc *namedPipe) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
 		// Event sent to queue
@@ -109,7 +109,7 @@ func (pc *namedPipes) emitEvent(evt string) {
 	}
 }
 
-func (pc *namedPipes) eventLoop() {
+func (pc *namedPipe) eventLoop() {
 
 	log.Println("Starting event loop...")
 
@@ -133,7 +133,7 @@ func (pc *namedPipes) eventLoop() {
 	}
 }
 
-func (pc *namedPipes) close() {
+func (pc *namedPipe) close() {
 	log.Println("Closing Unix pipe...")
 
 	os.Remove(pc.commandPipeName)

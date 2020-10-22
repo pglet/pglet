@@ -18,7 +18,7 @@ const (
 	readsize = 64 << 10
 )
 
-type namedPipes struct {
+type namedPipe struct {
 	conn            net.Conn
 	id              string
 	commandPipeName string
@@ -29,10 +29,10 @@ type namedPipes struct {
 	events          chan string
 }
 
-func newNamedPipes(id string) (*namedPipes, error) {
+func newNamedPipe(id string) (*namedPipe, error) {
 	pipeName := fmt.Sprintf("pglet_pipe_%s", id)
 
-	pc := &namedPipes{
+	pc := &namedPipe{
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
@@ -46,15 +46,15 @@ func newNamedPipes(id string) (*namedPipes, error) {
 	return pc, nil
 }
 
-func (pc *namedPipes) getCommandPipeName() string {
+func (pc *namedPipe) getCommandPipeName() string {
 	return pc.commandPipeName
 }
 
-func (pc *namedPipes) nextCommand() string {
+func (pc *namedPipe) nextCommand() string {
 	return <-pc.commands
 }
 
-func (pc *namedPipes) commandLoop() {
+func (pc *namedPipe) commandLoop() {
 	log.Println("Starting command loop - ", pc.commandPipeName)
 
 	var err error
@@ -90,7 +90,7 @@ func (pc *namedPipes) commandLoop() {
 	}
 }
 
-func (pc *namedPipes) read() string {
+func (pc *namedPipe) read() string {
 
 	var bytesRead int
 	var err error
@@ -127,7 +127,7 @@ func (pc *namedPipes) read() string {
 	}
 }
 
-func (pc *namedPipes) writeResult(result string) {
+func (pc *namedPipe) writeResult(result string) {
 	log.Println("Waiting for result to consume...")
 
 	w := bufio.NewWriter(pc.conn)
@@ -138,7 +138,7 @@ func (pc *namedPipes) writeResult(result string) {
 	w.Flush()
 }
 
-func (pc *namedPipes) emitEvent(evt string) {
+func (pc *namedPipe) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
 		// Event sent to queue
@@ -147,7 +147,7 @@ func (pc *namedPipes) emitEvent(evt string) {
 	}
 }
 
-func (pc *namedPipes) eventLoop() {
+func (pc *namedPipe) eventLoop() {
 
 	log.Println("Starting event loop - ", pc.eventPipeName)
 
@@ -208,7 +208,7 @@ func (pc *namedPipes) eventLoop() {
 	}
 }
 
-func (pc *namedPipes) close() {
+func (pc *namedPipe) close() {
 	log.Println("Closing Windows pipe...")
 
 	pc.commandListener.Close()

@@ -13,14 +13,14 @@ type PipeClient struct {
 	id         string
 	pageName   string
 	sessionID  string
-	pipe       protocol
+	pipe       pipe
 	hostClient *HostClient
 }
 
 func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
-	pipe, err := newNamedPipes(id)
+	pipe, err := newNamedPipe(id)
 
 	if err != nil {
 		return nil, err

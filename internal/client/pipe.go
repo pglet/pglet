@@ -1,6 +1,6 @@
 package client
 
-type protocol interface {
+type pipe interface {
 	getCommandPipeName() string
 	nextCommand() string
 	writeResult(result string)

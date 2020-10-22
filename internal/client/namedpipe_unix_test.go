@@ -1,4 +1,4 @@
-// +build windows
+// +build !windows
 
 package client
 
@@ -15,30 +15,30 @@ import (
 
 func TestCommandLoop(t *testing.T) {
 	pipeName := "111"
-	pc, _ := newNamedPipes(pipeName)
+	pc, _ := newNamedPipe(pipeName)
 	defer pc.close()
 
 	go func() {
 		for {
 			// command echo loop
-			cmd := <-pc.commands
+			cmd := pc.nextCommand()
 			t.Log(cmd)
 
 			pc.writeResult(fmt.Sprintf("%s - OK", strings.TrimSpace(strings.Split(cmd, "\n")[0])))
 		}
 	}()
 
-	out, err := runPowerShell(10*time.Second, "test-command-loop.ps1", pipeName)
+	out, err := runBash(10*time.Second, "test-command-loop.sh", pc.commandPipeName)
 	t.Logf("combined out:\n%s\n", out)
 
 	if err != nil {
-		t.Fatalf("test-command-loop.ps1 failed with %s\n", err)
+		t.Fatalf("test-command-loop.sh failed with %s\n", err)
 	}
 }
 
 func TestEventLoop(t *testing.T) {
 	pipeName := "222"
-	pc, _ := newNamedPipes(pipeName)
+	pc, _ := newNamedPipe(pipeName)
 	defer pc.close()
 
 	go func() {
@@ -48,15 +48,17 @@ func TestEventLoop(t *testing.T) {
 		}
 	}()
 
-	out, err := runPowerShell(10*time.Second, "test-event-loop.ps1", pipeName)
+	//time.Sleep(60 * time.Second)
+
+	out, err := runBash(10*time.Second, "test-event-loop.sh", pc.eventPipeName)
 	t.Logf("combined out:\n%s\n", out)
 
 	if err != nil {
-		t.Fatalf("test-event-loop.ps1 failed with %s\n", err)
+		t.Fatalf("test-event-loop.sh failed with %s\n", err)
 	}
 }
 
-func runPowerShell(timeout time.Duration, script string, args ...string) (out string, err error) {
+func runBash(timeout time.Duration, script string, args ...string) (out string, err error) {
 	// current tests directory
 	_, filename, _, _ := runtime.Caller(0)
 	psPath := filepath.Join(filepath.Dir(filename), "..", "..", "tests", script)
@@ -65,7 +67,7 @@ func runPowerShell(timeout time.Duration, script string, args ...string) (out st
 	defer cancel() // The cancel should be deferred so resources are cleaned up
 
 	combinedArgs := append([]string{psPath}, args...)
-	cmd := exec.CommandContext(ctx, "powershell.exe", combinedArgs...)
+	cmd := exec.CommandContext(ctx, "bash", combinedArgs...)
 	outBytes, err := cmd.CombinedOutput()
 
 	if ctx.Err() == context.DeadlineExceeded {
