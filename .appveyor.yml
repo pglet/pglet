@@ -1,17 +1,26 @@
 skip_branch_with_pr: true
-skip_tags: true
 
 environment:
+  GO_VERSION: 1.15.3
+  GITHUB_TOKEN:
+    secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
+
   matrix:
     - job_name: Windows
+      job_group: tests
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - job_name: Linux
+      job_group: tests
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
-init:
-- go version
-- echo %GOPATH%
+    - job_name: macOS
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: macOS
+
+    - job_name: Release
+      job_depends_on: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
 matrix:
   fast_finish: true
@@ -27,9 +36,11 @@ for:
     only:
     - job_name: Windows
 
-  init:
-  - go version
+  install:
+  - ps: .\install_go.ps1
+  - set GOPATH=%USERPROFILE%\go
   - echo %GOPATH%
+  - echo %GOROOT%
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
@@ -47,9 +58,8 @@ for:
     only:
     - job_name: Linux
 
-  init:
-  - go version
-  - echo $GOPATH
+  install:
+  - ./install_go.sh
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
@@ -57,3 +67,50 @@ for:
 
   test_script:
   - ./run-tests.sh
+
+# ======================================
+#      macOS
+# ======================================
+
+-
+  matrix:
+    only:
+    - job_name: macOS
+
+  install:
+  - ./install_go.sh
+
+  build_script:
+  - go install github.com/pglet/pglet/cmd/pglet
+  - ls $GOPATH/bin
+
+  test_script:
+  - ./run-tests.sh
+
+# ======================================
+#      Release
+# ======================================
+
+-
+  matrix:
+    only:
+    - job_name: Release
+
+  install:
+  - ./install_go.sh
+  - sh: |
+      sudo snap install --classic goreleaser
+      goreleaser --version
+
+  build_script:
+  - sh: |
+      if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
+        goreleaser
+      else
+        goreleaser --snapshot --skip-publish
+      fi
+
+  artifacts:
+  - path: dist/pglet-*
+
+  test: off

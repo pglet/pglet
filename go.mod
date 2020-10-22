@@ -1,6 +1,6 @@
 module github.com/pglet/pglet
 
-go 1.14
+go 1.15
 
 require (
 	github.com/alexflint/go-filemutex v1.1.0

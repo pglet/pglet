@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/json"
@@ -14,10 +14,10 @@ type pipeClient struct {
 	pageName   string
 	sessionID  string
 	pipe       *pipeImpl
-	hostClient *hostClient
+	hostClient *HostClient
 }
 
-func newPipeClient(pageName string, sessionID string, hc *hostClient) (*pipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*pipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
 	pipe, err := newPipeImpl(id)
@@ -37,11 +37,11 @@ func newPipeClient(pageName string, sessionID string, hc *hostClient) (*pipeClie
 	return pc, nil
 }
 
-func (pc *pipeClient) commandPipeName() string {
+func (pc *pipeClient) CommandPipeName() string {
 	return pc.pipe.commandPipeName
 }
 
-func (pc *pipeClient) start() error {
+func (pc *pipeClient) Start() error {
 
 	go pc.commandLoop()
 
@@ -68,7 +68,7 @@ func (pc *pipeClient) commandLoop() {
 			return
 		}
 
-		rawResult := pc.hostClient.call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+		rawResult := pc.hostClient.Call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 			PageName:  pc.pageName,
 			SessionID: pc.sessionID,
 			Command:   *command,
@@ -101,5 +101,5 @@ func (pc *pipeClient) close() {
 
 	pc.pipe.close()
 
-	pc.hostClient.unregisterPipeClient(pc)
+	pc.hostClient.UnregisterPipeClient(pc)
 }
