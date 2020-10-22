@@ -6,8 +6,8 @@ environment:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
 
   matrix:
-    # - job_name: Windows
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    - job_name: Windows
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - job_name: Linux
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
@@ -26,8 +26,8 @@ for:
     only:
     - job_name: Windows
 
-  init:
-  - go version
+  install:
+  - .\install_go.ps1
   - echo %GOPATH%
 
   build_script:
