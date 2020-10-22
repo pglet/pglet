@@ -3,8 +3,8 @@ project_name: pglet
 builds:
   - main: cmd/pglet/main.go
     ldflags: >
-      -X github.com/pglet/pglet/cmd/pglet/commands.version={{.Version}}
-      -X github.com/pglet/pglet/cmd/pglet/commands.commit={{.ShortCommit}}
+      -X github.com/pglet/pglet/internal/commands.version={{.Version}}
+      -X github.com/pglet/pglet/internal/commands.commit={{.ShortCommit}}
     goos:
       - linux
       - darwin
