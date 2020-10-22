@@ -51,7 +51,7 @@ for:
     - job_name: Linux
 
   init:
-  - wget --no-verbose -O - https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xz
+  - wget --no-verbose -O - https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz | sudo tar -C /usr/local -xz
   - export PATH=$PATH:/usr/local/go/bin
   - go version
   - echo $GOPATH
@@ -70,6 +70,8 @@ for:
 
   deploy_script:
   - sh: |
-      #if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
+      if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
-      #fi
+      else
+        goreleaser --snapshot --skip-publish
+      fi
