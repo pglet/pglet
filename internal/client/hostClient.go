@@ -22,7 +22,7 @@ type HostClient struct {
 	conn *websocket.Conn
 
 	// pageSessionClients by "pageName:sessionID"
-	pageSessionClients map[string]map[*pipeClient]bool
+	pageSessionClients map[string]map[*PipeClient]bool
 	pipeClientsMutex   sync.RWMutex
 
 	// async calls registry
@@ -42,7 +42,7 @@ type HostClient struct {
 func NewHostClient(wsURL string) *HostClient {
 	hc := &HostClient{}
 	hc.wsURL = wsURL
-	hc.pageSessionClients = make(map[string]map[*pipeClient]bool)
+	hc.pageSessionClients = make(map[string]map[*PipeClient]bool)
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.newSessions = make(map[string]chan string)
 
@@ -172,19 +172,19 @@ func (hc *HostClient) CallAndForget(action string, payload interface{}) {
 	hc.send <- msg
 }
 
-func (hc *HostClient) RegisterPipeClient(pc *pipeClient) {
+func (hc *HostClient) RegisterPipeClient(pc *PipeClient) {
 	hc.pipeClientsMutex.Lock()
 	defer hc.pipeClientsMutex.Unlock()
 	key := getPageSessionKey(pc.pageName, pc.sessionID)
 	clients, ok := hc.pageSessionClients[key]
 	if !ok {
-		clients = make(map[*pipeClient]bool)
+		clients = make(map[*PipeClient]bool)
 		hc.pageSessionClients[key] = clients
 	}
 	clients[pc] = true
 }
 
-func (hc *HostClient) UnregisterPipeClient(pc *pipeClient) {
+func (hc *HostClient) UnregisterPipeClient(pc *PipeClient) {
 	hc.pipeClientsMutex.Lock()
 	defer hc.pipeClientsMutex.Unlock()
 	key := getPageSessionKey(pc.pageName, pc.sessionID)

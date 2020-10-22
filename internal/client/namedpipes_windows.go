@@ -18,7 +18,7 @@ const (
 	readsize = 64 << 10
 )
 
-type pipeImpl struct {
+type namedPipes struct {
 	conn            net.Conn
 	id              string
 	commandPipeName string
@@ -29,10 +29,10 @@ type pipeImpl struct {
 	events          chan string
 }
 
-func newPipeImpl(id string) (*pipeImpl, error) {
+func newNamedPipes(id string) (*namedPipes, error) {
 	pipeName := fmt.Sprintf("pglet_pipe_%s", id)
 
-	pc := &pipeImpl{
+	pc := &namedPipes{
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
@@ -46,11 +46,15 @@ func newPipeImpl(id string) (*pipeImpl, error) {
 	return pc, nil
 }
 
-func (pc *pipeImpl) nextCommand() string {
+func (pc *namedPipes) getCommandPipeName() string {
+	return pc.commandPipeName
+}
+
+func (pc *namedPipes) nextCommand() string {
 	return <-pc.commands
 }
 
-func (pc *pipeImpl) commandLoop() {
+func (pc *namedPipes) commandLoop() {
 	log.Println("Starting command loop - ", pc.commandPipeName)
 
 	var err error
@@ -86,7 +90,7 @@ func (pc *pipeImpl) commandLoop() {
 	}
 }
 
-func (pc *pipeImpl) read() string {
+func (pc *namedPipes) read() string {
 
 	var bytesRead int
 	var err error
@@ -123,7 +127,7 @@ func (pc *pipeImpl) read() string {
 	}
 }
 
-func (pc *pipeImpl) writeResult(result string) {
+func (pc *namedPipes) writeResult(result string) {
 	log.Println("Waiting for result to consume...")
 
 	w := bufio.NewWriter(pc.conn)
@@ -134,7 +138,7 @@ func (pc *pipeImpl) writeResult(result string) {
 	w.Flush()
 }
 
-func (pc *pipeImpl) emitEvent(evt string) {
+func (pc *namedPipes) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
 		// Event sent to queue
@@ -143,7 +147,7 @@ func (pc *pipeImpl) emitEvent(evt string) {
 	}
 }
 
-func (pc *pipeImpl) eventLoop() {
+func (pc *namedPipes) eventLoop() {
 
 	log.Println("Starting event loop - ", pc.eventPipeName)
 
@@ -204,7 +208,7 @@ func (pc *pipeImpl) eventLoop() {
 	}
 }
 
-func (pc *pipeImpl) close() {
+func (pc *namedPipes) close() {
 	log.Println("Closing Windows pipe...")
 
 	pc.commandListener.Close()

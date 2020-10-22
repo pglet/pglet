@@ -15,7 +15,7 @@ const (
 	readsize = 64 << 10
 )
 
-type pipeImpl struct {
+type namedPipes struct {
 	id              string
 	pageName        string
 	sessionID       string
@@ -24,10 +24,10 @@ type pipeImpl struct {
 	events          chan string
 }
 
-func newPipeImpl(id string) (*pipeImpl, error) {
+func newNamedPipes(id string) (*namedPipes, error) {
 	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
-	pc := &pipeImpl{
+	pc := &namedPipes{
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
@@ -37,7 +37,11 @@ func newPipeImpl(id string) (*pipeImpl, error) {
 	return pc, pc.start()
 }
 
-func (pc *pipeImpl) start() error {
+func (pc *namedPipes) getCommandPipeName() string {
+	return pc.commandPipeName
+}
+
+func (pc *namedPipes) start() error {
 	// create "command" named pipe
 	err := createFifo(pc.commandPipeName)
 	if err != nil {
@@ -55,11 +59,11 @@ func (pc *pipeImpl) start() error {
 	return nil
 }
 
-func (pc *pipeImpl) nextCommand() string {
+func (pc *namedPipes) nextCommand() string {
 	return pc.read()
 }
 
-func (pc *pipeImpl) read() string {
+func (pc *namedPipes) read() string {
 	var bytesRead int
 	buf := make([]byte, readsize)
 	for {
@@ -84,7 +88,7 @@ func (pc *pipeImpl) read() string {
 	return ""
 }
 
-func (pc *pipeImpl) writeResult(result string) {
+func (pc *namedPipes) writeResult(result string) {
 	log.Println("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
@@ -96,7 +100,7 @@ func (pc *pipeImpl) writeResult(result string) {
 	output.Close()
 }
 
-func (pc *pipeImpl) emitEvent(evt string) {
+func (pc *namedPipes) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
 		// Event sent to queue
@@ -105,7 +109,7 @@ func (pc *pipeImpl) emitEvent(evt string) {
 	}
 }
 
-func (pc *pipeImpl) eventLoop() {
+func (pc *namedPipes) eventLoop() {
 
 	log.Println("Starting event loop...")
 
@@ -129,7 +133,7 @@ func (pc *pipeImpl) eventLoop() {
 	}
 }
 
-func (pc *pipeImpl) close() {
+func (pc *namedPipes) close() {
 	log.Println("Closing Unix pipe...")
 
 	os.Remove(pc.commandPipeName)
