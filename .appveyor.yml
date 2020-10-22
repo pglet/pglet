@@ -7,9 +7,15 @@ environment:
 
   matrix:
     - job_name: Windows
+      job_group: tests
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - job_name: Linux
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+
+    - job_name: Release
+      job_depends_on: tests
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
 matrix:
@@ -28,7 +34,9 @@ for:
 
   install:
   - ps: .\install_go.ps1
+  - set GOPATH=%USERPROFILE%\go
   - echo %GOPATH%
+  - echo %GOROOT%
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
@@ -48,9 +56,6 @@ for:
 
   install:
   - ./install_go.sh
-  - sh: |
-      sudo snap install --classic goreleaser
-      goreleaser --version
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
@@ -58,6 +63,21 @@ for:
 
   test_script:
   - ./run-tests.sh
+
+# ======================================
+#      Release
+# ======================================
+
+-
+  matrix:
+    only:
+    - job_name: Release
+
+  install:
+  - ./install_go.sh
+  - sh: |
+      sudo snap install --classic goreleaser
+      goreleaser --version
 
   after_test:
   - sh: |
