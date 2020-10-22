@@ -3,8 +3,8 @@ skip_tags: true
 
 environment:
   matrix:
-    - job_name: Windows
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    # - job_name: Windows
+    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - job_name: Linux
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
@@ -50,6 +50,10 @@ for:
   init:
   - go version
   - echo $GOPATH
+
+  install:
+  - sh: |
+      sudo snap install --classic goreleaser
 
   build_script:
   - go install github.com/pglet/pglet/cmd/pglet
