@@ -50,6 +50,7 @@ for:
     - job_name: Linux
 
   init:
+  - gvm use 1.15.2
   - go version
   - echo $GOPATH
 
