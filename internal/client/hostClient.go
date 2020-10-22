@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/pglet/pglet/page"
 )
 
-type hostClient struct {
+type HostClient struct {
 
 	// "ws" endpoint full URL
 	wsURL string
@@ -39,8 +39,8 @@ type hostClient struct {
 	done chan bool
 }
 
-func newHostClient(wsURL string) *hostClient {
-	hc := &hostClient{}
+func NewHostClient(wsURL string) *HostClient {
+	hc := &HostClient{}
 	hc.wsURL = wsURL
 	hc.pageSessionClients = make(map[string]map[*pipeClient]bool)
 	hc.calls = make(map[string]chan *json.RawMessage)
@@ -51,7 +51,7 @@ func newHostClient(wsURL string) *hostClient {
 	return hc
 }
 
-func (hc *hostClient) start() (err error) {
+func (hc *HostClient) Start() (err error) {
 
 	// connect only once
 	hc.connectOnce.Do(func() {
@@ -70,7 +70,7 @@ func (hc *hostClient) start() (err error) {
 	return
 }
 
-func (hc *hostClient) readLoop() {
+func (hc *HostClient) readLoop() {
 	defer close(hc.done)
 
 	for {
@@ -103,7 +103,7 @@ func (hc *hostClient) readLoop() {
 	}
 }
 
-func (hc *hostClient) writeLoop() {
+func (hc *HostClient) writeLoop() {
 	for {
 		select {
 		case message, ok := <-hc.send:
@@ -134,7 +134,7 @@ func (hc *hostClient) writeLoop() {
 	}
 }
 
-func (hc *hostClient) call(action string, payload interface{}) *json.RawMessage {
+func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage {
 
 	// assign unique ID to the message
 	messageID := uuid.New().String()
@@ -159,7 +159,7 @@ func (hc *hostClient) call(action string, payload interface{}) *json.RawMessage 
 	return <-result
 }
 
-func (hc *hostClient) callAndForget(action string, payload interface{}) {
+func (hc *HostClient) CallAndForget(action string, payload interface{}) {
 
 	// serialize payload
 	jsonPayload, _ := json.Marshal(payload)
@@ -172,7 +172,7 @@ func (hc *hostClient) callAndForget(action string, payload interface{}) {
 	hc.send <- msg
 }
 
-func (hc *hostClient) registerPipeClient(pc *pipeClient) {
+func (hc *HostClient) RegisterPipeClient(pc *pipeClient) {
 	hc.pipeClientsMutex.Lock()
 	defer hc.pipeClientsMutex.Unlock()
 	key := getPageSessionKey(pc.pageName, pc.sessionID)
@@ -184,7 +184,7 @@ func (hc *hostClient) registerPipeClient(pc *pipeClient) {
 	clients[pc] = true
 }
 
-func (hc *hostClient) unregisterPipeClient(pc *pipeClient) {
+func (hc *HostClient) UnregisterPipeClient(pc *pipeClient) {
 	hc.pipeClientsMutex.Lock()
 	defer hc.pipeClientsMutex.Unlock()
 	key := getPageSessionKey(pc.pageName, pc.sessionID)
@@ -194,7 +194,7 @@ func (hc *hostClient) unregisterPipeClient(pc *pipeClient) {
 	}
 }
 
-func (hc *hostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
+func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 	// parse event
 	payload := &page.PageEventPayload{}
 	err := json.Unmarshal(*rawPayload, payload)
@@ -220,14 +220,14 @@ func getPageSessionKey(pageName string, sessionID string) string {
 	return fmt.Sprintf("%s:%s", pageName, sessionID)
 }
 
-func (hc *hostClient) notifySession(rawPayload *json.RawMessage) error {
+func (hc *HostClient) notifySession(rawPayload *json.RawMessage) error {
 
 	payload := new(page.SessionCreatedPayload)
 	json.Unmarshal(*rawPayload, payload)
 
 	log.Printf("Notify %s subscribers about new session %s\n", payload.PageName, payload.SessionID)
 	select {
-	case hc.pageNewSessions(payload.PageName) <- payload.SessionID:
+	case hc.PageNewSessions(payload.PageName) <- payload.SessionID:
 		// Event sent to subscriber
 	default:
 		// No event listeners
@@ -236,7 +236,7 @@ func (hc *hostClient) notifySession(rawPayload *json.RawMessage) error {
 	return nil
 }
 
-func (hc *hostClient) pageNewSessions(pageName string) chan string {
+func (hc *HostClient) PageNewSessions(pageName string) chan string {
 	hc.nsLock.Lock()
 	defer hc.nsLock.Unlock()
 

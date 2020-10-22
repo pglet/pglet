@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/pglet/pglet/internal/proxy"
+
+	"github.com/pglet/pglet/internal/server"
 )
 
 var (
@@ -24,7 +28,7 @@ func main() {
 	flag.StringVar(&serverAddr, "server", "", "Pglet server address.")
 	flag.StringVar(&sessionID, "session-id", "", "Client session ID.")
 	flag.BoolVar(&isProxy, "proxy", false, "Start Proxy service.")
-	flag.IntVar(&serverPort, "port", defaultServerPort, "The port number to run pglet server on.")
+	flag.IntVar(&serverPort, "port", server.DefaultServerPort, "The port number to run pglet server on.")
 	flag.Parse()
 
 	if !isProxy && pageName == "" && appName == "" {
@@ -37,20 +41,20 @@ func main() {
 	}
 
 	if isProxy {
-		runProxyService()
+		proxy.RunService()
 	} else if isServer {
-		runServer()
+		server.Start(serverPort)
 	} else {
 		runClient()
 	}
 }
 
 func runClient() {
-	client := &proxyClient{}
-	client.start()
+	client := &proxy.Client{}
+	client.Start()
 
 	if pageName != "" {
-		pipeName, err := client.connectSharedPage(pageName)
+		pipeName, err := client.ConnectSharedPage(pageName)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -58,7 +62,7 @@ func runClient() {
 	} else if appName != "" {
 		// continuously wait for new client connections
 		for {
-			pipeName, err := client.connectAppPage(appName)
+			pipeName, err := client.ConnectAppPage(appName)
 			if err != nil {
 				log.Fatalln(err)
 			}

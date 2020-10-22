@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"encoding/json"
@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/alexflint/go-filemutex"
+	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/page"
 )
 
@@ -26,19 +27,19 @@ func init() {
 	lockFilename = filepath.Join(os.TempDir(), "pglet.lock")
 }
 
-// ProxyService manages connections to a shared page or app.
-type ProxyService struct {
+// Service manages connections to a shared page or app.
+type Service struct {
 	hcMutex     sync.RWMutex
-	hostClients map[string]*hostClient
+	hostClients map[string]*client.HostClient
 }
 
-func newProxyService() *ProxyService {
-	ps := &ProxyService{}
-	ps.hostClients = make(map[string]*hostClient)
+func newService() *Service {
+	ps := &Service{}
+	ps.hostClients = make(map[string]*client.HostClient)
 	return ps
 }
 
-func (ps *ProxyService) getHostClient(pageURI string) *hostClient {
+func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 	ps.hcMutex.Lock()
 	defer ps.hcMutex.Unlock()
 
@@ -46,8 +47,8 @@ func (ps *ProxyService) getHostClient(pageURI string) *hostClient {
 
 	hc, ok := ps.hostClients[wsURL]
 	if !ok {
-		hc = newHostClient(wsURL)
-		err := hc.start()
+		hc = client.NewHostClient(wsURL)
+		err := hc.Start()
 
 		if err != nil {
 			log.Fatalf("Cannot connect to %s: %v\n", wsURL, err)
@@ -58,7 +59,7 @@ func (ps *ProxyService) getHostClient(pageURI string) *hostClient {
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
-func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectSharedPage(pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
 	pageName := getPageNameFromURI(*pageURI)
@@ -66,7 +67,7 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 	log.Println("Connecting to shared page:", pageName)
 
 	// call server
-	result := hc.call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    false,
 	})
@@ -80,23 +81,23 @@ func (ps *ProxyService) ConnectSharedPage(pageURI *string, pipeName *string) err
 	}
 
 	// create new pipeClient
-	pc, err := newPipeClient(pageName, payload.SessionID, hc)
+	pc, err := client.NewPipeClient(pageName, payload.SessionID, hc)
 	if err != nil {
 		return err
 	}
 
-	pc.start()
+	pc.Start()
 
 	// register pipe client, so it can receive events from pages/sessions
-	hc.registerPipeClient(pc)
+	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.commandPipeName()
+	*pipeName = pc.CommandPipeName()
 
 	return nil
 }
 
 // ConnectAppPage waits for new web clients connecting specified page, creates a new session and returns file name of control pipe.
-func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectAppPage(pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
 	pageName := getPageNameFromURI(*pageURI)
@@ -104,7 +105,7 @@ func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error 
 	log.Println("Connecting to app page:", pageName)
 
 	// call server
-	result := hc.call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    true,
 	})
@@ -118,25 +119,25 @@ func (ps *ProxyService) ConnectAppPage(pageURI *string, pipeName *string) error 
 	}
 
 	// wait for new session
-	sessionID := <-hc.pageNewSessions(pageName)
+	sessionID := <-hc.PageNewSessions(pageName)
 
 	// create new pipeClient
-	pc, err := newPipeClient(pageName, sessionID, hc)
+	pc, err := client.NewPipeClient(pageName, sessionID, hc)
 	if err != nil {
 		return err
 	}
 
-	pc.start()
+	pc.Start()
 
 	// register pipe client, so it can receive events from pages/sessions
-	hc.registerPipeClient(pc)
+	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.commandPipeName()
+	*pipeName = pc.CommandPipeName()
 
 	return nil
 }
 
-func runProxyService() {
+func RunService() {
 
 	log.Println("Starting Proxy service...")
 
@@ -157,7 +158,7 @@ func runProxyService() {
 		log.Fatal(err)
 	}
 
-	proxySvc := newProxyService()
+	proxySvc := newService()
 	rpc.Register(proxySvc)
 	rpc.HandleHTTP()
 	l, e := net.Listen("unix", sockAddr)

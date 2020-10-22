@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"log"
@@ -12,11 +12,11 @@ const (
 	connectAttempts = 20
 )
 
-type proxyClient struct {
+type Client struct {
 	client *rpc.Client
 }
 
-func (proxy *proxyClient) start() {
+func (proxy *Client) Start() {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
@@ -37,12 +37,12 @@ func (proxy *proxyClient) start() {
 	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
 }
 
-func (proxy *proxyClient) connectSharedPage(pageName string) (pipeFilename string, err error) {
+func (proxy *Client) ConnectSharedPage(pageName string) (pipeFilename string, err error) {
 	err = proxy.client.Call("ProxyService.ConnectSharedPage", &pageName, &pipeFilename)
 	return
 }
 
-func (proxy *proxyClient) connectAppPage(pageName string) (pipeFilename string, err error) {
+func (proxy *Client) ConnectAppPage(pageName string) (pipeFilename string, err error) {
 	err = proxy.client.Call("ProxyService.ConnectAppPage", &pageName, &pipeFilename)
 	return
 }

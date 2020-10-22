@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	defaultServerPort   int    = 5000
+	DefaultServerPort   int    = 5000
 	apiRoutePrefix      string = "/api"
 	contentRootFolder   string = "./tests" //"./client/build"
 	siteDefaultDocument string = "index.html"
 )
 
-func runServer() {
+func Start(serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
