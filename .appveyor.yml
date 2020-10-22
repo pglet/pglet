@@ -12,10 +12,6 @@ environment:
     - job_name: Linux
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
-init:
-- go version
-- echo %GOPATH%
-
 matrix:
   fast_finish: true
   
