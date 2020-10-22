@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/pglet/pglet/page"
+	"github.com/pglet/pglet/internal/page"
 )
 
 type HostClient struct {

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pglet/pglet/utils"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (

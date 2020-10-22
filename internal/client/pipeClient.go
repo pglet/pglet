@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pglet/pglet/page"
-	"github.com/pglet/pglet/utils"
+	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 type pipeClient struct {

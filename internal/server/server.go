@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/pglet/pglet/page"
+	"github.com/pglet/pglet/internal/page"
 )
 
 const (

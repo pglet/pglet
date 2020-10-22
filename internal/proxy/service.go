@@ -14,7 +14,7 @@ import (
 
 	"github.com/alexflint/go-filemutex"
 	"github.com/pglet/pglet/internal/client"
-	"github.com/pglet/pglet/page"
+	"github.com/pglet/pglet/internal/page"
 )
 
 var (
