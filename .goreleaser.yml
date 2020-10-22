@@ -1,0 +1,23 @@
+project_name: pglet
+
+builds:
+  - main: cmd/pglet/main.go
+    ldflags: >
+      -X github.com/pglet/pglet/cmd/pglet/commands.version={{.Version}}
+      -X github.com/pglet/pglet/cmd/pglet/commands.commit={{.ShortCommit}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+
+archives:
+  - id: binary
+    format: binary
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+  - id: regular
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+
+release:
+  prerelease: auto

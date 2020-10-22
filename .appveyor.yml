@@ -62,3 +62,9 @@ for:
 
   test_script:
   - ./run-tests.sh
+
+  deploy_script:
+  - sh: |
+      if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
+        goreleaser
+      fi
