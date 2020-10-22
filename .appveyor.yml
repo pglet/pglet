@@ -1,7 +1,7 @@
 skip_branch_with_pr: true
 
 environment:
-  GO_VERSION: 1.15.2
+  GO_VERSION: 1.15.3
   GITHUB_TOKEN:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
 
@@ -51,7 +51,8 @@ for:
     - job_name: Linux
 
   init:
-  - gvm install "go$GO_VERSION" && gvm use "go$GO_VERSION"
+  - wget --no-verbose -O - https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xz
+  - export PATH=$PATH:/usr/local/go/bin
   - go version
   - echo $GOPATH
 
