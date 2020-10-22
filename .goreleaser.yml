@@ -16,8 +16,11 @@ archives:
   - id: binary
     format: binary
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
-  - id: regular
+  - id: zip
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip    
 
 release:
   prerelease: auto

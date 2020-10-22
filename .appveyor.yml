@@ -64,6 +64,9 @@ for:
   test_script:
   - ./run-tests.sh
 
+  artifacts:
+  - path: dist/pglet-*
+
   deploy_script:
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
