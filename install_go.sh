@@ -1,4 +1,4 @@
-local GO_OS=linux
+GO_OS=linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
     GO_OS=darwin
 fi
