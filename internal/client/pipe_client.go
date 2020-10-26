@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pglet/pglet/page"
-	"github.com/pglet/pglet/utils"
+	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/utils"
 )
 
-type pipeClient struct {
+type PipeClient struct {
 	id         string
 	pageName   string
 	sessionID  string
-	pipe       *pipeImpl
+	pipe       pipe
 	hostClient *HostClient
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*pipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
-	pipe, err := newPipeImpl(id)
+	pipe, err := newNamedPipe(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	pc := &pipeClient{
+	pc := &PipeClient{
 		id:         id,
 		pageName:   pageName,
 		sessionID:  sessionID,
@@ -37,18 +37,18 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*pipeClie
 	return pc, nil
 }
 
-func (pc *pipeClient) CommandPipeName() string {
-	return pc.pipe.commandPipeName
+func (pc *PipeClient) CommandPipeName() string {
+	return pc.pipe.getCommandPipeName()
 }
 
-func (pc *pipeClient) Start() error {
+func (pc *PipeClient) Start() error {
 
 	go pc.commandLoop()
 
 	return nil
 }
 
-func (pc *pipeClient) commandLoop() {
+func (pc *PipeClient) commandLoop() {
 	log.Println("Starting command loop...")
 
 	for {
@@ -92,11 +92,11 @@ func (pc *pipeClient) commandLoop() {
 	}
 }
 
-func (pc *pipeClient) emitEvent(evt string) {
+func (pc *PipeClient) emitEvent(evt string) {
 	pc.pipe.emitEvent(evt)
 }
 
-func (pc *pipeClient) close() {
+func (pc *PipeClient) close() {
 	log.Println("Closing pipe client...")
 
 	pc.pipe.close()

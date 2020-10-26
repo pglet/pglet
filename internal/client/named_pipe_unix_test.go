@@ -15,7 +15,7 @@ import (
 
 func TestCommandLoop(t *testing.T) {
 	pipeName := "111"
-	pc, _ := newPipeImpl(pipeName)
+	pc, _ := newNamedPipe(pipeName)
 	defer pc.close()
 
 	go func() {
@@ -38,7 +38,7 @@ func TestCommandLoop(t *testing.T) {
 
 func TestEventLoop(t *testing.T) {
 	pipeName := "222"
-	pc, _ := newPipeImpl(pipeName)
+	pc, _ := newNamedPipe(pipeName)
 	defer pc.close()
 
 	go func() {

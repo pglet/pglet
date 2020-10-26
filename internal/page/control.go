@@ -3,7 +3,7 @@ package page
 import (
 	"encoding/json"
 
-	"github.com/pglet/pglet/utils"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (

@@ -20,16 +20,16 @@ func (proxy *Client) Start() {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
-		log.Printf("Connecting to Proxy service (attempt %d of %d)\n", i, connectAttempts)
+		//log.Printf("Connecting to Proxy service (attempt %d of %d)\n", i, connectAttempts)
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
-			log.Println("Error connecting to Proxy service:", err)
+			//log.Println("Error connecting to Proxy service:", err)
 
 			// start Proxy service
 			startProxyService()
 			time.Sleep(1 * time.Second)
 		} else {
-			log.Println("Connected to Proxy service")
+			//log.Println("Connected to Proxy service")
 			return
 		}
 	}
@@ -38,12 +38,12 @@ func (proxy *Client) Start() {
 }
 
 func (proxy *Client) ConnectSharedPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("ProxyService.ConnectSharedPage", &pageName, &pipeFilename)
+	err = proxy.client.Call("Service.ConnectSharedPage", &pageName, &pipeFilename)
 	return
 }
 
 func (proxy *Client) ConnectAppPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("ProxyService.ConnectAppPage", &pageName, &pipeFilename)
+	err = proxy.client.Call("Service.ConnectAppPage", &pageName, &pipeFilename)
 	return
 }
 
@@ -52,7 +52,7 @@ func startProxyService() {
 	// run proxy
 	execPath, _ := os.Executable()
 
-	cmd := exec.Command(execPath, "--proxy")
+	cmd := exec.Command(execPath, "proxy")
 	err := cmd.Start()
 
 	if err != nil {
