@@ -7,56 +7,10 @@ const initialState = {
     "error": null,
     "controls": {
         "0": {
-            "c": [
-                "1"
-            ],
+            "c": [],
             "i": "0",
             "p": "",
             "t": "page"
-        },
-        "1": {
-            "c": [
-                "2",
-                "3"
-            ],
-            "i": "1",
-            "p": "0",
-            "t": "row"
-        },
-        "2": {
-            "c": [
-                "myTxt",
-                "myBtn"
-            ],
-            "i": "2",
-            "p": "1",
-            "t": "col"
-        },
-        "3": {
-            "c": [
-                "5"
-            ],
-            "i": "3",
-            "p": "1",
-            "t": "col"
-        },
-        "myTxt": {
-            "i": "myTxt",
-            "p": "2",
-            "t": "text",
-            "text": "Hello, world!"
-        },
-        "5": {
-            "i": "5",
-            "p": "3",
-            "t": "button",
-            "text": "Click me!"
-        },
-        "myBtn": {
-            "i": "myBtn",
-            "p": "2",
-            "t": "button",
-            "text": "Cancel"
         }
     }
 }
@@ -67,7 +21,8 @@ const pageSlice = createSlice({
     reducers: {
         registerWebClientSuccess(state, action) {
             state.loading = false;
-            state.controls = action.payload;
+            state.sessionId = action.payload.id;
+            state.controls = action.payload.controls;
         },
         registerWebClientError(state, action) {
             state.loading = false;

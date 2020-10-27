@@ -11,7 +11,7 @@ import (
 
 const (
 	ZeroSession         string = ""
-	ControlAutoIDPrefix        = "_"
+	ControlAutoIDPrefix        = ""
 	ControlIDSeparator         = ":"
 )
 

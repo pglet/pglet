@@ -14,6 +14,8 @@ export default ({ children }) => {
     const dispatch = useDispatch();
 
     const registerWebClient = (pageName) => {
+
+        console.log("Call registerWebClient()")
         var msg = {
             action: "registerWebClient",
             payload: {
@@ -44,6 +46,8 @@ export default ({ children }) => {
             if (data.action === "registerWebClient") {
                 if (data.payload.error) {
                     dispatch(registerWebClientError(data.payload.error));
+                } else {
+                    dispatch(registerWebClientSuccess(data.payload.session));
                 }
             }
         };

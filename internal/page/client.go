@@ -84,8 +84,8 @@ type RegisterWebClientRequestPayload struct {
 }
 
 type RegisterWebClientResponsePayload struct {
-	SessionID string `json:"sessionID"`
-	Error     string `json:"error"`
+	Session *Session `json:"session"`
+	Error   string   `json:"error"`
 }
 
 type SessionCreatedPayload struct {
@@ -267,8 +267,7 @@ func registerWebClient(client *Client, message *Message) {
 	page := Pages().Get(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
-		SessionID: "",
-		Error:     "",
+		Error: "",
 	}
 
 	if page == nil {
@@ -315,7 +314,7 @@ func registerWebClient(client *Client, message *Message) {
 			}
 		}
 
-		response.SessionID = session.ID
+		response.Session = session
 	}
 
 	responsePayload, _ := json.Marshal(response)

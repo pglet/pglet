@@ -20,24 +20,24 @@ const PageLanding = () => {
 
         ws.registerWebClient(fullPageName);
 
-        setTimeout(() => {
-            console.log("change control prop!");
-            dispatch(changeProps({
-                nodeId: "myTxt",
-                newProps: {
-                    "text": "Another text!"
-                }
-            }));
-            dispatch(removeChild({
-                nodeId: "1",
-                childId: "3"
-            }))
-            dispatch(deleteNode("3"))
-        }, 4000)
-    })
+        // setTimeout(() => {
+        //     console.log("change control prop!");
+        //     dispatch(changeProps({
+        //         nodeId: "myTxt",
+        //         newProps: {
+        //             "text": "Another text!"
+        //         }
+        //     }));
+        //     dispatch(removeChild({
+        //         nodeId: "1",
+        //         childId: "3"
+        //     }))
+        //     dispatch(deleteNode("3"))
+        // }, 4000)
+    }, [])
 
     const err = useSelector(state => state.page.error);
-    const root = useSelector(state => state.page.controls[0]);
+    const root = useSelector(state => state.page.controls['0']);
 
     if (err) {
         return <div>{err}</div>;

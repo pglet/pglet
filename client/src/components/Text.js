@@ -4,7 +4,7 @@ const Text = React.memo(({control}) => {
 
   console.log(`render Text: ${control.i}`);
 
-  return <div className="text">{control.text}</div>;
+  return <div className="text">{control.value}</div>;
 })
 
 export default Text

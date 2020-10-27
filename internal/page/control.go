@@ -34,6 +34,7 @@ func NewControl(controlType string, parentID string, id string) *Control {
 	ctl["t"] = controlType
 	ctl["p"] = parentID
 	ctl["i"] = id
+	ctl["c"] = make([]string, 0, 0)
 	return &ctl
 }
 
