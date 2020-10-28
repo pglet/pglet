@@ -3,12 +3,14 @@ package page
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/pglet/pglet/internal/page/command"
 )
 
 const (
@@ -94,9 +96,9 @@ type SessionCreatedPayload struct {
 }
 
 type PageCommandRequestPayload struct {
-	PageName  string  `json:"pageName"`
-	SessionID string  `json:"sessionID"`
-	Command   Command `json:"command"`
+	PageName  string          `json:"pageName"`
+	SessionID string          `json:"sessionID"`
+	Command   command.Command `json:"command"`
 }
 
 type PageCommandResponsePayload struct {
@@ -145,7 +147,7 @@ func (c *Client) readLoop(readHandler readPumpHandler) {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
-		fmt.Println("received pong")
+		log.Println("received pong")
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
@@ -198,7 +200,7 @@ func (c *Client) writeLoop() {
 				return
 			}
 		case <-ticker.C:
-			fmt.Println("send ping")
+			log.Println("send ping")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -221,7 +223,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	client := newClient(conn)
 
-	fmt.Printf("New Client %s is connected, total: %d\n", client.id, 0)
+	log.Printf("New Client %s is connected, total: %d\n", client.id, 0)
 
 	// start read/write loops
 	go client.readLoop(readHandler)
@@ -229,7 +231,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func readHandler(c *Client, message []byte) error {
-	fmt.Printf("Message from %s: %v\n", c.id, string(message))
+	log.Printf("Message from %s: %v\n", c.id, string(message))
 
 	// decode message
 	msg := &Message{}
@@ -256,7 +258,7 @@ func readHandler(c *Client, message []byte) error {
 }
 
 func registerWebClient(client *Client, message *Message) {
-	fmt.Println("Registering as web client")
+	log.Println("Registering as web client")
 	payload := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
@@ -329,7 +331,7 @@ func registerWebClient(client *Client, message *Message) {
 }
 
 func registerHostClient(client *Client, message *Message) {
-	fmt.Println("Registering as host client")
+	log.Println("Registering as host client")
 	payload := new(RegisterHostClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
@@ -373,7 +375,7 @@ func registerHostClient(client *Client, message *Message) {
 }
 
 func executeCommandFromHostClient(client *Client, message *Message) {
-	fmt.Println("Page command from host client")
+	log.Println("Page command from host client")
 
 	payload := new(PageCommandRequestPayload)
 	json.Unmarshal(message.Payload, payload)
@@ -421,7 +423,7 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 		break
 	}
 
-	fmt.Println("Page event from browser:", message.Payload,
+	log.Println("Page event from browser:", message.Payload,
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
 	payload := new(PageEventPayload)

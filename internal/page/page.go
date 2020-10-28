@@ -1,8 +1,9 @@
 package page
 
 import (
-	"log"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Page represents a single page.

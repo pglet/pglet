@@ -1,12 +1,10 @@
-package page
+package command
 
 import (
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -15,7 +13,7 @@ const (
 
 const (
 	Add    string = "add"
-	Addr          = "addr"
+	Addf          = "addf"
 	Set           = "set"
 	Get           = "get"
 	Clean         = "clean"
@@ -25,15 +23,15 @@ const (
 )
 
 var (
-	supportedCommands = []string{
-		Add,
-		Addr,
-		Set,
-		Get,
-		Clean,
-		Remove,
-		Insert,
-		Quit,
+	supportedCommands = map[string]*CommandMetadata{
+		Add:    &CommandMetadata{Name: Add, ShouldReturn: true},
+		Addf:   &CommandMetadata{Name: Addf, ShouldReturn: false},
+		Set:    &CommandMetadata{Name: Set, ShouldReturn: false},
+		Get:    &CommandMetadata{Name: Get, ShouldReturn: true},
+		Clean:  &CommandMetadata{Name: Clean, ShouldReturn: false},
+		Remove: &CommandMetadata{Name: Remove, ShouldReturn: false},
+		Insert: &CommandMetadata{Name: Insert, ShouldReturn: false},
+		Quit:   &CommandMetadata{Name: Quit, ShouldReturn: false},
 	}
 )
 
@@ -43,7 +41,12 @@ type Command struct {
 	Attrs  map[string]string
 }
 
-func ParseCommand(cmdText string) (*Command, error) {
+type CommandMetadata struct {
+	Name         string
+	ShouldReturn bool
+}
+
+func Parse(cmdText string) (*Command, error) {
 	re := regexp.MustCompile(commandRegexPattern)
 	matches := re.FindAllSubmatch([]byte(cmdText), -1)
 
@@ -63,7 +66,8 @@ func ParseCommand(cmdText string) (*Command, error) {
 				return nil, errors.New("The first argument of the command must be a verb")
 			}
 			command.Name = strings.ToLower(key)
-			if !utils.ContainsString(supportedCommands, command.Name) {
+			_, commandExists := supportedCommands[command.Name]
+			if !commandExists {
 				return nil, fmt.Errorf("Unknown command: %s", command.Name)
 			}
 		} else if value == "" {

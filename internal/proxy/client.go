@@ -1,11 +1,12 @@
 package proxy
 
 import (
-	"log"
 	"net/rpc"
 	"os"
 	"os/exec"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

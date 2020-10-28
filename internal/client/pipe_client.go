@@ -1,11 +1,10 @@
 package client
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/page/command"
 	"github.com/pglet/pglet/internal/utils"
 )
 
@@ -56,39 +55,40 @@ func (pc *PipeClient) commandLoop() {
 		cmdText := pc.pipe.nextCommand()
 
 		// parse command
-		command, err := page.ParseCommand(cmdText)
+		cmd, err := command.Parse(cmdText)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Printf("Send command: %+v", command)
+		log.Printf("Send command: %+v", cmd)
 
-		if command.Name == page.Quit {
+		if cmd.Name == command.Quit {
 			pc.close()
 			return
 		}
 
-		rawResult := pc.hostClient.Call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+		pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 			PageName:  pc.pageName,
 			SessionID: pc.sessionID,
-			Command:   *command,
+			Command:   *cmd,
 		})
 
-		// parse response
-		payload := &page.PageCommandResponsePayload{}
-		err = json.Unmarshal(*rawResult, payload)
+		// // parse response
+		// payload := &page.PageCommandResponsePayload{}
+		// err = json.Unmarshal(*rawResult, payload)
 
-		if err != nil {
-			log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
-		}
+		// if err != nil {
+		// 	log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+		// }
 
-		// save command results
-		result := payload.Result
-		if payload.Error != "" {
-			result = fmt.Sprintf("error %s", payload.Error)
-		}
+		// // save command results
+		// result := payload.Result
+		// if payload.Error != "" {
+		// 	result = fmt.Sprintf("error %s", payload.Error)
+		// }
 
-		pc.pipe.writeResult("aaa" + result)
+		// pc.pipe.writeResult("aaa" + result)
+		pc.pipe.writeResult("bbb")
 	}
 }
 

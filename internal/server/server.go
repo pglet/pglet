@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -48,7 +49,7 @@ func Start(serverPort int) {
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {
-		fmt.Println(c.Request.RequestURI)
+		log.Println(c.Request.RequestURI)
 		if !strings.HasPrefix(c.Request.RequestURI, apiRoutePrefix+"/") {
 			c.File(contentRootFolder + "/" + siteDefaultDocument)
 		}
@@ -79,7 +80,7 @@ func pageHandler(c *gin.Context) {
 	accountName := c.Param("accountName")
 	pageName := c.Param("pageName")
 	sessionID := c.Query("sessionID")
-	fmt.Println("sessionID:", sessionID)
+	log.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
 	page := page.Pages().Get(fullPageName)

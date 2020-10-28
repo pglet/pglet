@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/alexflint/go-filemutex"
 	"github.com/pglet/pglet/internal/client"

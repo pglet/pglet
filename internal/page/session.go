@@ -4,28 +4,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/pglet/pglet/internal/page/command"
 )
 
 const (
-	ZeroSession         string = ""
-	ControlAutoIDPrefix        = ""
-	ControlIDSeparator         = ":"
+	// ZeroSession is ID of zero session
+	ZeroSession string = ""
+	// ControlAutoIDPrefix is a prefix for auto-generated control IDs
+	ControlAutoIDPrefix = "_"
+	// ControlIDSeparator is a symbol between parts of control ID
+	ControlIDSeparator = ":"
 )
 
-type commandHandler = func(*Session, Command) (string, error)
+type commandHandler = func(*Session, command.Command) (string, error)
 
 var (
 	commandHandlers = map[string]commandHandler{
-		Add:    add,
-		Addr:   add,
-		Set:    set,
-		Get:    get,
-		Insert: insert,
-		Clean:  clean,
-		Remove: remove,
+		command.Add:    add,
+		command.Addf:   add,
+		command.Set:    set,
+		command.Get:    get,
+		command.Insert: insert,
+		command.Clean:  clean,
+		command.Remove: remove,
 	}
 )
 
@@ -51,23 +57,21 @@ func NewSession(page *Page, id string) *Session {
 	return s
 }
 
-func (session *Session) ExecuteCommand(command Command) (result string, err error) {
+// ExecuteCommand executes command and returns the result
+func (session *Session) ExecuteCommand(command command.Command) (result string, err error) {
 
 	log.Printf("Execute command for page %s session %s: %+v\n",
 		session.Page.Name, session.ID, command)
 
 	commandHandler := commandHandlers[command.Name]
 	if commandHandler != nil {
-		return commandHandler(session, command)
+		return "", fmt.Errorf("command '%s' does not have a handler", command.Name)
 	}
 
-	// result = fmt.Sprintf("a\nb\n%+v", command)
-	// time.Sleep(2 * time.Second)
-
-	return
+	return commandHandler(session, command)
 }
 
-func add(session *Session, command Command) (result string, err error) {
+func add(session *Session, command command.Command) (result string, err error) {
 
 	controlsFragment := command.Attrs["controls"]
 
@@ -106,8 +110,8 @@ func add(session *Session, command Command) (result string, err error) {
 	session.AddControl(ctrl)
 
 	// output page
-	pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	log.Println(string(pJSON))
+	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
+	// log.Println(string(pJSON))
 
 	// update controls of all connected web cliens
 	msg := NewMessage(AddPageControlsAction, &AddPageControlsPayload{
@@ -116,10 +120,10 @@ func add(session *Session, command Command) (result string, err error) {
 
 	// broadcast command to all connected web clients
 	go session.broadcastCommandToWebClients(msg)
-	return "", nil
+	return id, nil
 }
 
-func set(session *Session, command Command) (result string, err error) {
+func set(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 
@@ -128,23 +132,14 @@ func set(session *Session, command Command) (result string, err error) {
 	return "", nil
 }
 
-func get(session *Session, command Command) (result string, err error) {
+func get(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 
 	return "", nil
 }
 
-func insert(session *Session, command Command) (result string, err error) {
-
-	// TODO - implement command
-
-	// broadcast command to all connected web clients
-	//go session.broadcastCommandToWebClients(command)
-	return "", nil
-}
-
-func clean(session *Session, command Command) (result string, err error) {
+func insert(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 
@@ -153,7 +148,16 @@ func clean(session *Session, command Command) (result string, err error) {
 	return "", nil
 }
 
-func remove(session *Session, command Command) (result string, err error) {
+func clean(session *Session, command command.Command) (result string, err error) {
+
+	// TODO - implement command
+
+	// broadcast command to all connected web clients
+	//go session.broadcastCommandToWebClients(command)
+	return "", nil
+}
+
+func remove(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 

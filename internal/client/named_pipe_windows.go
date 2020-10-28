@@ -6,10 +6,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/npipe"
 )
@@ -81,6 +82,7 @@ func (pc *namedPipe) commandLoop() {
 				if cmdText == "" {
 					log.Println("Disconnected from command pipe")
 					return
+					//continue
 				}
 
 				pc.commands <- cmdText

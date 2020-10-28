@@ -2,7 +2,8 @@ package commands
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/proxy"
 	"github.com/spf13/cobra"

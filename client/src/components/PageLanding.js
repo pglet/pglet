@@ -37,7 +37,7 @@ const PageLanding = () => {
     }, [])
 
     const err = useSelector(state => state.page.error);
-    const root = useSelector(state => state.page.controls['0']);
+    const root = useSelector(state => state.page.controls['_0']);
 
     if (err) {
         return <div>{err}</div>;

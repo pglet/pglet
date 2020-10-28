@@ -5,10 +5,11 @@ package client
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -80,7 +81,7 @@ func (pc *namedPipe) read() string {
 				break
 			}
 
-			//fmt.Printf("read: %d\n", bytesRead)
+			//log.Printf("read: %d\n", bytesRead)
 		}
 		input.Close()
 		return string(result)

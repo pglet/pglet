@@ -3,8 +3,9 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
