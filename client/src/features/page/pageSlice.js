@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, current } from '@reduxjs/toolkit'
 
 let nextId = 0
 
@@ -28,6 +28,16 @@ const pageSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+        addPageControlsSuccess(state, action) {
+            action.payload.forEach(ctrl => {
+                state.controls[ctrl.i] = ctrl;
+                state.controls[ctrl.p].c.push(ctrl.i)
+            })
+            console.log(current(state))
+        },
+        addPageControlsError(state, action) {
+            state.error = action.payload;
+        },        
         createNode: {
             reducer(state, action) {
                 const { nodeId, parentId } = action.payload
@@ -97,6 +107,8 @@ const deleteMany = (controls, ids) => {
 export const {
     registerWebClientSuccess,
     registerWebClientError,
+    addPageControlsSuccess,
+    addPageControlsError,
     createNode,
     increment,
     toggleExpand,

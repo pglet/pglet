@@ -25,13 +25,15 @@ type commandHandler = func(*Session, command.Command) (string, error)
 
 var (
 	commandHandlers = map[string]commandHandler{
-		command.Add:    add,
-		command.Addf:   add,
-		command.Set:    set,
-		command.Get:    get,
-		command.Insert: insert,
-		command.Clean:  clean,
-		command.Remove: remove,
+		command.Add:     add,
+		command.Addf:    add,
+		command.Set:     set,
+		command.Setf:    set,
+		command.Get:     get,
+		command.Clean:   clean,
+		command.Cleanf:  clean,
+		command.Remove:  remove,
+		command.Removef: remove,
 	}
 )
 
@@ -136,15 +138,6 @@ func get(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 
-	return "", nil
-}
-
-func insert(session *Session, command command.Command) (result string, err error) {
-
-	// TODO - implement command
-
-	// broadcast command to all connected web clients
-	//go session.broadcastCommandToWebClients(command)
 	return "", nil
 }
 

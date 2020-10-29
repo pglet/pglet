@@ -1,6 +1,9 @@
 package client
 
 import (
+	"encoding/json"
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/page"
@@ -57,7 +60,9 @@ func (pc *PipeClient) commandLoop() {
 		// parse command
 		cmd, err := command.Parse(cmdText)
 		if err != nil {
-			log.Fatalln(err)
+			log.Errorln(err)
+			pc.pipe.writeResult(fmt.Sprintf("error %s", err))
+			continue
 		}
 
 		log.Printf("Send command: %+v", cmd)
@@ -67,28 +72,38 @@ func (pc *PipeClient) commandLoop() {
 			return
 		}
 
-		pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-			PageName:  pc.pageName,
-			SessionID: pc.sessionID,
-			Command:   *cmd,
-		})
+		if cmd.ShouldReturn() {
+			// call and wait for result
+			rawResult := pc.hostClient.Call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+				PageName:  pc.pageName,
+				SessionID: pc.sessionID,
+				Command:   *cmd,
+			})
 
-		// // parse response
-		// payload := &page.PageCommandResponsePayload{}
-		// err = json.Unmarshal(*rawResult, payload)
+			// parse response
+			payload := &page.PageCommandResponsePayload{}
+			err = json.Unmarshal(*rawResult, payload)
 
-		// if err != nil {
-		// 	log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
-		// }
+			if err != nil {
+				log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+			}
 
-		// // save command results
-		// result := payload.Result
-		// if payload.Error != "" {
-		// 	result = fmt.Sprintf("error %s", payload.Error)
-		// }
+			// save command results
+			result := fmt.Sprintf("ok %s", payload.Result)
+			if payload.Error != "" {
+				result = fmt.Sprintf("error %s", payload.Error)
+			}
 
-		// pc.pipe.writeResult("aaa" + result)
-		pc.pipe.writeResult("bbb")
+			pc.pipe.writeResult(result)
+
+		} else {
+			// fire and forget
+			pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+				PageName:  pc.pageName,
+				SessionID: pc.sessionID,
+				Command:   *cmd,
+			})
+		}
 	}
 }
 

@@ -1,6 +1,11 @@
 import React, { createContext } from 'react'
 import { useDispatch } from 'react-redux';
-import { registerWebClientSuccess, registerWebClientError } from './features/page/pageSlice'
+import {
+    registerWebClientSuccess,
+    registerWebClientError,
+    addPageControlsSuccess,
+    addPageControlsError
+} from './features/page/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const WebSocketContext = createContext(null)
@@ -48,6 +53,12 @@ export default ({ children }) => {
                     dispatch(registerWebClientError(data.payload.error));
                 } else {
                     dispatch(registerWebClientSuccess(data.payload.session));
+                }
+            } else if (data.action === "addPageControls") {
+                if (data.payload.error) {
+                    dispatch(addPageControlsError(data.payload.error));
+                } else {
+                    dispatch(addPageControlsSuccess(data.payload.controls));
                 }
             }
         };

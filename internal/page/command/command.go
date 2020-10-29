@@ -12,26 +12,30 @@ const (
 )
 
 const (
-	Add    string = "add"
-	Addf          = "addf"
-	Set           = "set"
-	Get           = "get"
-	Clean         = "clean"
-	Remove        = "remove"
-	Insert        = "insert"
-	Quit          = "quit"
+	Add     string = "add"
+	Addf           = "addf"
+	Set            = "set"
+	Setf           = "setf"
+	Get            = "get"
+	Clean          = "clean"
+	Cleanf         = "cleanf"
+	Remove         = "remove"
+	Removef        = "removef"
+	Quit           = "quit"
 )
 
 var (
 	supportedCommands = map[string]*CommandMetadata{
-		Add:    &CommandMetadata{Name: Add, ShouldReturn: true},
-		Addf:   &CommandMetadata{Name: Addf, ShouldReturn: false},
-		Set:    &CommandMetadata{Name: Set, ShouldReturn: false},
-		Get:    &CommandMetadata{Name: Get, ShouldReturn: true},
-		Clean:  &CommandMetadata{Name: Clean, ShouldReturn: false},
-		Remove: &CommandMetadata{Name: Remove, ShouldReturn: false},
-		Insert: &CommandMetadata{Name: Insert, ShouldReturn: false},
-		Quit:   &CommandMetadata{Name: Quit, ShouldReturn: false},
+		Add:     &CommandMetadata{Name: Add, ShouldReturn: true},
+		Addf:    &CommandMetadata{Name: Addf, ShouldReturn: false},
+		Set:     &CommandMetadata{Name: Set, ShouldReturn: true},
+		Setf:    &CommandMetadata{Name: Setf, ShouldReturn: false},
+		Get:     &CommandMetadata{Name: Get, ShouldReturn: true},
+		Clean:   &CommandMetadata{Name: Clean, ShouldReturn: true},
+		Cleanf:  &CommandMetadata{Name: Cleanf, ShouldReturn: false},
+		Remove:  &CommandMetadata{Name: Remove, ShouldReturn: true},
+		Removef: &CommandMetadata{Name: Removef, ShouldReturn: false},
+		Quit:    &CommandMetadata{Name: Quit, ShouldReturn: false},
 	}
 )
 
@@ -86,4 +90,9 @@ func Parse(cmdText string) (*Command, error) {
 	}
 
 	return command, nil
+}
+
+func (cmd *Command) ShouldReturn() bool {
+	cmdMeta, _ := supportedCommands[strings.ToLower(cmd.Name)]
+	return cmdMeta.ShouldReturn
 }
