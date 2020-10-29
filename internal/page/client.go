@@ -37,6 +37,8 @@ const (
 	PageEventToHostAction = "pageEventToHost"
 
 	AddPageControlsAction = "addPageControls"
+
+	UpdateControlPropsAction = "updateControlProps"
 )
 
 const (
@@ -116,6 +118,10 @@ type PageEventPayload struct {
 
 type AddPageControlsPayload struct {
 	Controls []*Control `json:"controls"`
+}
+
+type UpdateControlPropsPayload struct {
+	Props []map[string]interface{} `json:"props"`
 }
 
 type readPumpHandler = func(*Client, []byte) error
@@ -252,6 +258,9 @@ func readHandler(c *Client, message []byte) error {
 
 	case PageEventFromWebAction:
 		processPageEventFromWebClient(c, msg)
+
+	case UpdateControlPropsAction:
+		updateControlPropsFromWebClient(c, msg)
 	}
 
 	return nil
@@ -423,7 +432,7 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 		break
 	}
 
-	log.Println("Page event from browser:", message.Payload,
+	log.Println("Page event from browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
 	payload := new(PageEventPayload)
@@ -447,6 +456,38 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 			c.send <- msg
 		}
 	}
+}
+
+func updateControlPropsFromWebClient(client *Client, message *Message) {
+
+	// web client can have only one session assigned
+	var session *Session
+	for s := range client.sessions {
+		session = s
+		break
+	}
+
+	payload := new(UpdateControlPropsPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	log.Println("Update control props from web browser:", string(message.Payload),
+		"PageName:", session.Page.Name, "SessionID:", session.ID, "Props:", payload.Props)
+
+	log.Printf("%+v", payload.Props)
+
+	// update control tree
+	session.UpdateControlProps(payload.Props)
+
+	// re-send the message to all connected web clients
+	go func() {
+		msg, _ := json.Marshal(message)
+
+		for c := range session.clients {
+			if c.role == WebClient && c.id != client.id {
+				c.send <- msg
+			}
+		}
+	}()
 }
 
 func (c *Client) registerPage(page *Page) {

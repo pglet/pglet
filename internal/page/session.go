@@ -159,6 +159,24 @@ func remove(session *Session, command command.Command) (result string, err error
 	return "", nil
 }
 
+func (session *Session) UpdateControlProps(props []map[string]interface{}) {
+	session.Lock()
+	defer session.Unlock()
+
+	for _, p := range props {
+		id := p["i"].(string)
+		if ctrl, ok := session.Controls[id]; ok {
+
+			// patch control properties
+			for n, v := range p {
+				if !IsSystemAttr(n) {
+					ctrl.SetAttr(n, v)
+				}
+			}
+		}
+	}
+}
+
 // NextControlID returns the next auto-generated control ID
 func (session *Session) NextControlID() string {
 	session.Lock()

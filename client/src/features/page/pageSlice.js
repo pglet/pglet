@@ -80,10 +80,14 @@ const pageSlice = createSlice({
             node.c = node.c.filter(id => id !== childId)
         },
         changeProps(state, action) {
-            const { nodeId, newProps } = action.payload
-            const node = state.controls[nodeId]
-            Object.assign(node, newProps)
-            console.log(current(state))
+
+            action.payload.forEach(props => {
+                const ctrl = state.controls[props.i];
+                if (ctrl) {
+                    Object.assign(ctrl, props)
+                }
+            })
+            //console.log(current(state))
         },
         deleteNode(state, action) {
             const nodeId = action.payload

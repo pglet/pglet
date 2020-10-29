@@ -84,6 +84,9 @@ func (hc *HostClient) readLoop() {
 		message := &page.Message{}
 		err = json.Unmarshal(bytesMessage, message)
 		if err == nil {
+
+			//log.Println("Message to host client:", message)
+
 			if message.ID != "" {
 				// this is callback message
 				result, ok := hc.calls[message.ID]
@@ -203,14 +206,17 @@ func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 		return err
 	}
 
+	log.Println("Event:", payload)
+
 	// iterate through all pipe clients
 	key := getPageSessionKey(payload.PageName, payload.SessionID)
 	clients, ok := hc.pageSessionClients[key]
 
 	if ok {
 		for client := range clients {
-			client.emitEvent(fmt.Sprintf("%s %s %s",
-				payload.EventTarget, payload.EventName, payload.EventData))
+			eventMessage := fmt.Sprintf("%s %s %s",
+				payload.EventTarget, payload.EventName, payload.EventData)
+			client.emitEvent(eventMessage)
 		}
 	}
 

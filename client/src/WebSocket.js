@@ -4,7 +4,8 @@ import {
     registerWebClientSuccess,
     registerWebClientError,
     addPageControlsSuccess,
-    addPageControlsError
+    addPageControlsError,
+    changeProps
 } from './features/page/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -25,6 +26,34 @@ export default ({ children }) => {
             action: "registerWebClient",
             payload: {
                 pageName: pageName
+            }
+        }
+
+        socket.send(JSON.stringify(msg));
+    }
+
+    const pageEventFromWeb = (eventTarget, eventName, eventData) => {
+
+        console.log("Call pageEventFromWeb()")
+        var msg = {
+            action: "pageEventFromWeb",
+            payload: {
+                eventTarget: eventTarget,
+                eventName: eventName,
+                eventData: eventData
+            }
+        }
+
+        socket.send(JSON.stringify(msg));
+    }
+
+    const updateControlProps = (props) => {
+
+        console.log("Call updateControlProps()")
+        var msg = {
+            action: "updateControlProps",
+            payload: {
+                props
             }
         }
 
@@ -60,12 +89,16 @@ export default ({ children }) => {
                 } else {
                     dispatch(addPageControlsSuccess(data.payload.controls));
                 }
+            } else if (data.action === "updateControlProps") {
+                dispatch(changeProps(data.payload.props));
             }
         };
 
         ws = {
             socket: socket,
-            registerWebClient
+            registerWebClient,
+            pageEventFromWeb,
+            updateControlProps
         }
     }
 

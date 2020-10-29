@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useContext } from 'react';
+import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../features/page/pageSlice'
 
@@ -6,15 +7,21 @@ const Textbox = React.memo(({control}) => {
 
   console.log(`render Textbox: ${control.i}`);
 
+  const ws = useContext(WebSocketContext);
+
   const dispatch = useDispatch();
   
   const handleChange = e => {
-    dispatch(changeProps({
-        nodeId: control.i,
-        newProps: {
-            "value": e.target.value
-        }
-    }));
+
+    const payload = [
+      {
+        i: control.i,
+        "value": e.target.value
+      }
+    ];
+
+    dispatch(changeProps(payload));
+    ws.updateControlProps(payload);
   }
 
   return <input type="text" value={control.value} onChange={handleChange} />;
