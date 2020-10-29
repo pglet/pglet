@@ -19,6 +19,8 @@ const (
 	ControlAutoIDPrefix = "_"
 	// ControlIDSeparator is a symbol between parts of control ID
 	ControlIDSeparator = ":"
+	// PageID is a reserved page ID
+	PageID = "page"
 )
 
 type commandHandler = func(*Session, command.Command) (string, error)
@@ -54,7 +56,7 @@ func NewSession(page *Page, id string) *Session {
 	s.Page = page
 	s.ID = id
 	s.Controls = make(map[string]*Control)
-	s.AddControl(NewControl("page", "", s.NextControlID()))
+	s.AddControl(NewControl("page", "", PageID))
 	s.clients = make(map[*Client]bool)
 	return s
 }
@@ -224,11 +226,11 @@ func getControlParentIDs(parentID string) []string {
 }
 
 func getPageID() string {
-	return fmt.Sprintf("%s%d", ControlAutoIDPrefix, 0)
+	return PageID
 }
 
 func isAutoID(id string) bool {
-	return strings.HasPrefix(id, ControlAutoIDPrefix)
+	return id == PageID || strings.HasPrefix(id, ControlAutoIDPrefix)
 }
 
 func (session *Session) broadcastCommandToWebClients(msg *Message) {

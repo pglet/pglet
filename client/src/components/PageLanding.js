@@ -19,7 +19,7 @@ const PageLanding = () => {
     }, [fullPageName, ws])
 
     const err = useSelector(state => state.page.error);
-    const root = useSelector(state => state.page.controls['_0']);
+    const root = useSelector(state => state.page.controls['page']);
 
     if (err) {
         return <div>{err}</div>;

@@ -6,9 +6,9 @@ const initialState = {
     "name": "test-1",
     "error": null,
     "controls": {
-        "_0": {
+        "page": {
             "c": [],
-            "i": "_0",
+            "i": "page",
             "p": "",
             "t": "page"
         }
