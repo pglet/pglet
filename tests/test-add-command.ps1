@@ -34,7 +34,7 @@ function pglet {
 $rowId = pglet "add row id=body"
 $colId = pglet "add col id=form to=$rowId"
 pglet "add text value='Enter your name:' to=$colId"
-pglet "add textbox id=fullName to=$colId"
-pglet "add button id=submit text=Submit to=$colId"
+pglet "add textbox id=fullName value='john smith' to=$colId"
+pglet "add button id=submit text=Submit event=btn_event to=$colId"
 
 $pipe.Close()

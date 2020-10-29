@@ -30,10 +30,11 @@ const pageSlice = createSlice({
         },
         addPageControlsSuccess(state, action) {
             action.payload.forEach(ctrl => {
-                state.controls[ctrl.i] = ctrl;
-                state.controls[ctrl.p].c.push(ctrl.i)
+                if (!state.controls[ctrl.i]) {
+                    state.controls[ctrl.i] = ctrl;
+                    state.controls[ctrl.p].c.push(ctrl.i)
+                }
             })
-            console.log(current(state))
         },
         addPageControlsError(state, action) {
             state.error = action.payload;
@@ -82,6 +83,7 @@ const pageSlice = createSlice({
             const { nodeId, newProps } = action.payload
             const node = state.controls[nodeId]
             Object.assign(node, newProps)
+            console.log(current(state))
         },
         deleteNode(state, action) {
             const nodeId = action.payload
