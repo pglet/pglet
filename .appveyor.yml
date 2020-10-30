@@ -44,7 +44,9 @@ for:
 
   build_script:
   - ps: Install-Product node 12 x64
+  - cd client
   - yarn build
+  - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
@@ -67,7 +69,9 @@ for:
 
   build_script:
   - nvm use 12
+  - cd client
   - yarn build
+  - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
@@ -90,7 +94,9 @@ for:
 
   build_script:
   - nvm use 12
+  - cd client
   - yarn build
+  - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
