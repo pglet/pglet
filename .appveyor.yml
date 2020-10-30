@@ -43,7 +43,7 @@ for:
   - echo %GOROOT%
 
   build_script:
-  - go mod download
+  - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - dir %USERPROFILE%\Go\bin
@@ -64,7 +64,7 @@ for:
   - ./install_go.sh
 
   build_script:
-  - go mod download
+  - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
@@ -85,7 +85,7 @@ for:
   - ./install_go.sh
 
   build_script:
-  - go mod download
+  - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
