@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -17,8 +16,6 @@ func (b *binaryFileSystem) Open(name string) (http.File, error) {
 }
 
 func (b *binaryFileSystem) Exists(prefix string, filepath string) bool {
-	log.Println("CHECK EXISTS:", prefix, filepath)
-
 	if p := strings.TrimPrefix(filepath, prefix); len(p) < len(filepath) {
 		if _, err := b.fs.Open(p); err != nil {
 			return false
