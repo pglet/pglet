@@ -44,6 +44,7 @@ for:
 
   build_script:
   - go mod download
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - dir %USERPROFILE%\Go\bin
 
@@ -64,6 +65,7 @@ for:
 
   build_script:
   - go mod download
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
 
@@ -84,6 +86,7 @@ for:
 
   build_script:
   - go mod download
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
 
