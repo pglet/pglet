@@ -43,6 +43,7 @@ for:
   - echo %GOROOT%
 
   build_script:
+  - go mod download
   - go install github.com/pglet/pglet/cmd/pglet
   - dir %USERPROFILE%\Go\bin
 
@@ -62,6 +63,7 @@ for:
   - ./install_go.sh
 
   build_script:
+  - go mod download
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
 
@@ -81,6 +83,7 @@ for:
   - ./install_go.sh
 
   build_script:
+  - go mod download
   - go install github.com/pglet/pglet/cmd/pglet
   - ls $GOPATH/bin
 
