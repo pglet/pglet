@@ -39,6 +39,7 @@ for:
   install:
   - ps: .\install_go.ps1
   - set GOPATH=%USERPROFILE%\go
+  - set PATH=%GOPATH%\bin;%PATH%
   - echo %GOPATH%
   - echo %GOROOT%
 
