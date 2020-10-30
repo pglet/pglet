@@ -126,6 +126,13 @@ for:
       goreleaser --version
 
   build_script:
+  - nvm use 12
+  - cd client
+  - yarn
+  - yarn build
+  - cd ..
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...    
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
