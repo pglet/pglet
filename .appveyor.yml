@@ -45,6 +45,7 @@ for:
   build_script:
   - ps: Install-Product node 12 x64
   - cd client
+  - yarn
   - yarn build
   - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
@@ -70,6 +71,7 @@ for:
   build_script:
   - nvm use 12
   - cd client
+  - yarn
   - yarn build
   - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
@@ -95,6 +97,7 @@ for:
   build_script:
   - nvm use 12
   - cd client
+  - yarn
   - yarn build
   - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
