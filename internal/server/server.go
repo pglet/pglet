@@ -26,7 +26,10 @@ func Start(serverPort int) {
 	router := gin.Default()
 
 	// Serve frontend static files
-	router.Use(static.Serve("/", static.LocalFile(contentRootFolder, true)))
+	// router.Use(static.Serve("/", static.LocalFile(contentRootFolder, true)))
+
+	// Serve frontend static files
+	router.Use(static.Serve("/", BinaryFileSystem("client/build", "")))
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
@@ -49,9 +52,15 @@ func Start(serverPort int) {
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {
-		log.Println(c.Request.RequestURI)
 		if !strings.HasPrefix(c.Request.RequestURI, apiRoutePrefix+"/") {
-			c.File(contentRootFolder + "/" + siteDefaultDocument)
+			// SPA index.html
+			indexData, _ := Asset("client/build/index.html")
+			c.Data(http.StatusOK, "text/html", indexData)
+		} else {
+			// API not found
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": "API endpoint not found",
+			})
 		}
 	})
 
