@@ -16,7 +16,7 @@ import (
 const (
 	DefaultServerPort   int    = 5000
 	apiRoutePrefix      string = "/api"
-	contentRootFolder   string = "./tests" //"./client/build"
+	contentRootFolder   string = "client/build"
 	siteDefaultDocument string = "index.html"
 )
 
@@ -26,10 +26,7 @@ func Start(serverPort int) {
 	router := gin.Default()
 
 	// Serve frontend static files
-	// router.Use(static.Serve("/", static.LocalFile(contentRootFolder, true)))
-
-	// Serve frontend static files
-	router.Use(static.Serve("/", BinaryFileSystem("client/build", "")))
+	router.Use(static.Serve("/", BinaryFileSystem(contentRootFolder, "")))
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
@@ -54,7 +51,7 @@ func Start(serverPort int) {
 	router.NoRoute(func(c *gin.Context) {
 		if !strings.HasPrefix(c.Request.RequestURI, apiRoutePrefix+"/") {
 			// SPA index.html
-			indexData, _ := Asset("client/build/index.html")
+			indexData, _ := Asset(contentRootFolder + "/" + siteDefaultDocument)
 			c.Data(http.StatusOK, "text/html", indexData)
 		} else {
 			// API not found
@@ -79,7 +76,7 @@ func userHandler(c *gin.Context) {
 			"username": "admin",
 		})
 	} else {
-		// Joke ID is invalid
+		// User ID is invalid
 		c.AbortWithStatus(http.StatusNotFound)
 	}
 }
