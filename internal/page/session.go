@@ -195,7 +195,26 @@ func set(session *Session, command command.Command) (result string, err error) {
 
 func clean(session *Session, command command.Command) (result string, err error) {
 
-	// TODO - implement command
+	// command format must be:
+	// clean <control-id>
+	if len(command.Values) < 1 {
+		return "", errors.New("'clean' command should have control ID specified")
+	}
+
+	// control ID
+	id := command.Values[0]
+
+	ctrl, ok := session.Controls[id]
+	if !ok {
+		return "", fmt.Errorf("control with ID '%s' not found", id)
+	}
+
+	descendantIds := session.getAllDescendantIds(ctrl.ID())
+	log.Println("DESCENDANT IDS:", descendantIds)
+
+	// output page
+	pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
+	log.Println(string(pJSON))
 
 	// broadcast command to all connected web clients
 	//go session.broadcastCommandToWebClients(command)
@@ -204,7 +223,22 @@ func clean(session *Session, command command.Command) (result string, err error)
 
 func remove(session *Session, command command.Command) (result string, err error) {
 
-	// TODO - implement command
+	// command format must be:
+	// clean <control-id>
+	if len(command.Values) < 1 {
+		return "", errors.New("'clean' command should have control ID specified")
+	}
+
+	// control ID
+	id := command.Values[0]
+
+	ctrl, ok := session.Controls[id]
+	if !ok {
+		return "", fmt.Errorf("control with ID '%s' not found", id)
+	}
+
+	descendantIds := session.getAllDescendantIds(ctrl.ID())
+	log.Println("DESCENDANT IDS:", descendantIds)
 
 	// broadcast command to all connected web clients
 	//go session.broadcastCommandToWebClients(command)
@@ -271,6 +305,20 @@ func getControlParentIDs(parentID string) []string {
 		if !isAutoID(idPart) {
 			result = append(result, idPart)
 		}
+	}
+	return result
+}
+
+func (session *Session) getAllDescendantIds(ID string) []string {
+	return session.getAllDescendantIdsRecursively(make([]string, 0, 0), ID)
+}
+
+func (session *Session) getAllDescendantIdsRecursively(descendantIds []string, ID string) []string {
+	ctl := session.Controls[ID]
+	childrenIds := ctl.GetChildrenIds()
+	result := append(descendantIds, childrenIds...)
+	for _, childID := range childrenIds {
+		result = append(result, session.getAllDescendantIdsRecursively(make([]string, 0, 0), childID)...)
 	}
 	return result
 }

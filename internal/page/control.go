@@ -75,6 +75,11 @@ func (ctl *Control) AddChildID(childID string) {
 	(*ctl)["c"] = append(childIds, childID)
 }
 
+func (ctl *Control) GetChildrenIds() []string {
+	ids, _ := (*ctl)["c"].([]string)
+	return ids
+}
+
 func IsSystemAttr(attr string) bool {
 	return utils.ContainsString(systemAttrs, attr)
 }
