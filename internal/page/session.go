@@ -127,19 +127,40 @@ func add(session *Session, command command.Command) (result string, err error) {
 	return id, nil
 }
 
+func get(session *Session, command command.Command) (result string, err error) {
+
+	// command format must be:
+	// get <control-id> <property>
+	if len(command.Values) < 2 {
+		return "", errors.New("'get' command should have control ID and property specified")
+	}
+
+	// control ID
+	id := command.Values[0]
+
+	ctrl, ok := session.Controls[id]
+	if !ok {
+		return "", fmt.Errorf("control with ID '%s' not found", command.Name)
+	}
+
+	// control property
+	prop := command.Values[1]
+
+	v := ctrl.GetAttr(prop)
+
+	if v == nil {
+		return "", nil
+	}
+
+	return v.(string), nil
+}
+
 func set(session *Session, command command.Command) (result string, err error) {
 
 	// TODO - implement command
 
 	// broadcast command to all connected web clients
 	//go session.broadcastCommandToWebClients(command)
-	return "", nil
-}
-
-func get(session *Session, command command.Command) (result string, err error) {
-
-	// TODO - implement command
-
 	return "", nil
 }
 

@@ -28,6 +28,9 @@ function pglet {
     $ERROR_RESULT = "error"
     
     $result = $pipeReader.ReadLine()
+
+    #Write-Host "Result: $result"
+
     if ($result -eq $OK_RESULT) {
         return ""
     } elseif ($result.StartsWith("$OK_RESULT ")) {
@@ -45,8 +48,10 @@ pglet "add text value='Enter your name:' to=$colId"
 pglet "add textbox id=fullName value='john smith' to=$colId"
 pglet "add button id=submit text=Submit event=btn_event to=$colId"
 
-$pipe.Close()
-
 while($true) {
     pglet_event
+    $fullName = pglet "get body:form:fullName value"
+    Write-Host "Full name: $fullName"
 }
+
+$pipe.Close()
