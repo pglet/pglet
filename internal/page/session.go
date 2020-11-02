@@ -140,7 +140,7 @@ func get(session *Session, command command.Command) (result string, err error) {
 
 	ctrl, ok := session.Controls[id]
 	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", command.Name)
+		return "", fmt.Errorf("control with ID '%s' not found", id)
 	}
 
 	// control property
@@ -157,10 +157,39 @@ func get(session *Session, command command.Command) (result string, err error) {
 
 func set(session *Session, command command.Command) (result string, err error) {
 
-	// TODO - implement command
+	// command format must be:
+	// get <control-id> <property>
+	if len(command.Values) < 1 {
+		return "", errors.New("'set' command should have control ID specified")
+	}
 
-	// broadcast command to all connected web clients
-	//go session.broadcastCommandToWebClients(command)
+	// control ID
+	id := command.Values[0]
+
+	ctrl, ok := session.Controls[id]
+	if !ok {
+		return "", fmt.Errorf("control with ID '%s' not found", id)
+	}
+
+	props := make(map[string]interface{})
+	props["i"] = id
+
+	// set control properties, except system ones
+	for n, v := range command.Attrs {
+		if !IsSystemAttr(n) {
+			ctrl.SetAttr(n, v)
+			props[n] = v
+		}
+	}
+
+	payload := &UpdateControlPropsPayload{
+		Props: make([]map[string]interface{}, 0, 0),
+	}
+
+	payload.Props = append(payload.Props, props)
+
+	// broadcast control updates to all connected web clients
+	go session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
 	return "", nil
 }
 

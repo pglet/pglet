@@ -21,7 +21,6 @@ var (
 		"to",
 		"from",
 		"at",
-		"controls",
 	}
 )
 
