@@ -5,7 +5,9 @@ import {
     registerWebClientError,
     addPageControlsSuccess,
     addPageControlsError,
-    changeProps
+    changeProps,
+    cleanControl,
+    removeControl
 } from './features/page/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -91,6 +93,10 @@ export default ({ children }) => {
                 }
             } else if (data.action === "updateControlProps") {
                 dispatch(changeProps(data.payload.props));
+            } else if (data.action === "cleanControl") {
+                dispatch(cleanControl(data.payload));
+            } else if (data.action === "removeControl") {
+                dispatch(removeControl(data.payload));
             }
         };
 

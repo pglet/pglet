@@ -63,6 +63,8 @@ func NewSession(page *Page, id string) *Session {
 
 // ExecuteCommand executes command and returns the result
 func (session *Session) ExecuteCommand(command command.Command) (result string, err error) {
+	session.Lock()
+	defer session.Unlock()
 
 	log.Printf("Execute command for page %s session %s: %+v\n",
 		session.Page.Name, session.ID, command)
@@ -209,15 +211,16 @@ func clean(session *Session, command command.Command) (result string, err error)
 		return "", fmt.Errorf("control with ID '%s' not found", id)
 	}
 
-	descendantIds := session.getAllDescendantIds(ctrl.ID())
-	log.Println("DESCENDANT IDS:", descendantIds)
+	session.cleanControl(ctrl)
 
 	// output page
-	pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	log.Println(string(pJSON))
+	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
+	// log.Println(string(pJSON))
 
 	// broadcast command to all connected web clients
-	//go session.broadcastCommandToWebClients(command)
+	go session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
+		ID: id,
+	}))
 	return "", nil
 }
 
@@ -237,11 +240,16 @@ func remove(session *Session, command command.Command) (result string, err error
 		return "", fmt.Errorf("control with ID '%s' not found", id)
 	}
 
-	descendantIds := session.getAllDescendantIds(ctrl.ID())
-	log.Println("DESCENDANT IDS:", descendantIds)
+	if ctrl.ParentID() == "" {
+		return "", fmt.Errorf("root control '%s' cannot be deleted", id)
+	}
+
+	session.deleteControl(ctrl)
 
 	// broadcast command to all connected web clients
-	//go session.broadcastCommandToWebClients(command)
+	go session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
+		ID: id,
+	}))
 	return "", nil
 }
 
@@ -265,33 +273,29 @@ func (session *Session) UpdateControlProps(props []map[string]interface{}) {
 
 // NextControlID returns the next auto-generated control ID
 func (session *Session) NextControlID() string {
-	session.Lock()
-	defer session.Unlock()
 	nextID := fmt.Sprintf("%s%d", ControlAutoIDPrefix, session.nextControlID)
 	session.nextControlID++
 	return nextID
 }
 
 // AddControl adds a control to a page
-func (session *Session) AddControl(ctl *Control) error {
-	session.Lock()
-	defer session.Unlock()
-	if _, exists := session.Controls[ctl.ID()]; exists {
+func (session *Session) AddControl(ctrl *Control) error {
+	if _, exists := session.Controls[ctrl.ID()]; exists {
 		return nil
 	}
-	session.Controls[ctl.ID()] = ctl
+	session.Controls[ctrl.ID()] = ctrl
 
 	// find parent
-	parentID := ctl.ParentID()
+	parentID := ctrl.ParentID()
 	if parentID != "" {
-		parentCtl, ok := session.Controls[parentID]
+		parentctrl, ok := session.Controls[parentID]
 
 		if !ok {
 			return fmt.Errorf("parent control with id '%s' not found", parentID)
 		}
 
 		// update parent's childIds
-		parentCtl.AddChildID(ctl.ID())
+		parentctrl.AddChildID(ctrl.ID())
 	}
 
 	return nil
@@ -309,13 +313,38 @@ func getControlParentIDs(parentID string) []string {
 	return result
 }
 
-func (session *Session) getAllDescendantIds(ID string) []string {
-	return session.getAllDescendantIdsRecursively(make([]string, 0, 0), ID)
+func (session *Session) cleanControl(ctrl *Control) {
+
+	// delete all descendants
+	for _, descID := range session.getAllDescendantIds(ctrl) {
+		delete(session.Controls, descID)
+	}
+
+	// clean up children collection
+	ctrl.RemoveChildren()
+}
+
+func (session *Session) deleteControl(ctrl *Control) {
+
+	// delete all descendants
+	for _, descID := range session.getAllDescendantIds(ctrl) {
+		delete(session.Controls, descID)
+	}
+
+	// delete control itself
+	delete(session.Controls, ctrl.ID())
+
+	// remove control from parent's children collection
+	session.Controls[ctrl.ParentID()].RemoveChild(ctrl.ID())
+}
+
+func (session *Session) getAllDescendantIds(ctrl *Control) []string {
+	return session.getAllDescendantIdsRecursively(make([]string, 0, 0), ctrl.ID())
 }
 
 func (session *Session) getAllDescendantIdsRecursively(descendantIds []string, ID string) []string {
-	ctl := session.Controls[ID]
-	childrenIds := ctl.GetChildrenIds()
+	ctrl := session.Controls[ID]
+	childrenIds := ctrl.GetChildrenIds()
 	result := append(descendantIds, childrenIds...)
 	for _, childID := range childrenIds {
 		result = append(result, session.getAllDescendantIdsRecursively(make([]string, 0, 0), childID)...)

@@ -39,6 +39,10 @@ const (
 	AddPageControlsAction = "addPageControls"
 
 	UpdateControlPropsAction = "updateControlProps"
+
+	RemoveControlAction = "removeControl"
+
+	CleanControlAction = "cleanControl"
 )
 
 const (
@@ -122,6 +126,14 @@ type AddPageControlsPayload struct {
 
 type UpdateControlPropsPayload struct {
 	Props []map[string]interface{} `json:"props"`
+}
+
+type RemoveControlPayload struct {
+	ID string `json:"id"`
+}
+
+type CleanControlPayload struct {
+	ID string `json:"id"`
 }
 
 type readPumpHandler = func(*Client, []byte) error

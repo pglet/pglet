@@ -93,6 +93,32 @@ const pageSlice = createSlice({
             const nodeId = action.payload
             const descendantIds = getAllDescendantIds(state.controls, nodeId)
             return deleteMany(state.controls, [nodeId, ...descendantIds])
+        },        
+        cleanControl(state, action) {
+            const { id } = action.payload
+
+            // remove all children
+            const descendantIds = getAllDescendantIds(state.controls, id)
+            descendantIds.forEach(descId => delete state.controls[descId])
+
+            // cleanup children collection
+            state.controls[id].c = []
+        },        
+        removeControl(state, action) {
+            const { id } = action.payload
+
+            const ctrl = state.controls[id]
+
+            // remove all children
+            const descendantIds = getAllDescendantIds(state.controls, id)
+            descendantIds.forEach(descId => delete state.controls[descId])
+
+            // delete control itself
+            delete state.controls[id]
+
+            // remove ID from parent's children collection
+            const parent = state.controls[ctrl.p]
+            parent.c = parent.c.filter(childId => childId !== id)            
         }
     }
 })
@@ -121,7 +147,9 @@ export const {
     addChild,
     removeChild,
     changeProps,
-    deleteNode
+    deleteNode,
+    cleanControl,
+    removeControl
 } = pageSlice.actions
 
 export default pageSlice.reducer

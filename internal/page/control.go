@@ -68,11 +68,16 @@ func (ctl *Control) ParentID() string {
 // AddChildID appends the child to the parent control.
 func (ctl *Control) AddChildID(childID string) {
 	childIds, _ := (*ctl)["c"].([]string)
-	// if !ok {
-	// 	childIds = make([]string, 0, 1)
-	// 	ctl["c"] = childIds
-	// }
 	(*ctl)["c"] = append(childIds, childID)
+}
+
+func (ctl *Control) RemoveChild(childID string) {
+	childIds, _ := (*ctl)["c"].([]string)
+	(*ctl)["c"] = utils.RemoveString(childIds, childID)
+}
+
+func (ctl *Control) RemoveChildren() {
+	(*ctl)["c"] = make([]string, 0, 0)
 }
 
 func (ctl *Control) GetChildrenIds() []string {

@@ -27,3 +27,12 @@ func ContainsString(arr []string, str string) bool {
 	}
 	return false
 }
+
+func RemoveString(arr []string, str string) []string {
+	for i, v := range arr {
+		if v == str {
+			return append(arr[:i], arr[i+1:]...)
+		}
+	}
+	return arr
+}
