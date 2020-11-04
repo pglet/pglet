@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/contrib/static"
@@ -23,6 +24,11 @@ const (
 	siteDefaultDocument string = "index.html"
 )
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
 func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	defer wg.Done()
 
@@ -34,7 +40,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		page.WebsocketHandler(c.Writer, c.Request)
+		websocketHandler(c.Writer, c.Request)
 	})
 
 	// Setup route group for the API
@@ -92,6 +98,22 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	}
 
 	log.Println("Server exited")
+}
+
+func websocketHandler(w http.ResponseWriter, r *http.Request) {
+
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	wsc := page.NewConnWebSocket(conn)
+	page.NewClient(wsc)
 }
 
 func userHandler(c *gin.Context) {

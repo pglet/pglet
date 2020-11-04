@@ -366,7 +366,7 @@ func (session *Session) broadcastCommandToWebClients(msg *Message) {
 
 	for c := range session.clients {
 		if c.role == WebClient {
-			c.send <- serializedMsg
+			c.send(serializedMsg)
 		}
 	}
 }
