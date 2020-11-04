@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -138,7 +139,7 @@ func (hc *HostClient) writeLoop() {
 	}
 }
 
-func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage {
+func (hc *HostClient) Call(ctx context.Context, action string, payload interface{}) *json.RawMessage {
 
 	// assign unique ID to the message
 	messageID := uuid.New().String()
@@ -152,7 +153,7 @@ func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage 
 	})
 
 	// create and register result channel
-	result := make(chan *json.RawMessage)
+	result := make(chan *json.RawMessage, 1)
 	hc.calls[messageID] = result
 
 	// send message
@@ -160,7 +161,12 @@ func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage 
 
 	// wait for result to arrive
 	// TODO - implement timeout
-	return <-result
+	select {
+	case <-ctx.Done():
+		return nil
+	case r := <-result:
+		return r
+	}
 }
 
 func (hc *HostClient) CallAndForget(action string, payload interface{}) {

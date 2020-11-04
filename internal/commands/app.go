@@ -23,7 +23,7 @@ func newAppCommand() *cobra.Command {
 			for {
 				pipeName, err := client.ConnectAppPage(cmd.Context(), args[0])
 				if err != nil {
-					log.Fatalln("ConnectAppPage error:", err)
+					log.Fatalln("Connect app error:", err)
 				}
 				fmt.Println(pipeName)
 			}

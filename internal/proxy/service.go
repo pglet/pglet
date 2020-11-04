@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/url"
@@ -70,7 +71,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, pageURI *string, pipeN
 	log.Println("Connecting to shared page:", pageName)
 
 	// call server
-	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    false,
 	})
@@ -108,7 +109,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, pageURI *string, pipeName
 	log.Println("Connecting to app page:", pageName)
 
 	// call server
-	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    true,
 	})
@@ -118,11 +119,20 @@ func (ps *Service) ConnectAppPage(ctx context.Context, pageURI *string, pipeName
 	err := json.Unmarshal(*result, payload)
 
 	if err != nil {
-		log.Fatalln("Error calling ConnectSharedPage:", err)
+		log.Fatalln("Error calling ConnectAppPage:", err)
 	}
 
+	log.Println("Connected to app page:", pageName)
+
+	var sessionID string
+
 	// wait for new session
-	sessionID := <-hc.PageNewSessions(pageName)
+	select {
+	case sessionID = <-hc.PageNewSessions(pageName):
+		break
+	case <-ctx.Done():
+		return errors.New("abort waiting for new session")
+	}
 
 	// create new pipeClient
 	pc, err := client.NewPipeClient(pageName, sessionID, hc)

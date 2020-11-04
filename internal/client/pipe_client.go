@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -74,7 +75,7 @@ func (pc *PipeClient) commandLoop() {
 
 		if cmd.ShouldReturn() {
 			// call and wait for result
-			rawResult := pc.hostClient.Call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
 				PageName:  pc.pageName,
 				SessionID: pc.sessionID,
 				Command:   *cmd,
