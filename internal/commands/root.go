@@ -28,6 +28,10 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			log.SetLevel(level)
+
+			log.SetFormatter(&log.TextFormatter{
+				ForceColors: true,
+			})
 		},
 	}
 
@@ -38,7 +42,6 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(
 		newPageCommand(),
 		newAppCommand(),
-		newProxyCommand(),
 		newServerCommand(),
 	)
 

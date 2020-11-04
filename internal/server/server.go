@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -22,7 +23,8 @@ const (
 	siteDefaultDocument string = "index.html"
 )
 
-func Start(ctx context.Context, serverPort int) {
+func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
+	defer wg.Done()
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()

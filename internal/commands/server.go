@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"sync"
+
+	"github.com/pglet/pglet/internal/proxy"
 	"github.com/pglet/pglet/internal/server"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +17,14 @@ func newServerCommand() *cobra.Command {
 		Short: "Start server service",
 		Long:  `Server is for ...`,
 		Run: func(cmd *cobra.Command, args []string) {
-			server.Start(cmd.Context(), serverPort)
+
+			waitGroup := sync.WaitGroup{}
+
+			waitGroup.Add(2)
+			go proxy.Start(cmd.Context(), &waitGroup)
+			go server.Start(cmd.Context(), &waitGroup, serverPort)
+
+			waitGroup.Wait()
 		},
 	}
 

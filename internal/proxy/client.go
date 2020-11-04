@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/keegancsmith/rpc"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -55,7 +54,7 @@ func startProxyService() {
 	// run proxy
 	execPath, _ := os.Executable()
 
-	cmd := exec.Command(execPath, "proxy")
+	cmd := exec.Command(execPath, "server")
 	err := cmd.Start()
 
 	if err != nil {

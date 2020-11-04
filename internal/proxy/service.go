@@ -150,7 +150,8 @@ func (ps *Service) ConnectAppPage(ctx context.Context, pageURI *string, pipeName
 	return nil
 }
 
-func RunService(ctx context.Context) {
+func Start(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	log.Println("Starting Proxy service...")
 
