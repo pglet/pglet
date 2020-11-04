@@ -14,7 +14,7 @@ func newServerCommand() *cobra.Command {
 		Short: "Start server service",
 		Long:  `Server is for ...`,
 		Run: func(cmd *cobra.Command, args []string) {
-			server.Start(serverPort)
+			server.Start(cmd.Context(), serverPort)
 		},
 	}
 

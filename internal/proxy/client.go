@@ -1,10 +1,12 @@
 package proxy
 
 import (
-	"net/rpc"
+	"context"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/keegancsmith/rpc"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -38,13 +40,13 @@ func (proxy *Client) Start() {
 	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
 }
 
-func (proxy *Client) ConnectSharedPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("Service.ConnectSharedPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectSharedPage(ctx context.Context, pageName string) (pipeFilename string, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &pageName, &pipeFilename)
 	return
 }
 
-func (proxy *Client) ConnectAppPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("Service.ConnectAppPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectAppPage(ctx context.Context, pageName string) (pipeFilename string, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &pageName, &pipeFilename)
 	return
 }
 

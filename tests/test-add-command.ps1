@@ -53,7 +53,8 @@ try {
     
     pglet "clean page"
     #pglet "remove body"
-    $rowId = pglet "add row id=body"
+    $rowId = pglet "add row id=body
+      aaa=bbb"
     $colId = pglet "add col id=form to=$rowId"
     pglet "add text value='Enter your name:' to=$colId"
     pglet "add textbox id=fullName value='someone' to=$colId"

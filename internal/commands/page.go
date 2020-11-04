@@ -20,7 +20,7 @@ func newPageCommand() *cobra.Command {
 			client.Start()
 
 			pageName := args[0]
-			pipeName, err := client.ConnectSharedPage(pageName)
+			pipeName, err := client.ConnectSharedPage(cmd.Context(), pageName)
 			if err != nil {
 				log.Fatalln(err)
 			}

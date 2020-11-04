@@ -21,9 +21,9 @@ func newAppCommand() *cobra.Command {
 
 			// continuously wait for new client connections
 			for {
-				pipeName, err := client.ConnectAppPage(args[0])
+				pipeName, err := client.ConnectAppPage(cmd.Context(), args[0])
 				if err != nil {
-					log.Fatalln(err)
+					log.Fatalln("ConnectAppPage error:", err)
 				}
 				fmt.Println(pipeName)
 			}

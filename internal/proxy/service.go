@@ -1,19 +1,21 @@
 package proxy
 
 import (
+	"context"
 	"encoding/json"
 	"net"
 	"net/http"
-	"net/rpc"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/alexflint/go-filemutex"
+	"github.com/keegancsmith/rpc"
 	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/internal/page"
 )
@@ -60,7 +62,7 @@ func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
-func (ps *Service) ConnectSharedPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectSharedPage(ctx context.Context, pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
 	pageName := getPageNameFromURI(*pageURI)
@@ -98,7 +100,7 @@ func (ps *Service) ConnectSharedPage(pageURI *string, pipeName *string) error {
 }
 
 // ConnectAppPage waits for new web clients connecting specified page, creates a new session and returns file name of control pipe.
-func (ps *Service) ConnectAppPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectAppPage(ctx context.Context, pageURI *string, pipeName *string) error {
 
 	hc := ps.getHostClient(*pageURI)
 	pageName := getPageNameFromURI(*pageURI)
@@ -138,7 +140,7 @@ func (ps *Service) ConnectAppPage(pageURI *string, pipeName *string) error {
 	return nil
 }
 
-func RunService() {
+func RunService(ctx context.Context) {
 
 	log.Println("Starting Proxy service...")
 
@@ -162,13 +164,39 @@ func RunService() {
 	proxySvc := newService()
 	rpc.Register(proxySvc)
 	rpc.HandleHTTP()
-	l, e := net.Listen("unix", sockAddr)
+
+	lc := net.ListenConfig{}
+	l, e := lc.Listen(ctx, "unix", sockAddr)
+
+	//l, e := net.Listen("unix", sockAddr)
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
+
+	srv := &http.Server{}
+
+	go func() {
+		if err := srv.Serve(l); err != nil && err != http.ErrServerClosed {
+			log.Println("Serve error:", err)
+		}
+	}()
+
 	log.Println("Waiting for connections...")
-	err = http.Serve(l, nil)
-	log.Println(err)
+
+	<-ctx.Done()
+
+	log.Println("Stopping proxy service...")
+
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err = srv.Shutdown(ctxShutDown); err != nil {
+		log.Fatalf("Proxy service shutdown failed:%+s", err)
+	}
+
+	log.Println("Proxy service exited")
 }
 
 func buildWSEndPointURL(pageURI string) string {

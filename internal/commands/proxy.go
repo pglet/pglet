@@ -11,7 +11,7 @@ func newProxyCommand() *cobra.Command {
 		Short: "Start proxy service",
 		Long:  `Proxy is for ...`,
 		Run: func(cmd *cobra.Command, args []string) {
-			proxy.RunService()
+			proxy.RunService(cmd.Context())
 		},
 	}
 

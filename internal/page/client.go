@@ -59,12 +59,12 @@ const (
 	maxMessageSize = 512
 )
 
-type ClientRole int
+type ClientRole string
 
 const (
-	None ClientRole = iota
-	WebClient
-	HostClient
+	None       ClientRole = "None"
+	WebClient             = "Web"
+	HostClient            = "Host"
 )
 
 type Client struct {

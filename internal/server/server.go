@@ -1,12 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -20,7 +22,7 @@ const (
 	siteDefaultDocument string = "index.html"
 )
 
-func Start(serverPort int) {
+func Start(ctx context.Context, serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -62,7 +64,32 @@ func Start(serverPort int) {
 	})
 
 	// Start and run the server
-	router.Run(fmt.Sprintf(":%d", serverPort))
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", serverPort),
+		Handler: router,
+	}
+
+	// Initializing the server in a goroutine so that
+	// it won't block the graceful shutdown handling below
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Println("Shutting down server...")
+
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctxShutDown); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exited")
 }
 
 func userHandler(c *gin.Context) {
