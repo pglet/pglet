@@ -1,7 +1,8 @@
 package client
 
+type ReadMessageHandler func(message []byte) error
+
 type Conn interface {
-	Start()
-	ReadMessage() []byte
+	Start(handler ReadMessageHandler) (err error)
 	Send(message []byte)
 }

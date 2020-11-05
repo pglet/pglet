@@ -50,7 +50,7 @@ func (proxy *Client) ConnectAppPage(ctx context.Context, pageName string) (pipeF
 }
 
 func startProxyService() {
-	log.Println("Starting Proxy service")
+	log.Println("Starting Pglet server")
 	// run proxy
 	execPath, _ := os.Executable()
 
@@ -61,5 +61,5 @@ func startProxyService() {
 		log.Fatalln(err)
 	}
 
-	log.Println("Proxy service process started with PID:", cmd.Process.Pid)
+	log.Println("Server process started with PID:", cmd.Process.Pid)
 }

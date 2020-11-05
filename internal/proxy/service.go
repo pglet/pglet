@@ -179,7 +179,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	lc := net.ListenConfig{}
 	l, e := lc.Listen(ctx, "unix", sockAddr)
 
-	//l, e := net.Listen("unix", sockAddr)
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}

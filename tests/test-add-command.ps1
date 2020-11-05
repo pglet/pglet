@@ -51,6 +51,7 @@ try {
     $eventPipe.Connect(5000)
     $eventPipeReader = new-object System.IO.StreamReader($eventPipe)
     
+    
     pglet "clean page"
     #pglet "remove body"
     $rowId = pglet "add row id=body
