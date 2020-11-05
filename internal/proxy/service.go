@@ -215,6 +215,10 @@ func buildWSEndPointURL(pageURI string) string {
 		log.Fatalln("Cannot parse page URI:", err)
 	}
 
+	if u.Host == "" {
+		return ""
+	}
+
 	u.Scheme = "ws"
 	u.Path = "ws"
 	u.RawQuery = ""

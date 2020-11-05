@@ -1,4 +1,4 @@
-package page
+package connection
 
 import (
 	"time"
@@ -7,14 +7,28 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ConnWebSocket struct {
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 512
+)
+
+type WebSocket struct {
 	conn *websocket.Conn
 	send chan []byte
 	done chan bool
 }
 
-func NewConnWebSocket(conn *websocket.Conn) *ConnWebSocket {
-	cws := &ConnWebSocket{
+func NewWebSocket(conn *websocket.Conn) *WebSocket {
+	cws := &WebSocket{
 		conn: conn,
 		send: make(chan []byte),
 		done: make(chan bool),
@@ -22,18 +36,18 @@ func NewConnWebSocket(conn *websocket.Conn) *ConnWebSocket {
 	return cws
 }
 
-func (c *ConnWebSocket) Start(handler ReadMessageHandler) {
+func (c *WebSocket) Start(handler ReadMessageHandler) {
 	// start read/write loops
 	go c.readLoop(handler)
 	go c.writeLoop()
 	<-c.done
 }
 
-func (c *ConnWebSocket) Send(message []byte) {
+func (c *WebSocket) Send(message []byte) {
 	c.send <- message
 }
 
-func (c *ConnWebSocket) readLoop(readHandler ReadMessageHandler) {
+func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 	defer func() {
 		c.done <- true
 		c.conn.Close()
@@ -62,7 +76,7 @@ func (c *ConnWebSocket) readLoop(readHandler ReadMessageHandler) {
 	}
 }
 
-func (c *ConnWebSocket) writeLoop() {
+func (c *WebSocket) writeLoop() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()

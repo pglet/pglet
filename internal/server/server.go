@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/pglet/pglet/internal/page"
+	page_connection "github.com/pglet/pglet/internal/page/connection"
 )
 
 const (
@@ -112,7 +113,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wsc := page.NewConnWebSocket(conn)
+	wsc := page_connection.NewWebSocket(conn)
 	page.NewClient(wsc)
 }
 

@@ -1,19 +1,19 @@
-package client
+package connection
 
 import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
 
-type ConnWebSocket struct {
+type WebSocket struct {
 	wsURL string
 	conn  *websocket.Conn
 	send  chan []byte
 	done  chan bool
 }
 
-func NewConnWebSocket(wsURL string) *ConnWebSocket {
-	cws := &ConnWebSocket{
+func NewWebSocket(wsURL string) *WebSocket {
+	cws := &WebSocket{
 		wsURL: wsURL,
 		send:  make(chan []byte),
 		done:  make(chan bool),
@@ -21,7 +21,7 @@ func NewConnWebSocket(wsURL string) *ConnWebSocket {
 	return cws
 }
 
-func (c *ConnWebSocket) Start(handler ReadMessageHandler) (err error) {
+func (c *WebSocket) Start(handler ReadMessageHandler) (err error) {
 
 	log.Println("Connecting via WebSockets to:", c.wsURL)
 	c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
@@ -36,11 +36,11 @@ func (c *ConnWebSocket) Start(handler ReadMessageHandler) (err error) {
 	return
 }
 
-func (c *ConnWebSocket) Send(message []byte) {
+func (c *WebSocket) Send(message []byte) {
 	c.send <- message
 }
 
-func (hc *ConnWebSocket) readLoop(handler ReadMessageHandler) {
+func (hc *WebSocket) readLoop(handler ReadMessageHandler) {
 	defer close(hc.done)
 
 	for {
@@ -54,7 +54,7 @@ func (hc *ConnWebSocket) readLoop(handler ReadMessageHandler) {
 	}
 }
 
-func (c *ConnWebSocket) writeLoop() {
+func (c *WebSocket) writeLoop() {
 	for {
 		select {
 		case message, ok := <-c.send:

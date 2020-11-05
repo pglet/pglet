@@ -1,4 +1,4 @@
-package page
+package connection
 
 type ReadMessageHandler func(message []byte) error
 

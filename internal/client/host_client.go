@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
+	"github.com/pglet/pglet/internal/client/connection"
 	"github.com/pglet/pglet/internal/page"
 )
 
@@ -20,7 +21,7 @@ type HostClient struct {
 	connectOnce sync.Once
 
 	// active connection
-	conn Conn
+	conn connection.Conn
 
 	// pageSessionClients by "pageName:sessionID"
 	pageSessionClients map[string]map[*PipeClient]bool
@@ -41,8 +42,13 @@ func NewHostClient(wsURL string) *HostClient {
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.newSessions = make(map[string]chan string)
 
-	// TODO: decide on connection type depdnding on wsURL
-	hc.conn = NewConnWebSocket(wsURL)
+	if wsURL == "" {
+		// local/loopback connection
+		hc.conn = connection.NewLocal()
+	} else {
+		// WebSocket connection
+		hc.conn = connection.NewWebSocket(wsURL)
+	}
 
 	return hc
 }

@@ -3,12 +3,12 @@ package page
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/page/connection"
 )
 
 const (
@@ -39,20 +39,6 @@ const (
 	CleanControlAction = "cleanControl"
 )
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 512
-)
-
 type ClientRole string
 
 const (
@@ -64,7 +50,7 @@ const (
 type Client struct {
 	id       string
 	role     ClientRole
-	conn     Conn
+	conn     connection.Conn
 	sessions map[*Session]bool
 	pages    map[*Page]bool
 }
@@ -133,7 +119,7 @@ func autoID() string {
 	return uuid.New().String()
 }
 
-func NewClient(conn Conn) *Client {
+func NewClient(conn connection.Conn) *Client {
 	c := &Client{
 		id:       autoID(),
 		conn:     conn,
