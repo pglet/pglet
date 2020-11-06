@@ -30,7 +30,7 @@ type WebSocket struct {
 func NewWebSocket(conn *websocket.Conn) *WebSocket {
 	cws := &WebSocket{
 		conn: conn,
-		send: make(chan []byte),
+		send: make(chan []byte, 10),
 		done: make(chan bool),
 	}
 	return cws

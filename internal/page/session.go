@@ -125,7 +125,7 @@ func add(session *Session, command command.Command) (result string, err error) {
 	})
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(msg)
+	session.broadcastCommandToWebClients(msg)
 	return id, nil
 }
 
@@ -191,7 +191,7 @@ func set(session *Session, command command.Command) (result string, err error) {
 	payload.Props = append(payload.Props, props)
 
 	// broadcast control updates to all connected web clients
-	go session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
+	session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
 	return "", nil
 }
 
@@ -218,7 +218,7 @@ func clean(session *Session, command command.Command) (result string, err error)
 	// log.Println(string(pJSON))
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
+	session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
 		ID: id,
 	}))
 	return "", nil
@@ -247,7 +247,7 @@ func remove(session *Session, command command.Command) (result string, err error
 	session.deleteControl(ctrl)
 
 	// broadcast command to all connected web clients
-	go session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
+	session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
 		ID: id,
 	}))
 	return "", nil
