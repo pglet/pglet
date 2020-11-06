@@ -10,6 +10,9 @@ import (
 )
 
 func newAppCommand() *cobra.Command {
+
+	var uds bool
+
 	var cmd = &cobra.Command{
 		Use:   "app",
 		Short: "Connect to an app",
@@ -21,7 +24,10 @@ func newAppCommand() *cobra.Command {
 
 			// continuously wait for new client connections
 			for {
-				pipeName, err := client.ConnectAppPage(cmd.Context(), args[0])
+				pipeName, err := client.ConnectAppPage(cmd.Context(), &proxy.ConnectPageArgs{
+					PageURI: args[0],
+					Uds:     uds,
+				})
 				if err != nil {
 					log.Fatalln("Connect app error:", err)
 				}
@@ -29,6 +35,8 @@ func newAppCommand() *cobra.Command {
 			}
 		},
 	}
+
+	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
 
 	return cmd
 }
