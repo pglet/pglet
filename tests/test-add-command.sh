@@ -14,8 +14,9 @@ function pglet_event() {
   # https://askubuntu.com/questions/992439/bash-pass-both-array-and-non-array-parameter-to-function
   arr=("$@")
   IFS=' '
-  while read eventTarget eventName eventData < "$page_pipe.events"
+  while true
   do
+    read eventTarget eventName eventData < "$page_pipe.events"
     for evt in "${arr[@]}";
     do
       IFS=' ' read -r et en fn <<< "$evt"
@@ -28,21 +29,26 @@ function pglet_event() {
   done
 }
 
+full_name=`curl $REPLIT_DB_URL/full_name`
+
 function main() {
   pglet "clean page"
-  rowId=`pglet "add row id=body"`
-  colId=`pglet "add col id=form to=$rowId"`
-  pglet "add text value='Enter your name:' to=$colId"
-  pglet "add textbox id=fullName value='john smith' to=$colId"
-  pglet "add button id=submit text=Submit event=btn_event to=$colId"
+  rowID=`pglet "add row"`
+  colID=`pglet "add col to=$rowID"`
+  pglet "add text to=$colID value='Enter your name:'"
+  pglet "add textbox to=$colID id=fullName value='$full_name'"
+  pglet "add button to=$colID id=submit text=Submit"
 
-  events=("body:form:submit click welcome")
+  events=("submit click welcome")
   pglet_event "${events[@]}"
 }
 
 function welcome() {
   # get fullName value
-  full_name=`pglet "get body:form:fullName value"`
+  full_name=`pglet "get fullName value"`
+
+  # save to Repl database
+  curl $REPLIT_DB_URL -d "full_name=$full_name"
 
   # output welcome message
   pglet "clean page"
