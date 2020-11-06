@@ -1,7 +1,8 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
+import Button from 'react-bootstrap/Button';
 
-const Button = React.memo(({control}) => {
+const button = React.memo(({control}) => {
 
   console.log(`render Button: ${control.i}`);
 
@@ -11,7 +12,7 @@ const Button = React.memo(({control}) => {
     ws.pageEventFromWeb(control.i, 'click', control.event)
   }
 
-  return <button type="button" className="btn btn-primary" onClick={handleClick}>{control.text}</button>;
+  return <Button variant="primary" onClick={handleClick}>{control.text}</Button>;
 })
 
-export default Button
+export default button
