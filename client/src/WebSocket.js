@@ -76,7 +76,7 @@ export default ({ children }) => {
         };
 
         socket.onmessage = function (evt) {
-            console.log("WebSocket onmessage");
+            console.log("WebSocket onmessage:", evt.data);
             var data = JSON.parse(evt.data);
             console.log(data);
 
