@@ -63,7 +63,8 @@ export default ({ children }) => {
     }
 
     if (!socket) {
-        socket = new ReconnectingWebSocket(`ws://${document.location.host}/ws`);
+        const wsProtocol = document.location.protocol === "https:" ? "wss:" : "ws:";
+        socket = new ReconnectingWebSocket(`${wsProtocol}//${document.location.host}/ws`);
 
         socket.onopen = function (evt) {
             console.log("WebSocket connection opened");

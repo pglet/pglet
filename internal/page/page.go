@@ -54,7 +54,7 @@ func (p *Page) unregisterClient(client *Client) {
 	p.clientsMutex.Lock()
 	defer p.clientsMutex.Unlock()
 
-	log.Printf("Unregistering %v client %s from %s",
+	log.Printf("Unregistering %v client %s from page %s",
 		client.role, client.id, p.Name)
 
 	delete(p.clients, client)

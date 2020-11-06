@@ -179,7 +179,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	lc := net.ListenConfig{}
 	l, e := lc.Listen(ctx, "unix", sockAddr)
 
-	//l, e := net.Listen("unix", sockAddr)
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
@@ -214,6 +213,10 @@ func buildWSEndPointURL(pageURI string) string {
 	u, err := url.Parse(pageURI)
 	if err != nil {
 		log.Fatalln("Cannot parse page URI:", err)
+	}
+
+	if u.Host == "" {
+		return ""
 	}
 
 	u.Scheme = "ws"

@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +15,7 @@ func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pglet",
 		Short:   "Pglet",
-		Version: fmt.Sprintf("%s-%s", version, commit),
+		Version: version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
 			level := log.FatalLevel // default logging level

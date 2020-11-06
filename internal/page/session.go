@@ -366,7 +366,7 @@ func (session *Session) broadcastCommandToWebClients(msg *Message) {
 
 	for c := range session.clients {
 		if c.role == WebClient {
-			c.send <- serializedMsg
+			c.send(serializedMsg)
 		}
 	}
 }
@@ -387,7 +387,7 @@ func (session *Session) unregisterClient(client *Client) {
 	session.clientsMutex.Lock()
 	defer session.clientsMutex.Unlock()
 
-	log.Printf("Unregistering %v client %s from %s:%s",
+	log.Printf("Unregistering %v client %s from session %s:%s",
 		client.role, client.id, session.Page.Name, session.ID)
 
 	delete(session.clients, client)
