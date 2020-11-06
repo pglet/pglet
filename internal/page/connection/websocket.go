@@ -55,7 +55,7 @@ func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
-		log.Println("received pong")
+		log.Traceln("received pong")
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
@@ -108,7 +108,7 @@ func (c *WebSocket) writeLoop() {
 				return
 			}
 		case <-ticker.C:
-			log.Println("send ping")
+			log.Traceln("send ping")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
