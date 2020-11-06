@@ -98,11 +98,11 @@ func (c *WebSocket) writeLoop() {
 			}
 			w.Write(message)
 
-			// Add queued messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(<-c.send)
-			}
+			// // Add queued messages to the current websocket message.
+			// n := len(c.send)
+			// for i := 0; i < n; i++ {
+			// 	w.Write(<-c.send)
+			// }
 
 			if err := w.Close(); err != nil {
 				return
