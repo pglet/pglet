@@ -66,9 +66,6 @@ func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, pipeName *string) error {
 
 	pageURI := args.PageURI
-
-	log.Println("PAGE_URI:", pageURI)
-
 	hc := ps.getHostClient(pageURI)
 	pageName := getPageNameFromURI(pageURI)
 
@@ -89,7 +86,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	}
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, payload.SessionID, hc)
+	pc, err := client.NewPipeClient(pageName, payload.SessionID, hc, args.Uds)
 	if err != nil {
 		return err
 	}
@@ -140,7 +137,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, pi
 	}
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, sessionID, hc)
+	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds)
 	if err != nil {
 		return err
 	}

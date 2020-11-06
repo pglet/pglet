@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 
 	log "github.com/sirupsen/logrus"
 
@@ -20,10 +21,16 @@ type PipeClient struct {
 	hostClient *HostClient
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
-	pipe, err := newNamedPipe(id)
+	var err error
+	var p pipe
+	if uds && runtime.GOOS != "windows" {
+		p, err = newUnixDomainSocket(id)
+	} else {
+		p, err = newNamedPipe(id)
+	}
 
 	if err != nil {
 		return nil, err
@@ -33,7 +40,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClie
 		id:         id,
 		pageName:   pageName,
 		sessionID:  sessionID,
-		pipe:       pipe,
+		pipe:       p,
 		hostClient: hc,
 	}
 
