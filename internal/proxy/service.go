@@ -63,10 +63,14 @@ func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
-func (ps *Service) ConnectSharedPage(ctx context.Context, pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, pipeName *string) error {
 
-	hc := ps.getHostClient(*pageURI)
-	pageName := getPageNameFromURI(*pageURI)
+	pageURI := args.PageURI
+
+	log.Println("PAGE_URI:", pageURI)
+
+	hc := ps.getHostClient(pageURI)
+	pageName := getPageNameFromURI(pageURI)
 
 	log.Println("Connecting to shared page:", pageName)
 
@@ -101,10 +105,11 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, pageURI *string, pipeN
 }
 
 // ConnectAppPage waits for new web clients connecting specified page, creates a new session and returns file name of control pipe.
-func (ps *Service) ConnectAppPage(ctx context.Context, pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, pipeName *string) error {
 
-	hc := ps.getHostClient(*pageURI)
-	pageName := getPageNameFromURI(*pageURI)
+	pageURI := args.PageURI
+	hc := ps.getHostClient(pageURI)
+	pageName := getPageNameFromURI(pageURI)
 
 	log.Println("Connecting to app page:", pageName)
 

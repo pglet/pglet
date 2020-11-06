@@ -18,6 +18,11 @@ type Client struct {
 	client *rpc.Client
 }
 
+type ConnectPageArgs struct {
+	PageURI string
+	Uds     bool
+}
+
 func (proxy *Client) Start() {
 	var err error
 
@@ -39,13 +44,13 @@ func (proxy *Client) Start() {
 	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
 }
 
-func (proxy *Client) ConnectSharedPage(ctx context.Context, pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (pipeFilename string, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &pipeFilename)
 	return
 }
 
-func (proxy *Client) ConnectAppPage(ctx context.Context, pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (pipeFilename string, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &pipeFilename)
 	return
 }
 
