@@ -54,7 +54,7 @@ func (pc *unixDomainSocket) nextCommand() string {
 }
 
 func (pc *unixDomainSocket) commandLoop() {
-	log.Println("Starting command loop - ", pc.commandPipeName)
+	log.Println("Starting command loop:", pc.commandPipeName)
 
 	var err error
 	sockAddr := filepath.Join(os.TempDir(), coreFxSocketPrefix+pc.commandPipeName)
@@ -150,7 +150,7 @@ func (pc *unixDomainSocket) emitEvent(evt string) {
 
 func (pc *unixDomainSocket) eventLoop() {
 
-	log.Println("Starting event loop - ", pc.eventPipeName)
+	log.Println("Starting event loop:", pc.eventPipeName)
 
 	var err error
 	sockAddr := filepath.Join(os.TempDir(), coreFxSocketPrefix+pc.eventPipeName)

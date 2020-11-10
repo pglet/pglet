@@ -8,7 +8,7 @@ const Col = React.memo(({control}) => {
 
   const childControls = useSelector(state => control.c.map(childId => state.page.controls[childId]), shallowEqual);
 
-  return <div className="col"><ControlsList controls={childControls} /></div>;
+  return <div className="col-12"><ControlsList controls={childControls} /></div>;
 })
 
 export default Col

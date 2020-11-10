@@ -11,6 +11,10 @@ import (
 
 func newAppCommand() *cobra.Command {
 
+	var public bool
+	var private bool
+	var server string
+	var token string
 	var uds bool
 
 	var cmd = &cobra.Command{
@@ -24,18 +28,26 @@ func newAppCommand() *cobra.Command {
 
 			// continuously wait for new client connections
 			for {
-				pipeName, err := client.ConnectAppPage(cmd.Context(), &proxy.ConnectPageArgs{
-					PageURI: args[0],
-					Uds:     uds,
+				results, err := client.ConnectAppPage(cmd.Context(), &proxy.ConnectPageArgs{
+					PageName: args[0],
+					Private:  private,
+					Public:   public,
+					Server:   server,
+					Token:    token,
+					Uds:      uds,
 				})
 				if err != nil {
 					log.Fatalln("Connect app error:", err)
 				}
-				fmt.Println(pipeName)
+				fmt.Println(results.PipeName, results.PageURL)
 			}
 		},
 	}
 
+	cmd.Flags().BoolVarP(&public, "public", "", false, "makes the app available as public at pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().BoolVarP(&private, "private", "", false, "makes the app available as private at pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the app on a self-hosted Pglet server")
+	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
 
 	return cmd

@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -43,11 +42,11 @@ func newService() *Service {
 	return ps
 }
 
-func (ps *Service) getHostClient(pageURI string) *client.HostClient {
+func (ps *Service) getHostClient(pageName string, server string, token string) *client.HostClient {
 	ps.hcMutex.Lock()
 	defer ps.hcMutex.Unlock()
 
-	wsURL := buildWSEndPointURL(pageURI)
+	wsURL := buildWSEndPointURL(pageName, server)
 
 	hc, ok := ps.hostClients[wsURL]
 	if !ok {
@@ -63,11 +62,10 @@ func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
-func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, pipeName *string) error {
+func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
-	pageURI := args.PageURI
-	hc := ps.getHostClient(pageURI)
-	pageName := getPageNameFromURI(pageURI)
+	pageName := args.PageName
+	hc := ps.getHostClient(pageName, args.Server, args.Token)
 
 	log.Println("Connecting to shared page:", pageName)
 
@@ -96,17 +94,17 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	// register pipe client, so it can receive events from pages/sessions
 	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.CommandPipeName()
+	results.PipeName = pc.CommandPipeName()
+	results.PageURL = "http://URL"
 
 	return nil
 }
 
 // ConnectAppPage waits for new web clients connecting specified page, creates a new session and returns file name of control pipe.
-func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, pipeName *string) error {
+func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
-	pageURI := args.PageURI
-	hc := ps.getHostClient(pageURI)
-	pageName := getPageNameFromURI(pageURI)
+	pageName := args.PageName
+	hc := ps.getHostClient(pageName, args.Server, args.Token)
 
 	log.Println("Connecting to app page:", pageName)
 
@@ -147,7 +145,8 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, pi
 	// register pipe client, so it can receive events from pages/sessions
 	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.CommandPipeName()
+	results.PipeName = pc.CommandPipeName()
+	results.PageURL = "http://URL"
 
 	return nil
 }
@@ -211,7 +210,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("Proxy service exited")
 }
 
-func buildWSEndPointURL(pageURI string) string {
+func buildWSEndPointURL(pageURI string, server string) string {
 	u, err := url.Parse(pageURI)
 	if err != nil {
 		log.Fatalln("Cannot parse page URI:", err)
@@ -226,13 +225,4 @@ func buildWSEndPointURL(pageURI string) string {
 	u.RawQuery = ""
 
 	return u.String()
-}
-
-func getPageNameFromURI(pageURI string) string {
-	u, err := url.Parse(pageURI)
-	if err != nil {
-		log.Fatalln("Cannot parse page URI:", err)
-	}
-
-	return strings.ToLower(strings.Trim(u.Path, "/"))
 }

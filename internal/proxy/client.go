@@ -19,8 +19,17 @@ type Client struct {
 }
 
 type ConnectPageArgs struct {
-	PageURI string
-	Uds     bool
+	PageName string
+	Public   bool
+	Private  bool
+	Server   string
+	Token    string
+	Uds      bool
+}
+
+type ConnectPageResults struct {
+	PipeName string
+	PageURL  string
 }
 
 func (proxy *Client) Start() {
@@ -44,13 +53,13 @@ func (proxy *Client) Start() {
 	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
 }
 
-func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (pipeFilename string, err error) {
-	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &pipeFilename)
+func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &results)
 	return
 }
 
-func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (pipeFilename string, err error) {
-	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &pipeFilename)
+func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &results)
 	return
 }
 

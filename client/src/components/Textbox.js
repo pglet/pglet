@@ -24,7 +24,7 @@ const Textbox = React.memo(({control}) => {
     ws.updateControlProps(payload);
   }
 
-  return <input type="text" value={control.value} onChange={handleChange} />;
+  return <input type="text" className="form-control" value={control.value} onChange={handleChange} />;
 })
 
 export default Textbox
