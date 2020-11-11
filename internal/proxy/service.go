@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +20,11 @@ import (
 	"github.com/keegancsmith/rpc"
 	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/server"
+)
+
+const (
+	pgletIoURL = "https://app.pglet.io"
 )
 
 var (
@@ -42,11 +49,11 @@ func newService() *Service {
 	return ps
 }
 
-func (ps *Service) getHostClient(pageName string, server string, token string) *client.HostClient {
+func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 	ps.hcMutex.Lock()
 	defer ps.hcMutex.Unlock()
 
-	wsURL := buildWSEndPointURL(pageName, server)
+	wsURL := buildWSEndPointURL(serverURL)
 
 	hc, ok := ps.hostClients[wsURL]
 	if !ok {
@@ -54,18 +61,28 @@ func (ps *Service) getHostClient(pageName string, server string, token string) *
 		err := hc.Start()
 
 		if err != nil {
-			log.Fatalf("Cannot connect to %s: %v\n", wsURL, err)
+			return nil, fmt.Errorf("Cannot connect to %s: %v", wsURL, err)
 		}
 		ps.hostClients[wsURL] = hc
 	}
-	return hc
+	return hc, nil
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	hc := ps.getHostClient(pageName, args.Server, args.Token)
+	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
 
 	log.Println("Connecting to shared page:", pageName)
 
@@ -77,7 +94,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
-	err := json.Unmarshal(*result, payload)
+	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
 		log.Fatalln("Error calling ConnectSharedPage:", err)
@@ -95,7 +112,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	hc.RegisterPipeClient(pc)
 
 	results.PipeName = pc.CommandPipeName()
-	results.PageURL = "http://URL"
+	results.PageURL = getPageURL(serverURL, pageName)
 
 	return nil
 }
@@ -104,7 +121,17 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	hc := ps.getHostClient(pageName, args.Server, args.Token)
+	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
 
 	log.Println("Connecting to app page:", pageName)
 
@@ -116,7 +143,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
-	err := json.Unmarshal(*result, payload)
+	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
 		log.Fatalln("Error calling ConnectAppPage:", err)
@@ -146,7 +173,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 	hc.RegisterPipeClient(pc)
 
 	results.PipeName = pc.CommandPipeName()
-	results.PageURL = "http://URL"
+	results.PageURL = getPageURL(serverURL, pageName)
 
 	return nil
 }
@@ -210,19 +237,53 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("Proxy service exited")
 }
 
-func buildWSEndPointURL(pageURI string, server string) string {
-	u, err := url.Parse(pageURI)
-	if err != nil {
-		log.Fatalln("Cannot parse page URI:", err)
-	}
+func buildWSEndPointURL(serverURL string) string {
 
-	if u.Host == "" {
+	if serverURL == "" {
 		return ""
 	}
 
-	u.Scheme = "ws"
+	u, err := url.Parse(serverURL)
+	if err != nil {
+		log.Fatalln("Cannot parse server URL:", err)
+	}
+
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+
 	u.Path = "ws"
 	u.RawQuery = ""
 
 	return u.String()
+}
+
+func getServerURL(server string, public bool, private bool) (string, error) {
+	if public && private {
+		return "", errors.New("the page or app cannot be both public and private")
+	}
+
+	if server == "" && (public || private) {
+		return pgletIoURL, nil
+	} else if server == "" {
+		return "", nil
+	}
+
+	serverURL := strings.Trim(server, "/")
+
+	if !strings.Contains(serverURL, "://") {
+		// scheme is specified
+		serverURL = "http://" + serverURL
+	}
+
+	return serverURL, nil
+}
+
+func getPageURL(serverURL string, pageName string) string {
+	if serverURL == "" {
+		serverURL = fmt.Sprintf("http://localhost:%d", server.Port)
+	}
+	return fmt.Sprintf("%s/p/%s", serverURL, pageName)
 }

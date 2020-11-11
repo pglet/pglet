@@ -19,10 +19,13 @@ import (
 )
 
 const (
-	DefaultServerPort   int    = 5000
 	apiRoutePrefix      string = "/api"
 	contentRootFolder   string = "client/build"
 	siteDefaultDocument string = "index.html"
+)
+
+var (
+	Port int = 5000
 )
 
 var upgrader = websocket.Upgrader{
@@ -32,6 +35,8 @@ var upgrader = websocket.Upgrader{
 
 func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	defer wg.Done()
+
+	Port = serverPort
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -71,6 +76,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 			})
 		}
 	})
+
+	log.Println("Starting server on port", serverPort)
 
 	// Start and run the server
 	srv := &http.Server{

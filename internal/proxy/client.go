@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pglet/pglet/internal/utils"
+
 	"github.com/keegancsmith/rpc"
 	log "github.com/sirupsen/logrus"
 )
@@ -55,11 +57,13 @@ func (proxy *Client) Start() {
 
 func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &results)
+	utils.OpenBrowser(results.PageURL)
 	return
 }
 
 func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &results)
+	utils.OpenBrowser(results.PageURL)
 	return
 }
 

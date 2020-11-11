@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/pglet/pglet/internal/proxy"
@@ -8,9 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	defaultPort int = 5000
+)
+
 func newServerCommand() *cobra.Command {
 
 	var serverPort int
+
+	envPort, err := strconv.Atoi(os.Getenv("PGLET_SERVER_PORT"))
+	if err == nil {
+		defaultPort = envPort
+	}
 
 	var cmd = &cobra.Command{
 		Use:   "server",
@@ -21,14 +32,14 @@ func newServerCommand() *cobra.Command {
 			waitGroup := sync.WaitGroup{}
 
 			waitGroup.Add(2)
-			go proxy.Start(cmd.Context(), &waitGroup)
 			go server.Start(cmd.Context(), &waitGroup, serverPort)
+			go proxy.Start(cmd.Context(), &waitGroup)
 
 			waitGroup.Wait()
 		},
 	}
 
-	cmd.Flags().IntVarP(&serverPort, "port", "p", 5000, "port on which the server will listen")
+	cmd.Flags().IntVarP(&serverPort, "port", "p", defaultPort, "port on which the server will listen")
 
 	return cmd
 }
