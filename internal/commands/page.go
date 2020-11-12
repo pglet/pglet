@@ -46,6 +46,7 @@ func newPageCommand() *cobra.Command {
 
 			utils.OpenBrowser(results.PageURL)
 
+			// output connection ID and page URL to be consumed by a client
 			fmt.Println(results.PipeName, results.PageURL)
 		},
 	}

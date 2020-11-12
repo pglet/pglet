@@ -48,13 +48,15 @@ func newAppCommand() *cobra.Command {
 			connectArgs.PageName = results.PageName
 			utils.OpenBrowser(results.PageURL)
 
+			fmt.Println(results.PageURL)
+
 			// continuously wait for new client connections
 			for {
 				results, err := client.WaitAppSession(cmd.Context(), connectArgs)
 				if err != nil {
 					log.Fatalln("Error waiting for a new session:", err)
 				}
-				fmt.Println(results.PipeName, results.PageURL)
+				fmt.Println(results.PipeName)
 			}
 		},
 	}
