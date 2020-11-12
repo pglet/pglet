@@ -62,6 +62,7 @@ type RegisterHostClientRequestPayload struct {
 
 type RegisterHostClientResponsePayload struct {
 	SessionID string `json:"sessionID"`
+	PageName  string `json:"pageName"`
 	Error     string `json:"error"`
 }
 
@@ -251,31 +252,40 @@ func registerHostClient(client *Client, message *Message) {
 
 	responsePayload := &RegisterHostClientResponsePayload{
 		SessionID: "",
+		PageName:  "",
 		Error:     "",
 	}
 
 	// assign client role
 	client.role = HostClient
 
-	// retrieve page and then create if not exists
-	page := Pages().Get(payload.PageName)
-	if page == nil {
-		page = NewPage(payload.PageName, payload.IsApp)
-		Pages().Add(page)
-	}
+	pageName, err := parsePageName(payload.PageName)
+	if err == nil {
 
-	if !page.IsApp {
-		// retrieve zero session
-		session := page.GetSession(ZeroSession)
-		if session == nil {
-			session = NewSession(page, ZeroSession)
-			page.AddSession(session)
+		responsePayload.PageName = pageName.String()
+
+		// retrieve page and then create if not exists
+		page := Pages().Get(responsePayload.PageName)
+		if page == nil {
+			page = NewPage(responsePayload.PageName, payload.IsApp)
+			Pages().Add(page)
 		}
-		client.registerSession(session)
-		responsePayload.SessionID = session.ID
+
+		if !page.IsApp {
+			// retrieve zero session
+			session := page.GetSession(ZeroSession)
+			if session == nil {
+				session = NewSession(page, ZeroSession)
+				page.AddSession(session)
+			}
+			client.registerSession(session)
+			responsePayload.SessionID = session.ID
+		} else {
+			// register host client as an app server
+			client.registerPage(page)
+		}
 	} else {
-		// register host client as an app server
-		client.registerPage(page)
+		responsePayload.Error = err.Error()
 	}
 
 	responsePayloadRaw, _ := json.Marshal(responsePayload)

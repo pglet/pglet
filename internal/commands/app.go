@@ -19,16 +19,20 @@ func newAppCommand() *cobra.Command {
 	var uds bool
 
 	var cmd = &cobra.Command{
-		Use:   "app",
+		Use:   "app [[namespace/]<page_name>]",
 		Short: "Connect to an app",
 		Long:  `App command is ...`,
-		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
 			client.Start()
 
+			pageName := "*" // auto-generated
+			if len(args) > 0 {
+				pageName = args[0]
+			}
+
 			connectArgs := &proxy.ConnectPageArgs{
-				PageName: args[0],
+				PageName: pageName,
 				Private:  private,
 				Public:   public,
 				Server:   server,

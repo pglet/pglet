@@ -92,19 +92,25 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 		IsApp:    false,
 	})
 
-	results.PageName = pageName
-	results.PageURL = getPageURL(serverURL, pageName)
-
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
 	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
-		log.Fatalln("Error calling ConnectSharedPage:", err)
+		log.Errorln("Error parsing ConnectSharedPage response:", err)
+		return err
 	}
 
+	if payload.Error != "" {
+		log.Errorln("Error calling ConnectSharedPage:", payload.Error)
+		return errors.New(payload.Error)
+	}
+
+	results.PageName = payload.PageName
+	results.PageURL = getPageURL(serverURL, payload.PageName)
+
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, payload.SessionID, hc, args.Uds)
+	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds)
 	if err != nil {
 		return err
 	}
@@ -148,13 +154,19 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
-		log.Fatalln("Error calling ConnectAppPage:", err)
+		log.Errorln("Error parsing ConnectAppPage response:", err)
+		return err
 	}
 
-	log.Println("Connected to app page:", pageName)
+	if payload.Error != "" {
+		log.Errorln("Error calling ConnectAppPage:", payload.Error)
+		return errors.New(payload.Error)
+	}
 
-	results.PageName = pageName
-	results.PageURL = getPageURL(serverURL, pageName)
+	log.Println("Connected to app page:", payload.PageName)
+
+	results.PageName = payload.PageName
+	results.PageURL = getPageURL(serverURL, payload.PageName)
 
 	return nil
 }

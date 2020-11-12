@@ -19,22 +19,27 @@ func newPageCommand() *cobra.Command {
 	var uds bool
 
 	var cmd = &cobra.Command{
-		Use:   "page <namespace/page>",
+		Use:   "page [[namespace/]<page_name>]",
 		Short: "Connect to a shared page",
 		Long:  `Page command is ...`,
-		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
 			client.Start()
 
+			pageName := "*" // auto-generated
+			if len(args) > 0 {
+				pageName = args[0]
+			}
+
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
-				PageName: args[0],
+				PageName: pageName,
 				Private:  private,
 				Public:   public,
 				Server:   server,
 				Token:    token,
 				Uds:      uds,
 			})
+
 			if err != nil {
 				log.Fatalln("Connect page error:", err)
 			}

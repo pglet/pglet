@@ -6,6 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type PageName struct {
+	Namespace string
+	Name      string
+}
+
 // Page represents a single page.
 type Page struct {
 	sync.RWMutex
