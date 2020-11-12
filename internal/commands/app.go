@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/proxy"
+	"github.com/pglet/pglet/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -26,18 +27,28 @@ func newAppCommand() *cobra.Command {
 			client := &proxy.Client{}
 			client.Start()
 
+			connectArgs := &proxy.ConnectPageArgs{
+				PageName: args[0],
+				Private:  private,
+				Public:   public,
+				Server:   server,
+				Token:    token,
+				Uds:      uds,
+			}
+
+			results, err := client.ConnectAppPage(cmd.Context(), connectArgs)
+			if err != nil {
+				log.Fatalln("Connect app error:", err)
+			}
+
+			connectArgs.PageName = results.PageName
+			utils.OpenBrowser(results.PageURL)
+
 			// continuously wait for new client connections
 			for {
-				results, err := client.ConnectAppPage(cmd.Context(), &proxy.ConnectPageArgs{
-					PageName: args[0],
-					Private:  private,
-					Public:   public,
-					Server:   server,
-					Token:    token,
-					Uds:      uds,
-				})
+				results, err := client.WaitAppSession(cmd.Context(), connectArgs)
 				if err != nil {
-					log.Fatalln("Connect app error:", err)
+					log.Fatalln("Error waiting for a new session:", err)
 				}
 				fmt.Println(results.PipeName, results.PageURL)
 			}

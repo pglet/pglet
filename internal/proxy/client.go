@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/pglet/pglet/internal/utils"
-
 	"github.com/keegancsmith/rpc"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,6 +33,7 @@ type ConnectPageArgs struct {
 
 type ConnectPageResults struct {
 	PipeName string
+	PageName string
 	PageURL  string
 }
 
@@ -61,19 +60,16 @@ func (proxy *Client) Start() {
 
 func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &results)
-	if !browserOpened {
-		utils.OpenBrowser(results.PageURL)
-		browserOpened = true
-	}
 	return
 }
 
 func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &results)
-	if !browserOpened {
-		utils.OpenBrowser(results.PageURL)
-		browserOpened = true
-	}
+	return
+}
+
+func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.WaitAppSession", &args, &results)
 	return
 }
 

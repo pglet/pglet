@@ -92,6 +92,9 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 		IsApp:    false,
 	})
 
+	results.PageName = pageName
+	results.PageURL = getPageURL(serverURL, pageName)
+
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
 	err = json.Unmarshal(*result, payload)
@@ -112,7 +115,6 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	hc.RegisterPipeClient(pc)
 
 	results.PipeName = pc.CommandPipeName()
-	results.PageURL = getPageURL(serverURL, pageName)
 
 	return nil
 }
@@ -151,6 +153,29 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 
 	log.Println("Connected to app page:", pageName)
 
+	results.PageName = pageName
+	results.PageURL = getPageURL(serverURL, pageName)
+
+	return nil
+}
+
+func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
+
+	pageName := args.PageName
+	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
+
+	log.Println("Waiting for a new app session:", pageName)
+
 	var sessionID string
 
 	// wait for new session
@@ -172,8 +197,9 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 	// register pipe client, so it can receive events from pages/sessions
 	hc.RegisterPipeClient(pc)
 
-	results.PipeName = pc.CommandPipeName()
+	results.PageName = pageName
 	results.PageURL = getPageURL(serverURL, pageName)
+	results.PipeName = pc.CommandPipeName()
 
 	return nil
 }

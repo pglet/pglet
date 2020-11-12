@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/proxy"
+	"github.com/pglet/pglet/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,9 @@ func newPageCommand() *cobra.Command {
 			if err != nil {
 				log.Fatalln("Connect page error:", err)
 			}
+
+			utils.OpenBrowser(results.PageURL)
+
 			fmt.Println(results.PipeName, results.PageURL)
 		},
 	}
