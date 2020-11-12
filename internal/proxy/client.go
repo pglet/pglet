@@ -16,6 +16,10 @@ const (
 	connectAttempts = 20
 )
 
+var (
+	browserOpened = false
+)
+
 type Client struct {
 	client *rpc.Client
 }
@@ -57,13 +61,19 @@ func (proxy *Client) Start() {
 
 func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &results)
-	utils.OpenBrowser(results.PageURL)
+	if !browserOpened {
+		utils.OpenBrowser(results.PageURL)
+		browserOpened = true
+	}
 	return
 }
 
 func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
 	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &results)
-	utils.OpenBrowser(results.PageURL)
+	if !browserOpened {
+		utils.OpenBrowser(results.PageURL)
+		browserOpened = true
+	}
 	return
 }
 
