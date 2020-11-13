@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"runtime"
@@ -18,10 +17,10 @@ func OpenBrowser(url string) {
 
 	if goos == "linux" {
 		// check if it's WSL
-		content, err := ioutil.ReadFile("/cat/version")
+		content, err := ioutil.ReadFile("/proc/version")
 		if err == nil {
-			version := string(content)
-			if strings.Contains(version, "Microsoft") {
+			version := strings.ToLower(string(content))
+			if strings.Contains(version, "microsoft") {
 				goos = "wsl"
 			}
 		}
@@ -35,7 +34,6 @@ func OpenBrowser(url string) {
 	case "darwin":
 		err = exec.Command("open", url).Start()
 	default:
-		err = fmt.Errorf("unsupported platform")
 	}
 
 	if err != nil {
