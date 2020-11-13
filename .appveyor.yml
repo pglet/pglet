@@ -135,7 +135,6 @@ for:
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...    
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
-        git diff
         goreleaser
       else
         goreleaser --snapshot --skip-publish
