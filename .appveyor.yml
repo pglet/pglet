@@ -131,6 +131,7 @@ for:
   - yarn
   - yarn build
   - cd ..
+  - echo "internal/server/bindata.go" >> .gitignore
   - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...    
   - sh: |
