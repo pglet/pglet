@@ -56,7 +56,7 @@ func (pc *namedPipe) nextCommand() string {
 }
 
 func (pc *namedPipe) commandLoop() {
-	log.Println("Starting command loop - ", pc.commandPipeName)
+	log.Println("Starting command loop:", pc.commandPipeName)
 
 	var err error
 	pc.commandListener, err = npipe.Listen(`\\.\pipe\` + pc.commandPipeName)
@@ -151,7 +151,7 @@ func (pc *namedPipe) emitEvent(evt string) {
 
 func (pc *namedPipe) eventLoop() {
 
-	log.Println("Starting event loop - ", pc.eventPipeName)
+	log.Println("Starting event loop:", pc.eventPipeName)
 
 	var err error
 	pc.eventListener, err = npipe.Listen(`\\.\pipe\` + pc.eventPipeName)
