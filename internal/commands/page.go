@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -48,6 +49,7 @@ func newPageCommand() *cobra.Command {
 
 			// output connection ID and page URL to be consumed by a client
 			fmt.Println(results.PipeName, results.PageURL)
+			os.Stdout.Sync()
 		},
 	}
 

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -49,6 +50,7 @@ func newAppCommand() *cobra.Command {
 			utils.OpenBrowser(results.PageURL)
 
 			fmt.Println(results.PageURL)
+			os.Stdout.Sync()
 
 			// continuously wait for new client connections
 			for {
@@ -57,6 +59,7 @@ func newAppCommand() *cobra.Command {
 					log.Fatalln("Error waiting for a new session:", err)
 				}
 				fmt.Println(results.PipeName)
+				os.Stdout.Sync()
 			}
 		},
 	}
