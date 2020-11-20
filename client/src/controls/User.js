@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchUser } from '../features/users/userSlice'
+import { fetchUser } from '../slices/userSlice'
 
 const User = ({userId}) => {
 
