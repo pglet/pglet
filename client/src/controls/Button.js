@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
-import Button from 'react-bootstrap/Button';
+import { PrimaryButton } from 'office-ui-fabric-react';
 
 const button = React.memo(({control}) => {
 
@@ -12,7 +12,7 @@ const button = React.memo(({control}) => {
     ws.pageEventFromWeb(control.i, 'click', control.event)
   }
 
-  return <Button variant="primary" onClick={handleClick}>{control.text}</Button>;
+  return <PrimaryButton onClick={handleClick} text={control.text} />;
 })
 
 export default button

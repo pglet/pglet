@@ -8,7 +8,7 @@ import {
     changeProps,
     cleanControl,
     removeControl
-} from './features/page/pageSlice'
+} from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const WebSocketContext = createContext(null)

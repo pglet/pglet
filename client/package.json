@@ -1,23 +1,27 @@
 {
-  "name": "client",
+  "name": "my-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.4.0",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "bootstrap": "^4.5.0",
-    "http-proxy-middleware": "^1.0.4",
-    "node-sass": "^4.14.1",
-    "react": "^16.13.1",
-    "react-bootstrap": "^1.4.0",
-    "react-dom": "^16.13.1",
-    "react-redux": "^7.2.0",
+    "@types/http-proxy-middleware": "^0.19.3",
+    "@types/jest": "24.0.12",
+    "@types/node": "11.13.8",
+    "@types/react": "16.8.15",
+    "@types/react-dom": "16.8.4",
+    "@types/react-redux": "^7.1.11",
+    "@types/react-router-dom": "^5.1.6",
+    "@types/reconnectingwebsocket": "^1.0.5",
+    "@uifabric/fluent-theme": "^0.16.7",
+    "http-proxy-middleware": "^1.0.6",
+    "office-ui-fabric-react": "^6.174.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.4.1",
+    "react-scripts": "3.0.0",
     "reconnecting-websocket": "^4.4.0",
-    "redux": "^4.0.5"
+    "typescript": "3.4.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,10 +43,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "redux-thunk": "^2.3.0",
-    "reselect": "^4.0.0"
   },
   "proxy": "http://localhost:5000"
 }

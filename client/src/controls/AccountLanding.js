@@ -1,6 +1,6 @@
 import React from 'react'
 
-const AccountLanding = ({ control }) => {
+const AccountLanding = () => {
     return <h1>Account landing</h1>
 }
 

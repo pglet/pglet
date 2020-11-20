@@ -1,7 +1,8 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
-import { changeProps } from '../features/page/pageSlice'
+import { changeProps } from '../slices/pageSlice'
+import { TextField } from 'office-ui-fabric-react';
 
 const Textbox = React.memo(({control}) => {
 
@@ -24,7 +25,7 @@ const Textbox = React.memo(({control}) => {
     ws.updateControlProps(payload);
   }
 
-  return <input type="text" className="form-control" value={control.value} onChange={handleChange} />;
+  return <TextField value={control.value} onChange={handleChange} />;
 })
 
 export default Textbox

@@ -1,25 +1,37 @@
-import './pglet.scss';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { configureStore } from '@reduxjs/toolkit'
-import rootReducer from './rootReducer'
-import WebSocketProvider from './WebSocket';
-import { Provider } from 'react-redux'
-import App from './App';
+import { App } from './App';
+import { FluentCustomizations } from '@uifabric/fluent-theme';
+import { Customizer, mergeStyles } from 'office-ui-fabric-react';
 import * as serviceWorker from './serviceWorker';
+import { Provider } from 'react-redux'
+import rootReducer from './rootReducer'
+import { configureStore } from '@reduxjs/toolkit'
+import WebSocketProvider from './WebSocket';
+
+// Inject some global styles
+mergeStyles({
+  selectors: {
+    ':global(body), :global(html), :global(#root)': {
+      margin: 0,
+      padding: 0,
+      height: '100vh'
+    }
+  }
+});
 
 const store = configureStore({
   reducer: rootReducer
 });
 
 ReactDOM.render(
-  <React.StrictMode>
+  <Customizer {...FluentCustomizations}>
     <Provider store={store}>
       <WebSocketProvider>
         <App />
       </WebSocketProvider>
     </Provider>
-  </React.StrictMode>,
+  </Customizer>,
   document.getElementById('root')
 );
 
