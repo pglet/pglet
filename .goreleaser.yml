@@ -13,6 +13,8 @@ builds:
       - windows
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=0
 
 archives:
   - id: binary
