@@ -41,3 +41,23 @@ func TestParse2(t *testing.T) {
 		t.Errorf("command values[0] is %s, want %s", cmd.Values[0], expValue)
 	}
 }
+
+func TestParseClean(t *testing.T) {
+	cmd, err := Parse(`clean page`)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// visualize command
+	log.Printf("%s", utils.ToJSON(cmd))
+
+	if len(cmd.Values) != 1 {
+		t.Errorf("the number of values is %d, want %d", len(cmd.Values), 1)
+	}
+
+	expValue := "page"
+	if cmd.Values[0] != expValue {
+		t.Errorf("command values[0] is %s, want %s", cmd.Values[0], expValue)
+	}
+}

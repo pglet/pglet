@@ -84,7 +84,7 @@ func Parse(cmdText string) (*Command, error) {
 
 		tok := s.TokenText()
 
-		//fmt.Printf("%s: %s\n", s.Position, tok)
+		fmt.Printf("%s: %s\n", s.Position, tok)
 
 		if tok == "=" {
 			if prevLit == "" || prevToken == "=" {
@@ -110,6 +110,11 @@ func Parse(cmdText string) (*Command, error) {
 			prevLit = tok
 		}
 		prevToken = tok
+	}
+
+	// consume last token collected
+	if prevLit != "" {
+		command.Values = append(command.Values, prevLit)
 	}
 
 	return command, nil
