@@ -95,9 +95,9 @@ func Parse(cmdText string) (*Command, error) {
 			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(tok)
 			prevLit = ""
 		} else if tok != "=" && prevToken != "=" && prevLit != "" {
-			v := strings.ToLower(utils.TrimQuotes(prevLit))
+			v := utils.TrimQuotes(prevLit)
 			if command.Name == "" {
-				command.Name = v
+				command.Name = strings.ToLower(v)
 				_, commandExists := supportedCommands[command.Name]
 				if !commandExists {
 					return nil, fmt.Errorf("Unknown command: %s", command.Name)

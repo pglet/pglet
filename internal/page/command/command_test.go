@@ -26,8 +26,18 @@ func TestParse2(t *testing.T) {
 	cmd, err := Parse(`set body:form:fullName value='John Smith' another_prop=value`)
 
 	if err != nil {
-		log.Println(err)
-	} else {
-		log.Printf("%s", utils.ToJSON(cmd))
+		t.Fatal(err)
+	}
+
+	// visualize command
+	log.Printf("%s", utils.ToJSON(cmd))
+
+	if len(cmd.Values) != 1 {
+		t.Errorf("the number of values is %d, want %d", len(cmd.Values), 1)
+	}
+
+	expValue := "body:form:fullName"
+	if cmd.Values[0] != expValue {
+		t.Errorf("command values[0] is %s, want %s", cmd.Values[0], expValue)
 	}
 }
