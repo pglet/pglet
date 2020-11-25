@@ -18,7 +18,7 @@ export interface IWebSocket {
     updateControlProps(props: any): void;
 }
 
-const WebSocketContext = React.createContext<IWebSocket | undefined>(undefined)
+const WebSocketContext = React.createContext<IWebSocket>(undefined!)
 
 export { WebSocketContext }
 

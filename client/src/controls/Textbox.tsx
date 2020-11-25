@@ -22,7 +22,7 @@ const Textbox = React.memo<ITextboxProps>(({control}) => {
     ];
 
     dispatch(changeProps(payload));
-    ws!.updateControlProps(payload);
+    ws.updateControlProps(payload);
   }
 
   return <TextField value={control.value} onChange={handleChange} />;
