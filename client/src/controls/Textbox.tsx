@@ -4,20 +4,20 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField } from 'office-ui-fabric-react';
 
-const Textbox = React.memo(({control}) => {
+const Textbox = React.memo<ImStatelessProps>(({control}) => {
 
   console.log(`render Textbox: ${control.i}`);
 
-  const ws = useContext(WebSocketContext);
+  const ws = useContext<any>(WebSocketContext);
 
   const dispatch = useDispatch();
   
-  const handleChange = e => {
+  const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 
     const payload = [
       {
         i: control.i,
-        "value": e.target.value
+        "value": newValue
       }
     ];
 
@@ -27,5 +27,9 @@ const Textbox = React.memo(({control}) => {
 
   return <TextField value={control.value} onChange={handleChange} />;
 })
+
+interface ImStatelessProps {
+  control: any;
+}
 
 export default Textbox
