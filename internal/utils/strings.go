@@ -1,6 +1,9 @@
 package utils
 
-import "crypto/rand"
+import (
+	"crypto/rand"
+	"strings"
+)
 
 // GenerateRandomString returns a crypto-strong random string of specified length.
 func GenerateRandomString(n int) (string, error) {
@@ -35,4 +38,14 @@ func RemoveString(arr []string, str string) []string {
 		}
 	}
 	return arr
+}
+
+func TrimQuotes(s string) string {
+	if strings.HasPrefix(s, "\"") {
+		return strings.Trim(s, "\"")
+	} else if strings.HasPrefix(s, "'") {
+		return strings.Trim(s, "'")
+	} else {
+		return s
+	}
 }

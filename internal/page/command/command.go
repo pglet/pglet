@@ -3,8 +3,13 @@ package command
 import (
 	"errors"
 	"fmt"
+	"go/scanner"
+	"go/token"
+	"log"
 	"regexp"
 	"strings"
+
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -48,6 +53,60 @@ type Command struct {
 type CommandMetadata struct {
 	Name         string
 	ShouldReturn bool
+}
+
+func Parse2(cmdText string) (*Command, error) {
+
+	command := &Command{
+		Attrs:  make(map[string]string),
+		Values: make([]string, 0),
+	}
+
+	var errs scanner.ErrorList
+	errorHandler := func(pos token.Position, msg string) {
+		if msg != "illegal rune literal" {
+			errs.Add(pos, msg)
+		}
+	}
+
+	var src = []byte(cmdText)
+	var s scanner.Scanner
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len(src))
+	s.Init(file, src, errorHandler, scanner.ScanComments)
+
+	prevToken := token.ILLEGAL
+	prevLit := ""
+	for {
+		pos, tok, lit := s.Scan()
+		p := fset.Position(pos)
+
+		fmt.Printf("%s\t%s\t%s\n", p, tok, lit)
+
+		if tok == token.EOF {
+			break
+		} else if tok == token.ASSIGN {
+			if prevToken == token.ILLEGAL || prevToken == token.ASSIGN {
+				return nil, fmt.Errorf("Unexpected = at %d", p.Column)
+			}
+		} else if tok != token.ASSIGN && prevToken == token.ASSIGN && prevLit != "" {
+			// name=value
+			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(lit)
+			prevLit = ""
+		} else if tok != token.ASSIGN && prevToken != token.ASSIGN && prevLit != "" {
+			command.Values = append(command.Values, strings.ToLower(utils.TrimQuotes(prevLit)))
+			prevLit = lit
+		} else {
+			prevLit = lit
+		}
+		prevToken = tok
+	}
+
+	for _, e := range errs {
+		log.Printf("error: %d - %s", e.Pos.Column, e.Msg)
+	}
+
+	return command, nil
 }
 
 func Parse(cmdText string) (*Command, error) {
