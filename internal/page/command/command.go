@@ -1,10 +1,12 @@
 package command
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 	"strings"
+	"text/scanner"
+	"unicode"
+
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -51,42 +53,63 @@ type CommandMetadata struct {
 }
 
 func Parse(cmdText string) (*Command, error) {
-	re := regexp.MustCompile(commandRegexPattern)
-	matches := re.FindAllSubmatch([]byte(cmdText), -1)
 
 	command := &Command{
 		Attrs:  make(map[string]string),
 		Values: make([]string, 0),
 	}
 
-	order := 1
-	for _, m := range matches {
-		key := string(m[1])
-		value := string(m[2])
-
-		if order == 1 {
-			// verb
-			if key == "" || value != "" {
-				return nil, errors.New("The first argument of the command must be a verb")
-			}
-			command.Name = strings.ToLower(key)
-			_, commandExists := supportedCommands[command.Name]
-			if !commandExists {
-				return nil, fmt.Errorf("Unknown command: %s", command.Name)
-			}
-		} else if value == "" {
-			// bare value
-			command.Values = append(command.Values, key)
-		} else {
-			// attr
-			if strings.HasPrefix(value, "\"") {
-				value = strings.Trim(value, "\"")
-			} else if strings.HasPrefix(value, "'") {
-				value = strings.Trim(value, "'")
-			}
-			command.Attrs[strings.ToLower(key)] = value
+	var err error
+	var s scanner.Scanner
+	s.Init(strings.NewReader(cmdText))
+	s.Filename = "command"
+	s.Error = func(s *scanner.Scanner, msg string) {
+		if msg != "invalid char literal" {
+			err = fmt.Errorf("error parsing command at position %d: %s", s.Column, msg)
 		}
-		order++
+	}
+
+	// treat ':' as part of an identifier
+	s.IsIdentRune = func(ch rune, i int) bool {
+		return ch == ':' || ch == '_' || ch == '-' || ch == '.' || unicode.IsLetter(ch) || unicode.IsDigit(ch)
+	}
+
+	prevToken := ""
+	prevLit := ""
+	for r := s.Scan(); r != scanner.EOF; r = s.Scan() {
+
+		if err != nil {
+			return nil, err
+		}
+
+		tok := s.TokenText()
+
+		//fmt.Printf("%s: %s\n", s.Position, tok)
+
+		if tok == "=" {
+			if prevLit == "" || prevToken == "=" {
+				return nil, fmt.Errorf("unexpected '=' at position %d", s.Column)
+			}
+		} else if tok != "=" && prevToken == "=" && prevLit != "" {
+			// name=value
+			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(tok)
+			prevLit = ""
+		} else if tok != "=" && prevToken != "=" && prevLit != "" {
+			v := utils.TrimQuotes(prevLit)
+			if command.Name == "" {
+				command.Name = strings.ToLower(v)
+				_, commandExists := supportedCommands[command.Name]
+				if !commandExists {
+					return nil, fmt.Errorf("Unknown command: %s", command.Name)
+				}
+			} else {
+				command.Values = append(command.Values, v)
+			}
+			prevLit = tok
+		} else {
+			prevLit = tok
+		}
+		prevToken = tok
 	}
 
 	return command, nil
