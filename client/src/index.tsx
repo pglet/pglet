@@ -7,7 +7,7 @@ import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import rootReducer from './rootReducer'
 import { configureStore } from '@reduxjs/toolkit'
-import WebSocketProvider from './WebSocket';
+import { WebSocketProvider } from './WebSocket';
 
 // Inject some global styles
 mergeStyles({

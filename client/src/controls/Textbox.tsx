@@ -4,11 +4,11 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField } from 'office-ui-fabric-react';
 
-const Textbox = React.memo<ImStatelessProps>(({control}) => {
+const Textbox = React.memo<ITextboxProps>(({control}) => {
 
   console.log(`render Textbox: ${control.i}`);
 
-  const ws = useContext<any>(WebSocketContext);
+  const ws = useContext(WebSocketContext);
 
   const dispatch = useDispatch();
   
@@ -22,13 +22,13 @@ const Textbox = React.memo<ImStatelessProps>(({control}) => {
     ];
 
     dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
+    ws!.updateControlProps(payload);
   }
 
   return <TextField value={control.value} onChange={handleChange} />;
 })
 
-interface ImStatelessProps {
+interface ITextboxProps {
   control: any;
 }
 

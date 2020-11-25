@@ -1,4 +1,4 @@
-import React, { createContext } from 'react'
+import React from 'react'
 import { useDispatch } from 'react-redux';
 import {
     registerWebClientSuccess,
@@ -11,58 +11,23 @@ import {
 } from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-const WebSocketContext = createContext(null)
+export interface IWebSocket {
+    socket: ReconnectingWebSocket;
+    registerWebClient(pageName: string): void;
+    pageEventFromWeb(eventTarget: string, eventName: string, eventData: string): void;
+    updateControlProps(props: any): void;
+}
+
+const WebSocketContext = React.createContext<IWebSocket | undefined>(undefined)
 
 export { WebSocketContext }
 
-export default ({ children }) => {
-    let socket;
-    let ws;
+export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
+    let socket : ReconnectingWebSocket | null = null;
 
     const dispatch = useDispatch();
 
-    const registerWebClient = (pageName) => {
-
-        console.log("Call registerWebClient()")
-        var msg = {
-            action: "registerWebClient",
-            payload: {
-                pageName: pageName
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    const pageEventFromWeb = (eventTarget, eventName, eventData) => {
-
-        console.log("Call pageEventFromWeb()")
-        var msg = {
-            action: "pageEventFromWeb",
-            payload: {
-                eventTarget: eventTarget,
-                eventName: eventName,
-                eventData: eventData
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    const updateControlProps = (props) => {
-
-        console.log("Call updateControlProps()")
-        var msg = {
-            action: "updateControlProps",
-            payload: {
-                props
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    if (!socket) {
+    if (socket == null) {
         const wsProtocol = document.location.protocol === "https:" ? "wss:" : "ws:";
         socket = new ReconnectingWebSocket(`${wsProtocol}//${document.location.host}/ws`);
 
@@ -100,13 +65,54 @@ export default ({ children }) => {
                 dispatch(removeControl(data.payload));
             }
         };
+    }
 
-        ws = {
-            socket: socket,
-            registerWebClient,
-            pageEventFromWeb,
-            updateControlProps
+    const registerWebClient = (pageName: string) => {
+
+        console.log("Call registerWebClient()")
+        var msg = {
+            action: "registerWebClient",
+            payload: {
+                pageName: pageName
+            }
         }
+
+        socket!.send(JSON.stringify(msg));
+    }
+
+    const pageEventFromWeb = (eventTarget: string, eventName: string, eventData: string) => {
+
+        console.log("Call pageEventFromWeb()")
+        var msg = {
+            action: "pageEventFromWeb",
+            payload: {
+                eventTarget: eventTarget,
+                eventName: eventName,
+                eventData: eventData
+            }
+        }
+
+        socket!.send(JSON.stringify(msg));
+    }
+
+    const updateControlProps = (props: any) => {
+
+        console.log("Call updateControlProps()")
+        var msg = {
+            action: "updateControlProps",
+            payload: {
+                props
+            }
+        }
+
+        socket!.send(JSON.stringify(msg));
+    }
+
+    const ws: IWebSocket = {
+        socket: socket,
+        registerWebClient,
+        pageEventFromWeb,
+        updateControlProps
     }
 
     return (
