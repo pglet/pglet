@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"strings"
 )
 
@@ -48,4 +49,9 @@ func TrimQuotes(s string) string {
 	} else {
 		return s
 	}
+}
+
+func ToJSON(v interface{}) string {
+	json, _ := json.MarshalIndent(v, "", "  ")
+	return string(json)
 }

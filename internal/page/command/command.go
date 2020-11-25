@@ -1,13 +1,10 @@
 package command
 
 import (
-	"errors"
 	"fmt"
-	"go/scanner"
-	"go/token"
-	"log"
-	"regexp"
 	"strings"
+	"text/scanner"
+	"unicode"
 
 	"github.com/pglet/pglet/internal/utils"
 )
@@ -55,97 +52,64 @@ type CommandMetadata struct {
 	ShouldReturn bool
 }
 
-func Parse2(cmdText string) (*Command, error) {
+func Parse(cmdText string) (*Command, error) {
 
 	command := &Command{
 		Attrs:  make(map[string]string),
 		Values: make([]string, 0),
 	}
 
-	var errs scanner.ErrorList
-	errorHandler := func(pos token.Position, msg string) {
-		if msg != "illegal rune literal" {
-			errs.Add(pos, msg)
+	var err error
+	var s scanner.Scanner
+	s.Init(strings.NewReader(cmdText))
+	s.Filename = "command"
+	s.Error = func(s *scanner.Scanner, msg string) {
+		if msg != "invalid char literal" {
+			err = fmt.Errorf("error parsing command at position %d: %s", s.Column, msg)
 		}
 	}
 
-	var src = []byte(cmdText)
-	var s scanner.Scanner
-	fset := token.NewFileSet()
-	file := fset.AddFile("", fset.Base(), len(src))
-	s.Init(file, src, errorHandler, scanner.ScanComments)
+	// treat ':' as part of an identifier
+	s.IsIdentRune = func(ch rune, i int) bool {
+		return ch == ':' || ch == '_' || ch == '-' || ch == '.' || unicode.IsLetter(ch) || unicode.IsDigit(ch)
+	}
 
-	prevToken := token.ILLEGAL
+	prevToken := ""
 	prevLit := ""
-	for {
-		pos, tok, lit := s.Scan()
-		p := fset.Position(pos)
+	for r := s.Scan(); r != scanner.EOF; r = s.Scan() {
 
-		fmt.Printf("%s\t%s\t%s\n", p, tok, lit)
+		if err != nil {
+			return nil, err
+		}
 
-		if tok == token.EOF {
-			break
-		} else if tok == token.ASSIGN {
-			if prevToken == token.ILLEGAL || prevToken == token.ASSIGN {
-				return nil, fmt.Errorf("Unexpected = at %d", p.Column)
+		tok := s.TokenText()
+
+		//fmt.Printf("%s: %s\n", s.Position, tok)
+
+		if tok == "=" {
+			if prevLit == "" || prevToken == "=" {
+				return nil, fmt.Errorf("unexpected '=' at position %d", s.Column)
 			}
-		} else if tok != token.ASSIGN && prevToken == token.ASSIGN && prevLit != "" {
+		} else if tok != "=" && prevToken == "=" && prevLit != "" {
 			// name=value
-			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(lit)
+			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(tok)
 			prevLit = ""
-		} else if tok != token.ASSIGN && prevToken != token.ASSIGN && prevLit != "" {
-			command.Values = append(command.Values, strings.ToLower(utils.TrimQuotes(prevLit)))
-			prevLit = lit
+		} else if tok != "=" && prevToken != "=" && prevLit != "" {
+			v := strings.ToLower(utils.TrimQuotes(prevLit))
+			if command.Name == "" {
+				command.Name = v
+				_, commandExists := supportedCommands[command.Name]
+				if !commandExists {
+					return nil, fmt.Errorf("Unknown command: %s", command.Name)
+				}
+			} else {
+				command.Values = append(command.Values, v)
+			}
+			prevLit = tok
 		} else {
-			prevLit = lit
+			prevLit = tok
 		}
 		prevToken = tok
-	}
-
-	for _, e := range errs {
-		log.Printf("error: %d - %s", e.Pos.Column, e.Msg)
-	}
-
-	return command, nil
-}
-
-func Parse(cmdText string) (*Command, error) {
-	re := regexp.MustCompile(commandRegexPattern)
-	matches := re.FindAllSubmatch([]byte(cmdText), -1)
-
-	command := &Command{
-		Attrs:  make(map[string]string),
-		Values: make([]string, 0),
-	}
-
-	order := 1
-	for _, m := range matches {
-		key := string(m[1])
-		value := string(m[2])
-
-		if order == 1 {
-			// verb
-			if key == "" || value != "" {
-				return nil, errors.New("The first argument of the command must be a verb")
-			}
-			command.Name = strings.ToLower(key)
-			_, commandExists := supportedCommands[command.Name]
-			if !commandExists {
-				return nil, fmt.Errorf("Unknown command: %s", command.Name)
-			}
-		} else if value == "" {
-			// bare value
-			command.Values = append(command.Values, key)
-		} else {
-			// attr
-			if strings.HasPrefix(value, "\"") {
-				value = strings.Trim(value, "\"")
-			} else if strings.HasPrefix(value, "'") {
-				value = strings.Trim(value, "'")
-			}
-			command.Attrs[strings.ToLower(key)] = value
-		}
-		order++
 	}
 
 	return command, nil
