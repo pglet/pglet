@@ -74,7 +74,9 @@ try {
     pglet_send "set page title='Hello, world!' gap=20 horizontalAlign=start"
     pglet_send "add text value='Enter your name:'"
     pglet_send "add textbox id=fullName value='someone'"
-    pglet_send "add button id=submit text=Submit event=btn_event"
+    $footerId = pglet_send "add stack"
+    pglet_send "add button id=submit text=Submit primary=yes event=btn_event to=$footerId"
+    pglet_send "add button id=cancel event=btn_event2 to=$footerId"
     
     pglet_send "set fullName value='John Smith'"
     

@@ -8,11 +8,17 @@ const button = React.memo(({control}) => {
 
   const ws = useContext(WebSocketContext);
 
+  let ButtonType = (control.primary) ? PrimaryButton : DefaultButton;
+
+  let buttonProps = {
+    text: control.text ? control.text : control.i
+  };
+
   const handleClick = e => {
     ws.pageEventFromWeb(control.i, 'click', control.event)
   }
 
-  return <PrimaryButton onClick={handleClick} text={control.text} />;
+  return <ButtonType onClick={handleClick} {...buttonProps} />;
 })
 
 export default button

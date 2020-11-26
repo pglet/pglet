@@ -1,6 +1,7 @@
 import React from 'react'
 import Row from './Row'
 import Col from './Col'
+import MyStack from './Stack'
 import { Textbox } from './Textbox'
 import Button from './Button'
 import Text from './Text'
@@ -14,7 +15,8 @@ const ControlsList = ({ controls }) => {
         'col': Col,
         'textbox': Textbox,
         'text': Text,
-        'button': Button
+        'button': Button,
+        'stack': MyStack,
     }
 
     const renderChild = control => {
