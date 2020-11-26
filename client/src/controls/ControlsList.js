@@ -1,7 +1,7 @@
 import React from 'react'
 import Row from './Row'
 import Col from './Col'
-import Textbox from './Textbox'
+import { Textbox } from './Textbox'
 import Button from './Button'
 import Text from './Text'
 

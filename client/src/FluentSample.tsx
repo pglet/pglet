@@ -60,7 +60,7 @@ export const FluentSample: React.FunctionComponent = () => {
           </Stack>
         </Stack>
       </Stack>
-      <Text block variant="xSmall" styles={{ root: { textAlign: "left", width: "50%" } }}>Copyright &copy; 2020</Text>
+      <Text block variant="xSmall" styles={{ root: { textAlign: "left", width: "50%" } }}>{ "Copyright (c) 2020" }</Text>
       <MyIcon/>
       <ProgressIndicator label="Example title" description="Example description" percentComplete={0.5} styles={{ root: { width: "50%" } }} />
     </Stack>

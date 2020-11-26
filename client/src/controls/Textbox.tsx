@@ -3,8 +3,9 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField } from 'office-ui-fabric-react';
+import { IControlProps } from './IControlProps'
 
-const Textbox = React.memo<ITextboxProps>(({control}) => {
+export const Textbox = React.memo<IControlProps>(({control}) => {
 
   console.log(`render Textbox: ${control.i}`);
 
@@ -27,9 +28,3 @@ const Textbox = React.memo<ITextboxProps>(({control}) => {
 
   return <TextField value={control.value} onChange={handleChange} />;
 })
-
-interface ITextboxProps {
-  control: any;
-}
-
-export default Textbox

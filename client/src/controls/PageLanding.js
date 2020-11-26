@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import Page from './Page'
 import { WebSocketContext } from '../WebSocket';
+import { MessageBar, MessageBarType } from 'office-ui-fabric-react'
 
 const PageLanding = () => {
 
@@ -22,7 +23,7 @@ const PageLanding = () => {
     const root = useSelector(state => state.page.controls['page']);
 
     if (err) {
-        return <div>{err}</div>;
+        return <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>{err}</MessageBar>
     } else {
         return <Page control={root} />
     }

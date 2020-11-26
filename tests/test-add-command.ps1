@@ -49,8 +49,7 @@ function pglet_send {
 }
 
 try {
-    Write-Host "dddd"
-    $res = (pglet page)
+    $res = (pglet page page1)
 
     if ($res -match "(?<pipeName>[^\s]+)\s(?<url>[^\s]+)") {
         $pipeName = $Matches["pipeName"]
@@ -72,19 +71,16 @@ try {
     $eventPipeReader = new-object System.IO.StreamReader($eventPipe)
     
     pglet_send "clean page"
-    #pglet_send "remove body"
-    $rowId = pglet_send "add row id=body
-      aaa=bbb"
-    $colId = pglet_send "add col id=form to=$rowId"
-    pglet_send "add text value='Enter your name:' to=$colId"
-    pglet_send "add textbox id=fullName value='someone' to=$colId"
-    pglet_send "add button id=submit text=Submit event=btn_event to=$colId"
+    pglet_send "set page title='Hello, world!' gap=20 horizontalAlign=start"
+    pglet_send "add text value='Enter your name:'"
+    pglet_send "add textbox id=fullName value='someone'"
+    pglet_send "add button id=submit text=Submit event=btn_event"
     
-    pglet_send "set body:form:fullName value='John Smith'"
+    pglet_send "set fullName value='John Smith'"
     
     while($true) {
         pglet_event
-        $fullName = pglet_send "get body:form:fullName value"
+        $fullName = pglet_send "get fullName value"
         Write-Host "Full name: $fullName"
     }
 } catch {

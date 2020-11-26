@@ -84,7 +84,7 @@ func Parse(cmdText string) (*Command, error) {
 
 		tok := s.TokenText()
 
-		fmt.Printf("%s: %s\n", s.Position, tok)
+		//fmt.Printf("%s: %s\n", s.Position, tok)
 
 		if tok == "=" {
 			if prevLit == "" || prevToken == "=" {
