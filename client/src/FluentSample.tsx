@@ -1,20 +1,26 @@
 import React from 'react';
-import { Text, Link, FontWeights, PrimaryButton, TextField } from 'office-ui-fabric-react';
-import { Stack, IStackProps, IStackStyles } from 'office-ui-fabric-react/lib/Stack';
+import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField } from 'office-ui-fabric-react';
+import { Stack, IStackProps } from 'office-ui-fabric-react/lib/Stack';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
+//import { SharedColors, FontSizes } from '@uifabric/fluent-theme';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
-const stackTokens = { childrenGap: 50 };
-const stackStyles: Partial<IStackStyles> = { root: { width: 800 } };
+const MyIcon = () => <Icon iconName="CompassNW" styles={{ root: { fontSize: '36px'}}} />;
+
+// const stackTokens = { childrenGap: 50 };
+// const stackStyles: Partial<IStackStyles> = { root: { width: 800 } };
 const columnProps: Partial<IStackProps> = {
   tokens: { childrenGap: 15 },
   styles: { root: { width: "50%" } },
 };
 
+const ButtonType = DefaultButton;
+
 export const FluentSample: React.FunctionComponent = () => {
   return (
     <Stack
-      horizontal
       horizontalAlign="center"
       verticalAlign="center"
       verticalFill
@@ -26,7 +32,8 @@ export const FluentSample: React.FunctionComponent = () => {
       }}
       gap={15}
     >
-      <Stack horizontal styles={{ root: { width: '100%'}}}>
+      <Text variant="xxLarge">Hello, you!</Text>
+      <Stack horizontal styles={{ root: { width: '50%' } }}>
         <Stack {...columnProps}>
           <Link href="https://developer.microsoft.com/en-us/fabric">Docs</Link>
           <Link href="https://stackoverflow.com/questions/tagged/office-ui-fabric">Stack Overflow</Link>
@@ -38,21 +45,24 @@ export const FluentSample: React.FunctionComponent = () => {
       /> */}
           <Text variant="xxLarge" styles={boldStyle}>
             Welcome to Your UI Fabric App
-      </Text>
+          </Text>
           <Text variant="large">For a guide on how to customize this project, check out the UI Fabric documentation.</Text>
           <Text variant="large" styles={boldStyle}>
             Essential Links
-      </Text>
+          </Text>
         </Stack>
         <Stack {...columnProps}>
           <TextField label="First name" />
           <TextField label="Last name" />
           <Stack horizontal gap="10">
-            <PrimaryButton text="Button 2" />
+            <ButtonType text="Button 2" />
             <PrimaryButton text="Button 3" />
           </Stack>
         </Stack>
       </Stack>
+      <Text block variant="xSmall" styles={{ root: { textAlign: "left", width: "50%" } }}>Copyright &copy; 2020</Text>
+      <MyIcon/>
+      <ProgressIndicator label="Example title" description="Example description" percentComplete={0.5} styles={{ root: { width: "50%" } }} />
     </Stack>
   );
 };

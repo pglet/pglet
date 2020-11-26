@@ -8,6 +8,9 @@ import { Provider } from 'react-redux'
 import rootReducer from './rootReducer'
 import { configureStore } from '@reduxjs/toolkit'
 import { WebSocketProvider } from './WebSocket';
+import { initializeIcons } from '@uifabric/icons';
+
+initializeIcons();
 
 // Inject some global styles
 mergeStyles({
