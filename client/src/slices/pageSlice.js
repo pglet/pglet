@@ -1,4 +1,5 @@
-import { createSlice/*, current*/ } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
+//import { current } from '@reduxjs/toolkit'
 
 let nextId = 0
 
@@ -29,12 +30,22 @@ const pageSlice = createSlice({
             state.error = action.payload;
         },
         addPageControlsSuccess(state, action) {
+            let firstParentId = null;
             action.payload.forEach(ctrl => {
+                if (firstParentId == null) {
+                    firstParentId = ctrl.p;
+                }
+
                 if (!state.controls[ctrl.i]) {
                     state.controls[ctrl.i] = ctrl;
-                    state.controls[ctrl.p].c.push(ctrl.i)
+
+                    if (ctrl.p === firstParentId) {
+                        // root control
+                        state.controls[ctrl.p].c.push(ctrl.i)
+                    }
                 }
             })
+            //console.log("After addPageControlsSuccess:", current(state))
         },
         addPageControlsError(state, action) {
             state.error = action.payload;
