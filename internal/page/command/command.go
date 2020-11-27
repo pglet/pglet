@@ -50,7 +50,7 @@ type CommandMetadata struct {
 	ShouldReturn bool
 }
 
-func Parse(cmdText string) (*Command, error) {
+func Parse(cmdText string, parseName bool) (*Command, error) {
 
 	var command *Command = nil
 	var err error
@@ -62,7 +62,7 @@ func Parse(cmdText string) (*Command, error) {
 		if command == nil {
 			if !utils.WhiteSpaceOnly(line) {
 				// parse command
-				command, err = parseLine(line)
+				command, err = parseCommandLine(line, parseName)
 				if err != nil {
 					return nil, err
 				}
@@ -75,12 +75,14 @@ func Parse(cmdText string) (*Command, error) {
 	return command, nil
 }
 
-func parseLine(line string) (*Command, error) {
+func parseCommandLine(line string, parseName bool) (*Command, error) {
 	command := &Command{
 		Attrs:  make(map[string]string),
 		Values: make([]string, 0),
 		Lines:  make([]string, 0),
 	}
+
+	command.Indent = utils.CountIndent(line)
 
 	var err error
 	var s scanner.Scanner
@@ -119,7 +121,7 @@ func parseLine(line string) (*Command, error) {
 			prevLit = ""
 		} else if tok != "=" && prevToken != "=" && prevLit != "" {
 			v := utils.TrimQuotes(prevLit)
-			if command.Name == "" {
+			if command.Name == "" && parseName {
 				command.Name = utils.ReplaceEscapeSymbols(v)
 			} else {
 				command.Values = append(command.Values, utils.ReplaceEscapeSymbols(v))
@@ -133,7 +135,15 @@ func parseLine(line string) (*Command, error) {
 
 	// consume last token collected
 	if prevLit != "" {
-		command.Values = append(command.Values, prevLit)
+		if command.Name == "" && parseName {
+			command.Name = utils.ReplaceEscapeSymbols(prevLit)
+		} else {
+			command.Values = append(command.Values, utils.ReplaceEscapeSymbols(prevLit))
+		}
+	}
+
+	if parseName && !command.IsSupported() {
+		return nil, fmt.Errorf("unknown command: %s", command.Name)
 	}
 
 	return command, nil
@@ -151,4 +161,12 @@ func (cmd *Command) IsSupported() bool {
 func (cmd *Command) ShouldReturn() bool {
 	cmdMeta, _ := supportedCommands[strings.ToLower(cmd.Name)]
 	return cmdMeta.ShouldReturn
+}
+
+func (cmd *Command) String() string {
+	attrs := make([]string, 0)
+	for k, v := range cmd.Attrs {
+		attrs = append(attrs, fmt.Sprintf("%s=\"%s\"", k, v))
+	}
+	return fmt.Sprintf("%s %s %s\n%s", cmd.Name, strings.Join(cmd.Values, " "), strings.Join(attrs, " "), strings.Join(cmd.Lines, "\n"))
 }

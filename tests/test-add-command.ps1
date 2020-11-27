@@ -73,11 +73,13 @@ try {
     pglet_send "clean page"
     pglet_send "set page title='Hello, world!' gap=10 horizontalAlign=start"
     pglet_send "add text value='Your name' size=large"
-    pglet_send "add textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'"
-    pglet_send "add textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true"
-    $footerId = pglet_send "add stack"
-    pglet_send "add button id=submit text=Submit primary=yes event=btn_event to=$footerId"
-    pglet_send "add button id=cancel event=btn_event2 to=$footerId"
+    $stackId = pglet_send "add stack width=600px horizontalAlign=stretch"
+    pglet_send "add to=$stackId
+        textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
+        textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true
+        stack horizontal=true
+          button id=submit text=Submit primary=yes event=btn_event
+          button id=cancel event=btn_event2 to=$footerId"
     
     pglet_send "set fullName value='John Smith'"
     

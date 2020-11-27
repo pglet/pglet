@@ -66,7 +66,7 @@ func (pc *PipeClient) commandLoop() {
 		cmdText := pc.pipe.nextCommand()
 
 		// parse command
-		cmd, err := command.Parse(cmdText)
+		cmd, err := command.Parse(cmdText, true)
 		if err != nil {
 			log.Errorln(err)
 			pc.pipe.writeResult(fmt.Sprintf("error %s", err))

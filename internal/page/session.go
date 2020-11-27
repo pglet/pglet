@@ -50,6 +50,11 @@ type Session struct {
 	clientsMutex  sync.RWMutex
 }
 
+type AddCommandBatchItem struct {
+	Command *command.Command
+	Control *Control
+}
+
 // NewSession creates a new instance of Page.
 func NewSession(page *Page, id string) *Session {
 	s := &Session{}
@@ -71,62 +76,103 @@ func (session *Session) ExecuteCommand(command command.Command) (result string, 
 
 	commandHandler := commandHandlers[strings.ToLower(command.Name)]
 	if commandHandler == nil {
-		return "", fmt.Errorf("command '%s' does not have a handler", command.Name)
+		return "", fmt.Errorf("Unknown command: %s", command.Name)
 	}
 
 	return commandHandler(session, command)
 }
 
-func add(session *Session, command command.Command) (result string, err error) {
-
-	controlsFragment := command.Attrs["controls"]
-
-	// first value must be control type
-	if len(command.Values) == 0 && controlsFragment == "" {
-		return "", errors.New("Control type is not specified")
-	}
-
-	controlType := command.Values[0]
+func add(session *Session, cmd command.Command) (result string, err error) {
 
 	// parent ID
-	parentID := command.Attrs["to"]
+	topParentID := cmd.Attrs["to"]
 
-	if parentID == "" {
-		parentID = getPageID()
+	if topParentID == "" {
+		topParentID = getPageID()
 	}
 
-	// control ID
-	id := command.Attrs["id"]
-	if id == "" {
-		id = session.NextControlID()
+	//log.Println("COMMAND:", utils.ToJSON(cmd))
+
+	// "Add" commands to process
+	batch := make([]*AddCommandBatchItem, 0)
+	if len(cmd.Lines) == 0 {
+		// single command
+		batch = append(batch, &AddCommandBatchItem{
+			Command: &cmd,
+		})
 	} else {
-		// generate unique ID
-		parentIDs := getControlParentIDs(parentID)
-		id = strings.Join(append(parentIDs, id), ControlIDSeparator)
-	}
-
-	ctrl := NewControl(controlType, parentID, id)
-
-	for k, v := range command.Attrs {
-		if !IsSystemAttr(k) {
-			ctrl.SetAttr(k, v)
+		// batch
+		for _, line := range cmd.Lines {
+			childCmd, err := command.Parse(line, false)
+			if err != nil {
+				return "", err
+			}
+			childCmd.Name = "add"
+			batch = append(batch, &AddCommandBatchItem{
+				Command: childCmd,
+			})
 		}
 	}
 
-	session.AddControl(ctrl)
+	// list of control IDs
+	ids := make([]string, 0)
 
-	// output page
-	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	// log.Println(string(pJSON))
+	// list of controls to broadcast
+	payload := &AddPageControlsPayload{
+		Controls: make([]*Control, 0),
+	}
 
-	// update controls of all connected web cliens
-	msg := NewMessage(AddPageControlsAction, &AddPageControlsPayload{
-		Controls: []*Control{ctrl},
-	})
+	// process batch
+	for i, batchItem := range batch {
 
-	// broadcast command to all connected web clients
-	session.broadcastCommandToWebClients(msg)
-	return id, nil
+		// first value must be control type
+		if len(batchItem.Command.Values) == 0 {
+			return "", errors.New("Control type is not specified")
+		}
+
+		controlType := batchItem.Command.Values[0]
+
+		parentID := ""
+
+		// find nearest parentID
+		for pi := i - 1; pi >= 0; pi-- {
+			if batch[pi].Command.Indent < batchItem.Command.Indent {
+				parentID = batch[pi].Control.ID()
+				break
+			}
+		}
+
+		// parent wasn't found - use the topmost one
+		if parentID == "" {
+			parentID = topParentID
+		}
+
+		// control ID
+		id := batchItem.Command.Attrs["id"]
+		if id == "" {
+			id = session.NextControlID()
+		} else {
+			// generate unique ID
+			parentIDs := getControlParentIDs(parentID)
+			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
+		}
+
+		batchItem.Control = NewControl(controlType, parentID, id)
+
+		for k, v := range batchItem.Command.Attrs {
+			if !IsSystemAttr(k) {
+				batchItem.Control.SetAttr(k, v)
+			}
+		}
+
+		session.AddControl(batchItem.Control)
+		ids = append(ids, id)
+		payload.Controls = append(payload.Controls, batchItem.Control)
+	}
+
+	// broadcast new controls to all connected web clients
+	session.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, payload))
+	return strings.Join(ids, " "), nil
 }
 
 func get(session *Session, command command.Command) (result string, err error) {
