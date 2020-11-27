@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -86,6 +87,10 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
+	topParentAt := -1
+	if ta, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		topParentAt = ta
+	}
 
 	if topParentID == "" {
 		topParentID = getPageID()
@@ -133,6 +138,7 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 		controlType := batchItem.Command.Values[0]
 
 		parentID := ""
+		parentAt := -1
 
 		// find nearest parentID
 		for pi := i - 1; pi >= 0; pi-- {
@@ -145,6 +151,7 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 		// parent wasn't found - use the topmost one
 		if parentID == "" {
 			parentID = topParentID
+			parentAt = topParentAt
 		}
 
 		// control ID
@@ -158,6 +165,10 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 		}
 
 		batchItem.Control = NewControl(controlType, parentID, id)
+
+		if parentAt != -1 {
+			batchItem.Control.SetAttr("at", parentAt)
+		}
 
 		for k, v := range batchItem.Command.Attrs {
 			if !IsSystemAttr(k) {
