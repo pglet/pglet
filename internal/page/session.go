@@ -69,7 +69,7 @@ func (session *Session) ExecuteCommand(command command.Command) (result string, 
 	log.Printf("Execute command for page %s session %s: %+v\n",
 		session.Page.Name, session.ID, command)
 
-	commandHandler := commandHandlers[command.Name]
+	commandHandler := commandHandlers[strings.ToLower(command.Name)]
 	if commandHandler == nil {
 		return "", fmt.Errorf("command '%s' does not have a handler", command.Name)
 	}

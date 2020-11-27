@@ -26,5 +26,14 @@ export const Textbox = React.memo<IControlProps>(({control}) => {
     ws.updateControlProps(payload);
   }
 
-  return <TextField value={control.value} onChange={handleChange} />;
+  const textFieldProps = {
+    value: control.value ? control.value : null,
+    label: control.label ? control.label : null,
+    placeholder: control.placeholder ? control.placeholder : null,
+    errorMessage: control.errormessage ? control.errormessage : null,
+    description: control.description ? control.description : null,
+    multiline: control.multiline ? true : false
+  };
+
+  return <TextField {...textFieldProps} onChange={handleChange} />;
 })

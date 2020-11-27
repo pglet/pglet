@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/json"
+	"regexp"
 	"strings"
 )
 
@@ -49,6 +50,26 @@ func TrimQuotes(s string) string {
 	} else {
 		return s
 	}
+}
+
+func ReplaceEscapeSymbols(s string) string {
+	r := strings.ReplaceAll(s, "\\n", "\n")
+	r = strings.ReplaceAll(r, "\\t", "\t")
+	r = strings.ReplaceAll(r, "\\'", "'")
+	r = strings.ReplaceAll(r, "\\\"", "\"")
+	return r
+}
+
+func WhiteSpaceOnly(s string) bool {
+	re := regexp.MustCompile(`[^\s]+`)
+	return !re.Match([]byte(s))
+}
+
+func CountIndent(s string) int {
+	re := regexp.MustCompile(`\s*`)
+	r := string(re.Find([]byte(s)))
+	r = strings.ReplaceAll(r, "\t", "    ")
+	return len(r)
 }
 
 func ToJSON(v interface{}) string {

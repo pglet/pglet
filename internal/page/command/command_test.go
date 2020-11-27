@@ -7,7 +7,7 @@ import (
 	"github.com/pglet/pglet/internal/utils"
 )
 
-func TestParse(t *testing.T) {
+func TestParse1(t *testing.T) {
 	cmd, err := Parse(`Add value:1 c=3.1 TextField Text=aaa value="Hello,\n 'wor\"ld!" aaa='bbb' cmd2=1`)
 
 	if err != nil {
@@ -17,8 +17,8 @@ func TestParse(t *testing.T) {
 	// visualize command
 	log.Printf("%s", utils.ToJSON(cmd))
 
-	if cmd.Name != "add" {
-		t.Errorf("command name is %s, want %s", cmd.Name, "add")
+	if cmd.Name != "Add" {
+		t.Errorf("command name is %s, want %s", cmd.Name, "Add")
 	}
 }
 
@@ -60,4 +60,30 @@ func TestParseClean(t *testing.T) {
 	if cmd.Values[0] != expValue {
 		t.Errorf("command values[0] is %s, want %s", cmd.Values[0], expValue)
 	}
+}
+
+func TestParseMultilineCommand(t *testing.T) {
+	cmd, err := Parse(`
+	  add to=footer
+	    stack
+	      text value="Hello, world!"
+	    stack
+		  textbox id=txt1
+		  button id=ok`)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// visualize command
+	log.Printf("%s", utils.ToJSON(cmd))
+
+	// if len(cmd.Values) != 1 {
+	// 	t.Errorf("the number of values is %d, want %d", len(cmd.Values), 1)
+	// }
+
+	// expValue := "page"
+	// if cmd.Values[0] != expValue {
+	// 	t.Errorf("command values[0] is %s, want %s", cmd.Values[0], expValue)
+	// }
 }

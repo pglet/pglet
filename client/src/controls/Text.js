@@ -1,10 +1,17 @@
 import React from 'react'
+import { Text } from 'office-ui-fabric-react/lib/Text';
 
-const Text = React.memo(({control}) => {
+const MyText = React.memo(({ control }) => {
 
   console.log(`render Text: ${control.i}`);
 
-  return <div className="text">{control.value}</div>;
+  // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
+
+  const textProps = {
+    variant: control.size ? control.size : null
+  };
+
+  return <Text {...textProps}>{control.value}</Text>;
 })
 
-export default Text
+export default MyText

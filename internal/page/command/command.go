@@ -10,10 +10,6 @@ import (
 )
 
 const (
-	commandRegexPattern string = `(?:(\w+(?:\:\w+)*)[\s]*(?:=[\s]*((?:[^"'\s]+)|'(?:[^']*)'|"(?:[^"]*)"))?)`
-)
-
-const (
 	Add     string = "add"
 	Addf           = "addf"
 	Set            = "set"
@@ -42,9 +38,11 @@ var (
 )
 
 type Command struct {
+	Indent int
 	Name   string // mandatory command name
 	Values []string
 	Attrs  map[string]string
+	Lines  []string
 }
 
 type CommandMetadata struct {
@@ -54,14 +52,39 @@ type CommandMetadata struct {
 
 func Parse(cmdText string) (*Command, error) {
 
+	var command *Command = nil
+	var err error
+
+	lines := strings.Split(cmdText, "\n")
+	for _, line := range lines {
+
+		// 1st non-empty line contains command
+		if command == nil {
+			if !utils.WhiteSpaceOnly(line) {
+				// parse command
+				command, err = parseLine(line)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			command.Lines = append(command.Lines, strings.Trim(line, "\r"))
+		}
+	}
+
+	return command, nil
+}
+
+func parseLine(line string) (*Command, error) {
 	command := &Command{
 		Attrs:  make(map[string]string),
 		Values: make([]string, 0),
+		Lines:  make([]string, 0),
 	}
 
 	var err error
 	var s scanner.Scanner
-	s.Init(strings.NewReader(cmdText))
+	s.Init(strings.NewReader(line))
 	s.Filename = "command"
 	s.Error = func(s *scanner.Scanner, msg string) {
 		if msg != "invalid char literal" {
@@ -92,18 +115,14 @@ func Parse(cmdText string) (*Command, error) {
 			}
 		} else if tok != "=" && prevToken == "=" && prevLit != "" {
 			// name=value
-			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.TrimQuotes(tok)
+			command.Attrs[strings.ToLower(utils.TrimQuotes(prevLit))] = utils.ReplaceEscapeSymbols(utils.TrimQuotes(tok))
 			prevLit = ""
 		} else if tok != "=" && prevToken != "=" && prevLit != "" {
 			v := utils.TrimQuotes(prevLit)
 			if command.Name == "" {
-				command.Name = strings.ToLower(v)
-				_, commandExists := supportedCommands[command.Name]
-				if !commandExists {
-					return nil, fmt.Errorf("Unknown command: %s", command.Name)
-				}
+				command.Name = utils.ReplaceEscapeSymbols(v)
 			} else {
-				command.Values = append(command.Values, v)
+				command.Values = append(command.Values, utils.ReplaceEscapeSymbols(v))
 			}
 			prevLit = tok
 		} else {
@@ -118,6 +137,15 @@ func Parse(cmdText string) (*Command, error) {
 	}
 
 	return command, nil
+}
+
+func (cmd *Command) IsSupported() bool {
+	name := strings.ToLower(cmd.Name)
+	_, commandExists := supportedCommands[name]
+	if commandExists {
+		return true
+	}
+	return false
 }
 
 func (cmd *Command) ShouldReturn() bool {
