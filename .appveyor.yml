@@ -130,7 +130,7 @@ for:
   - nvm use 12
   - cd client
   - yarn
-  - yarn build
+  - GENERATE_SOURCEMAP=false yarn build
   - ls -alR build
   - cd ..
   - go get -u github.com/jteeuwen/go-bindata/...
