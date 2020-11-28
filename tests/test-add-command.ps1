@@ -86,8 +86,9 @@ try {
     pglet_send "add to=page at=0
         stack width=600px horizontalAlign=stretch
           textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
-          textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true
-        stack id=buttons horizontal=true
+          textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true"
+
+    pglet_send "add stack id=buttons horizontal=true
             button id=submit text=Submit primary=yes event=btn_event
             button id=cancel event=btn_event2"
     

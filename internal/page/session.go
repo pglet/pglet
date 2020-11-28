@@ -100,23 +100,28 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 
 	// "Add" commands to process
 	batch := make([]*AddCommandBatchItem, 0)
-	if len(cmd.Lines) == 0 {
+
+	// top command
+	indent := 0
+	if len(cmd.Values) > 0 {
 		// single command
 		batch = append(batch, &AddCommandBatchItem{
 			Command: &cmd,
 		})
-	} else {
-		// batch
-		for _, line := range cmd.Lines {
-			childCmd, err := command.Parse(line, false)
-			if err != nil {
-				return "", err
-			}
-			childCmd.Name = "add"
-			batch = append(batch, &AddCommandBatchItem{
-				Command: childCmd,
-			})
+		indent = 2
+	}
+
+	// sub-commands
+	for _, line := range cmd.Lines {
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
 		}
+		childCmd.Name = "add"
+		childCmd.Indent += indent
+		batch = append(batch, &AddCommandBatchItem{
+			Command: childCmd,
+		})
 	}
 
 	// list of control IDs
