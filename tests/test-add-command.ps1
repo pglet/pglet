@@ -88,7 +88,7 @@ try {
           textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
           textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true"
 
-    pglet_send "add stack id=buttons horizontal=true
+    pglet_send "add stack at=0 id=buttons horizontal=true
             button id=submit text=Submit primary=yes event=btn_event
             button id=cancel event=btn_event2"
     

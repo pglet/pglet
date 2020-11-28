@@ -41,7 +41,13 @@ const pageSlice = createSlice({
 
                     if (ctrl.p === firstParentId) {
                         // root control
-                        state.controls[ctrl.p].c.push(ctrl.i)
+                        if (typeof ctrl.at === 'undefined') {
+                            // append to the end
+                            state.controls[ctrl.p].c.push(ctrl.i)
+                        } else {
+                            // insert at specified position
+                            state.controls[ctrl.p].c.splice(ctrl.at, 0, ctrl.i)
+                        }
                     }
                 }
             })
