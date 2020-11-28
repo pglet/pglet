@@ -33,6 +33,16 @@ func ContainsString(arr []string, str string) bool {
 	return false
 }
 
+// https://stackoverflow.com/questions/46128016/insert-a-value-in-a-slice-at-a-given-index
+func InsertString(arr []string, value string, index int) []string {
+	if index >= len(arr) { // nil or empty slice or after last element
+		return append(arr, value)
+	}
+	arr = append(arr[:index+1], arr[index:]...) // index < len(a)
+	arr[index] = value
+	return arr
+}
+
 func RemoveString(arr []string, str string) []string {
 	for i, v := range arr {
 		if v == str {

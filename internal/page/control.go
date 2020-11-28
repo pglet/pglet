@@ -60,6 +60,14 @@ func (ctl *Control) ID() string {
 	return (*ctl)["i"].(string)
 }
 
+func (ctl *Control) At() int {
+	at, ok := (*ctl)["at"].(int)
+	if ok {
+		return at
+	}
+	return -1
+}
+
 // ParentID returns the ID of parent control.
 func (ctl *Control) ParentID() string {
 	return (*ctl)["p"].(string)
@@ -69,6 +77,11 @@ func (ctl *Control) ParentID() string {
 func (ctl *Control) AddChildID(childID string) {
 	childIds, _ := (*ctl)["c"].([]string)
 	(*ctl)["c"] = append(childIds, childID)
+}
+
+func (ctl *Control) InsertChildID(childID string, at int) {
+	childIds, _ := (*ctl)["c"].([]string)
+	(*ctl)["c"] = utils.InsertString(childIds, childID, at)
 }
 
 func (ctl *Control) RemoveChild(childID string) {

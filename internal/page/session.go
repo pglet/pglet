@@ -168,6 +168,7 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 
 		if parentAt != -1 {
 			batchItem.Control.SetAttr("at", parentAt)
+			topParentAt++
 		}
 
 		for k, v := range batchItem.Command.Attrs {
@@ -180,6 +181,8 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 		ids = append(ids, id)
 		payload.Controls = append(payload.Controls, batchItem.Control)
 	}
+
+	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))
 
 	// broadcast new controls to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, payload))
@@ -352,7 +355,11 @@ func (session *Session) AddControl(ctrl *Control) error {
 		}
 
 		// update parent's childIds
-		parentctrl.AddChildID(ctrl.ID())
+		if at := ctrl.At(); at != -1 {
+			parentctrl.InsertChildID(ctrl.ID(), at)
+		} else {
+			parentctrl.AddChildID(ctrl.ID())
+		}
 	}
 
 	return nil
