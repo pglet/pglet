@@ -32,6 +32,7 @@ export const FluentSample: React.FunctionComponent = () => {
       }}
       gap={15}
     >
+      <PrimaryButton text="Button 1" />
       <Text variant="xxLarge">Hello, you!</Text>
       <Stack horizontal styles={{ root: { width: '50%' } }}>
         <Stack {...columnProps}>

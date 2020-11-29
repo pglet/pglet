@@ -97,7 +97,6 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const updateControlProps = (props: any) => {
 
-        console.log("Call updateControlProps()")
         var msg = {
             action: "updateControlProps",
             payload: {
@@ -105,7 +104,10 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
             }
         }
 
-        socket!.send(JSON.stringify(msg));
+        const msgJson = JSON.stringify(msg);
+
+        console.log("Call updateControlProps()", msgJson)
+        socket!.send(msgJson);
     }
 
     const ws: IWebSocket = {

@@ -20,7 +20,6 @@ const Page = React.memo(({ control }) => {
     verticalFill: control.verticalFill ? control.verticalFill : false,
     horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
     verticalAlign: control.verticalalign ? control.verticalalign : "start",
-    childrenGap: control.gap ? control.gap : 10,
     styles: {
       root: {
         width: control.width ? control.width : "100%",
@@ -29,9 +28,13 @@ const Page = React.memo(({ control }) => {
     },
   };
 
+  const stackTokens = {
+    childrenGap: control.gap ? control.gap : 10
+  }
+
   const childControls = useSelector(state => control.c.map(childId => state.page.controls[childId]), shallowEqual);
 
-  return <Stack {...stackProps}>
+  return <Stack tokens={stackTokens} {...stackProps}>
     <ControlsList controls={childControls} />
   </Stack>
 })
