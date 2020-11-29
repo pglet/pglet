@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -113,6 +114,10 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 
 	// sub-commands
 	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
+		}
+
 		childCmd, err := command.Parse(line, false)
 		if err != nil {
 			return "", err

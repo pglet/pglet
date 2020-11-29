@@ -82,6 +82,16 @@ func CountIndent(s string) int {
 	return len(r)
 }
 
+func CountRune(s string, r rune) int {
+	count := 0
+	for _, c := range s {
+		if c == r {
+			count++
+		}
+	}
+	return count
+}
+
 func ToJSON(v interface{}) string {
 	json, _ := json.MarshalIndent(v, "", "  ")
 	return string(json)

@@ -1,13 +1,27 @@
-echo "Pipe name: $1"
-page_pipe=$1
+res=`pglet page page2`
 
-function pglet() {
-    # send command
-    echo "$1" > "$page_pipe"
+IFS=' ' read -r page_pipe page_url <<< "$res"
 
-    # read result
-    IFS=' ' read result_status result_value < "$page_pipe"
-    echo $result_value
+echo "Pipe name: $page_pipe"
+#page_pipe="$1"
+
+function pglet_send() {
+  # send command
+  echo "$1" > "$page_pipe"
+
+  # read result
+  local firstLine="true"
+  local result_value=""
+  IFS=''
+  while read -r line; do
+    if [[ $firstLine == "true" ]]; then
+      IFS=' ' read -r result_status result_value <<< "$line"
+      firstLine="false"
+    else
+      result_value="$line"
+    fi
+    echo "$result_value"
+  done <"$page_pipe"
 }
 
 function pglet_event() {
@@ -29,15 +43,13 @@ function pglet_event() {
   done
 }
 
-full_name=`curl $REPLIT_DB_URL/full_name`
-
 function main() {
-  pglet "clean page"
-  rowID=`pglet "add row"`
-  colID=`pglet "add col to=$rowID"`
-  pglet "add text to=$colID value='Enter your name:'"
-  pglet "add textbox to=$colID id=fullName value='$full_name'"
-  pglet "add button to=$colID id=submit text=Submit"
+  pglet_send "clean page"
+  rowID=`pglet_send "add row"`
+  colID=`pglet_send "add col to=$rowID"`
+  pglet_send "add text to=$colID value='Enter your name:'"
+  pglet_send "add textbox to=$colID id=fullName value='$full_name' multiline=true"
+  pglet_send "add button to=$colID id=submit text=Submit"
 
   events=("submit click welcome")
   pglet_event "${events[@]}"
@@ -45,15 +57,15 @@ function main() {
 
 function welcome() {
   # get fullName value
-  full_name=`pglet "get fullName value"`
-
-  # save to Repl database
-  curl $REPLIT_DB_URL -d "full_name=$full_name"
+  echo "before get name"
+  full_name=`pglet_send "get fullName value"`
+  full_name="${full_name//$'\n'/\\n}"
+  echo "full name: $full_name"
 
   # output welcome message
-  pglet "clean page"
-  pglet "add text value='Hello, $full_name'"
-  pglet "add button id=again text=Again"
+  pglet_send "clean page"
+  pglet_send "add text value='Hello, $full_name'"
+  pglet_send "add button id=again text=Again"
 
   events=("again click main")
   pglet_event "${events[@]}" 

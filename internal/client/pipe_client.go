@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -66,7 +67,7 @@ func (pc *PipeClient) commandLoop() {
 		cmdText := pc.pipe.nextCommand()
 
 		// parse command
-		cmd, err := command.Parse(cmdText, true)
+		cmd, err := command.Parse(strings.Trim(cmdText, "\n"), true)
 		if err != nil {
 			log.Errorln(err)
 			pc.pipe.writeResult(fmt.Sprintf("error %s", err))
@@ -97,12 +98,12 @@ func (pc *PipeClient) commandLoop() {
 			}
 
 			// save command results
-			result := fmt.Sprintf("ok %s", payload.Result)
 			if payload.Error != "" {
-				result = fmt.Sprintf("error %s", payload.Error)
+				pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
+			} else {
+				linesCount := utils.CountRune(payload.Result, '\n')
+				pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, payload.Result))
 			}
-
-			pc.pipe.writeResult(result)
 
 		} else {
 			// fire and forget
