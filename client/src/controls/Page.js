@@ -20,7 +20,7 @@ const Page = React.memo(({ control }) => {
     verticalFill: control.verticalFill ? control.verticalFill : false,
     horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
     verticalAlign: control.verticalalign ? control.verticalalign : "start",
-    gap: control.gap ? control.gap : 10,
+    childrenGap: control.gap ? control.gap : 10,
     styles: {
       root: {
         width: control.width ? control.width : "100%",
