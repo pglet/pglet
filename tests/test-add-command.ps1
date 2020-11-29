@@ -30,22 +30,28 @@ function pglet_send {
     $pipeWriter.Flush()
 
     # parse results
-    $OK_RESULT = "ok"
     $ERROR_RESULT = "error"
     
     $result = $pipeReader.ReadLine()
 
-    #Write-Host "Result: $result"
+    Write-Host "Result: $result"
 
-    if ($result -eq $OK_RESULT) {
-        return ""
-    } elseif ($result.StartsWith("$OK_RESULT ")) {
-        return $result.Substring($OK_RESULT.Length + 1)
-    } elseif ($result.StartsWith("$ERROR_RESULT ")) {
+    if ($result.StartsWith("$ERROR_RESULT ")) {
         throw $result.Substring($ERROR_RESULT.Length + 1)
+    } elseif ($result -match "(?<lines_count>[\d]+)\s(?<result>.*)") {
+        $lines_count = [int]$Matches["lines_count"]
+        $result = $Matches["result"]
+
+        # read the rest of multi-line result
+        for($i = 0; $i -lt $lines_count; $i++) {
+            $line = $pipeReader.ReadLine()
+            $result = "$result`n$line"
+        }
     } else {
-        throw "Unexpected result: $result"
+        throw "Invalid result: $result"
     }
+
+    return $result
 }
 
 try {
@@ -70,7 +76,6 @@ try {
     $eventPipe.Connect(5000)
     $eventPipeReader = new-object System.IO.StreamReader($eventPipe)
     
-    Start-Sleep -s 10
     pglet_send "clean page"
     Start-Sleep -s 2
 
@@ -100,8 +105,12 @@ try {
     
     while($true) {
         pglet_event
+
         $fullName = pglet_send "get fullName value"
         Write-Host "Full name: $fullName"
+
+        $bio = pglet_send "get bio value"
+        Write-Host "Bio: $bio"
     }
 } catch {
     Write-Host "$_"
