@@ -3,6 +3,7 @@ import Row from './Row'
 import Col from './Col'
 import MyStack from './Stack'
 import { Textbox } from './Textbox'
+import { MyDropdown } from './Dropdown'
 import Button from './Button'
 import Text from './Text'
 
@@ -14,6 +15,7 @@ const ControlsList = ({ controls }) => {
         'row': Row,
         'col': Col,
         'textbox': Textbox,
+        'dropdown': MyDropdown,
         'text': Text,
         'button': Button,
         'stack': MyStack,
