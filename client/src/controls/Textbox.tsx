@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { TextField } from 'office-ui-fabric-react';
+import { TextField } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Textbox = React.memo<IControlProps>(({control}) => {

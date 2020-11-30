@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text } from 'office-ui-fabric-react/lib/Text';
+import { Text } from '@fluentui/react';
 
 const MyText = React.memo(({ control }) => {
 

@@ -2,7 +2,7 @@ import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import ControlsList from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack } from 'office-ui-fabric-react/lib/Stack';
+import { Stack } from '@fluentui/react';
 
 const Page = React.memo(({ control }) => {
 

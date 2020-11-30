@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import Page from './Page'
 import { WebSocketContext } from '../WebSocket';
-import { MessageBar, MessageBarType } from 'office-ui-fabric-react'
+import { MessageBar, MessageBarType } from '@fluentui/react'
 
 const PageLanding = () => {
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import ControlsList from './ControlsList'
-import { Stack } from 'office-ui-fabric-react/lib/Stack';
+import { Stack } from '@fluentui/react';
 
 const MyStack = React.memo(({ control }) => {
 

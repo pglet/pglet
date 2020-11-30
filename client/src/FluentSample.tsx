@@ -1,8 +1,6 @@
 import React from 'react';
-import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField } from 'office-ui-fabric-react';
-import { Stack, IStackProps } from 'office-ui-fabric-react/lib/Stack';
-import { Icon } from 'office-ui-fabric-react/lib/Icon';
-import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
+import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField } from '@fluentui/react';
+import { Stack, IStackProps, ProgressIndicator, Icon } from '@fluentui/react';
 //import { SharedColors, FontSizes } from '@uifabric/fluent-theme';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
@@ -30,7 +28,9 @@ export const FluentSample: React.FunctionComponent = () => {
           padding: '10px'
         }
       }}
-      gap={15}
+      tokens={
+        { childrenGap: 15 }
+      }
     >
       <PrimaryButton text="Button 1" />
       <Text variant="xxLarge">Hello, you!</Text>
@@ -55,7 +55,7 @@ export const FluentSample: React.FunctionComponent = () => {
         <Stack {...columnProps}>
           <TextField label="First name" />
           <TextField label="Last name" />
-          <Stack horizontal gap="10">
+          <Stack horizontal tokens={{ childrenGap: 10 }}>
             <ButtonType text="Button 2" />
             <PrimaryButton text="Button 3" />
           </Stack>

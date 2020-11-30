@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
-import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react';
+import { PrimaryButton, DefaultButton } from '@fluentui/react';
 
 const button = React.memo(({control}) => {
 
