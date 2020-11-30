@@ -1243,6 +1243,15 @@
     "@uifabric/set-version" "^7.0.23"
     tslib "^1.10.0"
 
+"@fluentui/react@^7.153.2":
+  version "7.153.2"
+  resolved "https://registry.yarnpkg.com/@fluentui/react/-/react-7.153.2.tgz#5fa21aefc415fa3d2cdaffa7f9ab5aa2b97cb17a"
+  integrity sha512-8D/zFzv9WaHqX5qu5oT20rjxkKf3GMhc40AOK+wloIfqzGe/OOXpg2zr0Hz+OXEijkGU7UPsjZ6uys/UAcXERQ==
+  dependencies:
+    "@uifabric/set-version" "^7.0.23"
+    office-ui-fabric-react "^7.153.2"
+    tslib "^1.10.0"
+
 "@fluentui/theme@^1.7.0":
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/@fluentui/theme/-/theme-1.7.0.tgz#822adcc4b0c9cc057984b4ada21c30856907a8e6"
