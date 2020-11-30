@@ -4,6 +4,8 @@ import Col from './Col'
 import MyStack from './Stack'
 import { Textbox } from './Textbox'
 import { MyDropdown } from './Dropdown'
+import { MyCheckbox } from './Checkbox'
+import { Progress } from './Progress'
 import Button from './Button'
 import Text from './Text'
 
@@ -15,7 +17,9 @@ const ControlsList = ({ controls }) => {
         'row': Row,
         'col': Col,
         'textbox': Textbox,
+        'checkbox': MyCheckbox,
         'dropdown': MyDropdown,
+        'progress': Progress,
         'text': Text,
         'button': Button,
         'stack': MyStack,

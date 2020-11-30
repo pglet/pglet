@@ -95,7 +95,8 @@ try {
           dropdown id=color label='Your favorite color' placeholder='Select color'
             option key=red text=Red
             option key=green text=Green
-            option key=blue text=Blue"
+            option key=blue text=Blue
+          checkbox id=agree label='I agree to the terms of services'"
 
     pglet_send "add stack at=0 id=buttons horizontal=true
             button id=submit text=Submit primary=yes event=btn_event
@@ -106,6 +107,8 @@ try {
     pglet_send "add button id=b1 to=buttons"
 
     pglet_send "set fullName value='John Smith'"
+
+    pglet_send "add progress id=prog label='Doing something...' width=400px"
     
     while($true) {
         pglet_event
@@ -115,6 +118,11 @@ try {
 
         $bio = pglet_send "get bio value"
         Write-Host "Bio: $bio"
+
+        for ($i = 0; $i -lt 101; $i++) {
+            pglet_send "set prog percent=$($i) label='Step $i...'"
+            Start-Sleep -ms 50
+        }
     }
 } catch {
     Write-Host "$_"
