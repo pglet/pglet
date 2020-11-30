@@ -12,11 +12,12 @@ import (
 
 func newPageCommand() *cobra.Command {
 
-	var public bool
+	var web bool
 	var private bool
 	var server string
 	var token string
 	var uds bool
+	var noWindow bool
 
 	var cmd = &cobra.Command{
 		Use:   "page [[namespace/]<page_name>]",
@@ -34,7 +35,7 @@ func newPageCommand() *cobra.Command {
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
 				PageName: pageName,
 				Private:  private,
-				Public:   public,
+				Web:      web,
 				Server:   server,
 				Token:    token,
 				Uds:      uds,
@@ -44,18 +45,21 @@ func newPageCommand() *cobra.Command {
 				log.Fatalln("Connect page error:", err)
 			}
 
-			utils.OpenBrowser(results.PageURL)
+			if !noWindow {
+				utils.OpenBrowser(results.PageURL)
+			}
 
 			// output connection ID and page URL to be consumed by a client
 			fmt.Println(results.PipeName, results.PageURL)
 		},
 	}
 
-	cmd.Flags().BoolVarP(&public, "public", "", false, "makes the page available as public at pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the page available as public at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&private, "private", "", false, "makes the page available as private at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
+	cmd.Flags().BoolVarP(&noWindow, "no-window", "", false, "do not open browser window")
 
 	return cmd
 }

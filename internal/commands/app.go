@@ -12,11 +12,12 @@ import (
 
 func newAppCommand() *cobra.Command {
 
-	var public bool
+	var web bool
 	var private bool
 	var server string
 	var token string
 	var uds bool
+	var noWindow bool
 
 	var cmd = &cobra.Command{
 		Use:   "app [[namespace/]<page_name>]",
@@ -34,7 +35,7 @@ func newAppCommand() *cobra.Command {
 			connectArgs := &proxy.ConnectPageArgs{
 				PageName: pageName,
 				Private:  private,
-				Public:   public,
+				Web:      web,
 				Server:   server,
 				Token:    token,
 				Uds:      uds,
@@ -61,11 +62,12 @@ func newAppCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&public, "public", "", false, "makes the app available as public at pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the app available as public at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&private, "private", "", false, "makes the app available as private at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the app on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
+	cmd.Flags().BoolVarP(&noWindow, "no-window", "", false, "do not open browser window")
 
 	return cmd
 }
