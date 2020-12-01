@@ -1,5 +1,6 @@
 $ErrorActionPreference = "Stop"
 
+$pipeName = $null
 $pipe = $null
 $pipeReader = $null
 $pipeWriter = $null
@@ -7,7 +8,13 @@ $eventPipe = $null
 $eventPipeReader = $null
 
 function pglet_event {
+    if ($IsLinux -or $IsMacOS) {
+        $eventPipeReader = New-Object System.IO.StreamReader("$pipeName.events")
+    }
     $line = $eventPipeReader.ReadLine()
+    if ($IsLinux -or $IsMacOS) {
+        $eventPipeReader.Close()
+    }
     Write-Host "Event: $line"
     if ($line -match "(?<target>[^\s]+)\s(?<name>[^\s]+)(\s(?<data>.+))*") {
         return @{
@@ -25,37 +32,72 @@ function pglet_send {
         $command
     )
 
-    # send command
-    $pipeWriter.WriteLine($command)
-    $pipeWriter.Flush()
-
-    # parse results
-    $ERROR_RESULT = "error"
-    
-    $result = $pipeReader.ReadLine()
-
-    #Write-Host "Result: $result"
-
-    if ($result.StartsWith("$ERROR_RESULT ")) {
-        throw $result.Substring($ERROR_RESULT.Length + 1)
-    } elseif ($result -match "(?<lines_count>[\d]+)\s(?<result>.*)") {
-        $lines_count = [int]$Matches["lines_count"]
-        $result = $Matches["result"]
-
-        # read the rest of multi-line result
-        for($i = 0; $i -lt $lines_count; $i++) {
-            $line = $pipeReader.ReadLine()
-            $result = "$result`n$line"
+    $waitResult = $true
+    if ($command -match "(?<commandName>[^\s]+)\s(.*)") {
+        $commandName = $Matches["commandName"]
+        #Write-Host "COMMAND: $commandName"
+        if ($commandName.toLower().endsWith("f")) {
+            $waitResult = $false
         }
-    } else {
-        throw "Invalid result: $result"
     }
 
-    return $result
+    if ($IsLinux -or $IsMacOS) {
+        $pipeWriter = New-Object System.IO.StreamWriter($pipeName)
+    }
+
+    # send command
+    $pipeWriter.WriteLine($command)
+    #$pipeWriter.Flush()
+
+    #Write-Host "After write"
+
+    if ($IsLinux -or $IsMacOS) {
+        $pipeWriter.Close()
+    }
+
+    #Write-Host "After writer close"
+
+    if ($waitResult) {
+        # parse results
+        $ERROR_RESULT = "error"
+
+        try {
+            if ($IsLinux -or $IsMacOS) {
+                $pipeReader = New-Object System.IO.StreamReader($pipeName)
+            }
+            
+            $result = $pipeReader.ReadLine()
+
+            #Write-Host "After read"
+        
+            #Write-Host "Result: $result"
+        
+            if ($result.StartsWith("$ERROR_RESULT ")) {
+                throw $result.Substring($ERROR_RESULT.Length + 1)
+            } elseif ($result -match "(?<lines_count>[\d]+)\s(?<result>.*)") {
+                $lines_count = [int]$Matches["lines_count"]
+                $result = $Matches["result"]
+        
+                # read the rest of multi-line result
+                for($i = 0; $i -lt $lines_count; $i++) {
+                    $line = $pipeReader.ReadLine()
+                    $result = "$result`n$line"
+                }
+            } else {
+                throw "Invalid result: $result"
+            }
+            return $result
+        } finally {
+            if ($IsLinux -or $IsMacOS) {
+                $pipeReader.Close()
+            }
+        }
+    }
 }
 
 try {
-    $res = (pglet page page1 --uds)
+
+    $res = (pglet page page1)
 
     if ($res -match "(?<pipeName>[^\s]+)\s(?<url>[^\s]+)") {
         $pipeName = $Matches["pipeName"]
@@ -66,15 +108,18 @@ try {
 
     Write-Host "Page URL: $pageUrl"
 
-    $pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeName)
-    $pipe.Connect(5000)
-    $pipeReader = new-object System.IO.StreamReader($pipe)
-    $pipeWriter = new-object System.IO.StreamWriter($pipe)
-    $pipeWriter.AutoFlush = $true
-    
-    $eventPipe = new-object System.IO.Pipes.NamedPipeClientStream("$pipeName.events")
-    $eventPipe.Connect(5000)
-    $eventPipeReader = new-object System.IO.StreamReader($eventPipe)
+    if (-not $IsLinux -and -not $IsMacOS) {
+        # use Windows named pipes
+        $pipe = new-object System.IO.Pipes.NamedPipeClientStream($pipeName)
+        $pipe.Connect(5000)
+        $pipeReader = new-object System.IO.StreamReader($pipe)
+        $pipeWriter = new-object System.IO.StreamWriter($pipe)
+        $pipeWriter.AutoFlush = $true
+        
+        $eventPipe = new-object System.IO.Pipes.NamedPipeClientStream("$pipeName.events")
+        $eventPipe.Connect(5000)
+        $eventPipeReader = new-object System.IO.StreamReader($eventPipe)
+    }
     
     pglet_send "clean page"
     Start-Sleep -s 2
@@ -120,8 +165,8 @@ try {
         Write-Host "Bio: $bio"
 
         for ($i = 0; $i -lt 101; $i++) {
-            pglet_send "set prog value=$($i) label='Step $i...'" | out-null
-            Start-Sleep -ms 50
+            pglet_send "setf prog value=$($i) label='Step $i...'" | out-null
+            Start-Sleep -ms 10
         }
     }
 } catch {
