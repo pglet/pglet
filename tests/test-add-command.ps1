@@ -120,7 +120,7 @@ try {
         Write-Host "Bio: $bio"
 
         for ($i = 0; $i -lt 101; $i++) {
-            pglet_send "set prog percent=$($i) label='Step $i...'"
+            pglet_send "set prog value=$($i) label='Step $i...'"
             Start-Sleep -ms 50
         }
     }

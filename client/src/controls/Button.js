@@ -15,7 +15,7 @@ const button = React.memo(({control}) => {
   };
 
   const handleClick = e => {
-    ws.pageEventFromWeb(control.i, 'click', control.event)
+    ws.pageEventFromWeb(control.i, 'clicked', control.event)
   }
 
   return <ButtonType onClick={handleClick} {...buttonProps} />;

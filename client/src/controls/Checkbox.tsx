@@ -19,17 +19,18 @@ export const MyCheckbox = React.memo<IControlProps>(({control}) => {
       const payload = [
         {
           i: control.i,
-          "checked": checked.toString()
+          "value": checked.toString()
         }
       ];
   
       dispatch(changeProps(payload));
       ws.updateControlProps(payload);
+      ws.pageEventFromWeb(control.i, 'checked', checked.toString())
     }
   }
 
   const checkboxProps: ICheckboxProps = {
-    checked: control.checked === "true",
+    checked: control.value === "true",
     label: control.label ? control.label : null
   };
 
