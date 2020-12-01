@@ -34,7 +34,7 @@ function pglet_send {
     
     $result = $pipeReader.ReadLine()
 
-    Write-Host "Result: $result"
+    #Write-Host "Result: $result"
 
     if ($result.StartsWith("$ERROR_RESULT ")) {
         throw $result.Substring($ERROR_RESULT.Length + 1)
@@ -55,7 +55,7 @@ function pglet_send {
 }
 
 try {
-    $res = (pglet page page1)
+    $res = (pglet page page1 --uds)
 
     if ($res -match "(?<pipeName>[^\s]+)\s(?<url>[^\s]+)") {
         $pipeName = $Matches["pipeName"]
@@ -120,7 +120,7 @@ try {
         Write-Host "Bio: $bio"
 
         for ($i = 0; $i -lt 101; $i++) {
-            pglet_send "set prog value=$($i) label='Step $i...'"
+            pglet_send "set prog value=$($i) label='Step $i...'" | out-null
             Start-Sleep -ms 50
         }
     }
