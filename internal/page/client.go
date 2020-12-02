@@ -109,11 +109,11 @@ type UpdateControlPropsPayload struct {
 }
 
 type RemoveControlPayload struct {
-	ID string `json:"id"`
+	IDs []string `json:"ids"`
 }
 
 type CleanControlPayload struct {
-	ID string `json:"id"`
+	IDs []string `json:"ids"`
 }
 
 func autoID() string {

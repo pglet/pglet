@@ -274,22 +274,18 @@ func clean(session *Session, command command.Command) (result string, err error)
 	}
 
 	// control ID
-	id := command.Values[0]
+	for _, id := range command.Values {
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
 
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
+		session.cleanControl(ctrl)
 	}
-
-	session.cleanControl(ctrl)
-
-	// output page
-	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	// log.Println(string(pJSON))
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
-		ID: id,
+		IDs: command.Values,
 	}))
 	return "", nil
 }
@@ -302,23 +298,22 @@ func remove(session *Session, command command.Command) (result string, err error
 		return "", errors.New("'clean' command should have control ID specified")
 	}
 
-	// control ID
-	id := command.Values[0]
+	for _, id := range command.Values {
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
 
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
+		if ctrl.ParentID() == "" {
+			return "", fmt.Errorf("root control '%s' cannot be deleted", id)
+		}
+
+		session.deleteControl(ctrl)
 	}
-
-	if ctrl.ParentID() == "" {
-		return "", fmt.Errorf("root control '%s' cannot be deleted", id)
-	}
-
-	session.deleteControl(ctrl)
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
-		ID: id,
+		IDs: command.Values,
 	}))
 	return "", nil
 }
