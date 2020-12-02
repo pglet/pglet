@@ -315,7 +315,7 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 		session := page.GetSession(payload.SessionID)
 		if session != nil {
 			// process command
-			result, err := session.ExecuteCommand(payload.Command)
+			result, err := session.ExecuteCommand(&payload.Command)
 			responsePayload.Result = result
 			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)

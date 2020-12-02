@@ -152,6 +152,10 @@ try {
     pglet_send "add button id=b1 to=buttons"
 
     pglet_send "set fullName value='John Smith'"
+    Start-Sleep -s 2
+    pglet_send "set
+        bio value='Some bio...'
+        color value='green'"
 
     pglet_send "add progress id=prog label='Doing something...' width=400px"
     

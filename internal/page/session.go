@@ -25,7 +25,7 @@ const (
 	PageID = "page"
 )
 
-type commandHandler = func(*Session, command.Command) (string, error)
+type commandHandler = func(*Session, *command.Command) (string, error)
 
 var (
 	commandHandlers = map[string]commandHandler{
@@ -69,22 +69,22 @@ func NewSession(page *Page, id string) *Session {
 }
 
 // ExecuteCommand executes command and returns the result
-func (session *Session) ExecuteCommand(command command.Command) (result string, err error) {
+func (session *Session) ExecuteCommand(cmd *command.Command) (result string, err error) {
 	session.Lock()
 	defer session.Unlock()
 
 	log.Printf("Execute command for page %s session %s: %+v\n",
-		session.Page.Name, session.ID, command)
+		session.Page.Name, session.ID, cmd)
 
-	commandHandler := commandHandlers[strings.ToLower(command.Name)]
+	commandHandler := commandHandlers[strings.ToLower(cmd.Name)]
 	if commandHandler == nil {
-		return "", fmt.Errorf("Unknown command: %s", command.Name)
+		return "", fmt.Errorf("Unknown command: %s", cmd.Name)
 	}
 
-	return commandHandler(session, command)
+	return commandHandler(session, cmd)
 }
 
-func add(session *Session, cmd command.Command) (result string, err error) {
+func add(session *Session, cmd *command.Command) (result string, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
@@ -107,7 +107,7 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 	if len(cmd.Values) > 0 {
 		// single command
 		batch = append(batch, &AddCommandBatchItem{
-			Command: &cmd,
+			Command: cmd,
 		})
 		indent = 2
 	}
@@ -199,16 +199,16 @@ func add(session *Session, cmd command.Command) (result string, err error) {
 	return strings.Join(ids, " "), nil
 }
 
-func get(session *Session, command command.Command) (result string, err error) {
+func get(session *Session, cmd *command.Command) (result string, err error) {
 
 	// command format must be:
 	// get <control-id> <property>
-	if len(command.Values) < 2 {
+	if len(cmd.Values) < 2 {
 		return "", errors.New("'get' command should have control ID and property specified")
 	}
 
 	// control ID
-	id := command.Values[0]
+	id := cmd.Values[0]
 
 	ctrl, ok := session.Controls[id]
 	if !ok {
@@ -216,7 +216,7 @@ func get(session *Session, command command.Command) (result string, err error) {
 	}
 
 	// control property
-	prop := command.Values[1]
+	prop := cmd.Values[1]
 
 	v := ctrl.GetAttr(prop)
 
@@ -227,54 +227,78 @@ func get(session *Session, command command.Command) (result string, err error) {
 	return v.(string), nil
 }
 
-func set(session *Session, command command.Command) (result string, err error) {
+func set(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// get <control-id> <property>
-	if len(command.Values) < 1 {
-		return "", errors.New("'set' command should have control ID specified")
+	batch := make([]*command.Command, 0)
+
+	// top command
+	if len(cmd.Values) > 0 {
+		// single command
+		batch = append(batch, cmd)
 	}
 
-	// control ID
-	id := command.Values[0]
-
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
-	}
-
-	props := make(map[string]interface{})
-	props["i"] = id
-
-	// set control properties, except system ones
-	for n, v := range command.Attrs {
-		if !IsSystemAttr(n) {
-			ctrl.SetAttr(n, v)
-			props[n] = v
+	// sub-commands
+	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
 		}
+
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
+		}
+		childCmd.Name = "set"
+		batch = append(batch, childCmd)
 	}
 
 	payload := &UpdateControlPropsPayload{
 		Props: make([]map[string]interface{}, 0, 0),
 	}
 
-	payload.Props = append(payload.Props, props)
+	for _, batchCmd := range batch {
+		// command format must be:
+		// get <control-id> <property>
+		if len(batchCmd.Values) < 1 {
+			return "", errors.New("'set' command should have control ID specified")
+		}
+
+		// control ID
+		id := batchCmd.Values[0]
+
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		props := make(map[string]interface{})
+		props["i"] = id
+
+		// set control properties, except system ones
+		for n, v := range batchCmd.Attrs {
+			if !IsSystemAttr(n) {
+				ctrl.SetAttr(n, v)
+				props[n] = v
+			}
+		}
+
+		payload.Props = append(payload.Props, props)
+	}
 
 	// broadcast control updates to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
 	return "", nil
 }
 
-func clean(session *Session, command command.Command) (result string, err error) {
+func clean(session *Session, cmd *command.Command) (result string, err error) {
 
 	// command format must be:
 	// clean <control-id>
-	if len(command.Values) < 1 {
+	if len(cmd.Values) < 1 {
 		return "", errors.New("'clean' command should have control ID specified")
 	}
 
 	// control ID
-	for _, id := range command.Values {
+	for _, id := range cmd.Values {
 		ctrl, ok := session.Controls[id]
 		if !ok {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
@@ -285,20 +309,20 @@ func clean(session *Session, command command.Command) (result string, err error)
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
-		IDs: command.Values,
+		IDs: cmd.Values,
 	}))
 	return "", nil
 }
 
-func remove(session *Session, command command.Command) (result string, err error) {
+func remove(session *Session, cmd *command.Command) (result string, err error) {
 
 	// command format must be:
 	// clean <control-id>
-	if len(command.Values) < 1 {
+	if len(cmd.Values) < 1 {
 		return "", errors.New("'clean' command should have control ID specified")
 	}
 
-	for _, id := range command.Values {
+	for _, id := range cmd.Values {
 		ctrl, ok := session.Controls[id]
 		if !ok {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
@@ -313,7 +337,7 @@ func remove(session *Session, command command.Command) (result string, err error
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
-		IDs: command.Values,
+		IDs: cmd.Values,
 	}))
 	return "", nil
 }
