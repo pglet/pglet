@@ -319,7 +319,7 @@ func remove(session *Session, cmd *command.Command) (result string, err error) {
 	// command format must be:
 	// clean <control-id>
 	if len(cmd.Values) < 1 {
-		return "", errors.New("'clean' command should have control ID specified")
+		return "", errors.New("'remove' command should have control ID specified")
 	}
 
 	for _, id := range cmd.Values {
