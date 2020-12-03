@@ -1,6 +1,4 @@
 import React from 'react'
-import Row from './Row'
-import Col from './Col'
 import MyStack from './Stack'
 import { Textbox } from './Textbox'
 import { MyDropdown } from './Dropdown'
@@ -14,8 +12,6 @@ const ControlsList = ({ controls }) => {
     //console.log(`render ControlsList: ${id}`);
 
     const controlTypes = {
-        'row': Row,
-        'col': Col,
         'textbox': Textbox,
         'checkbox': MyCheckbox,
         'dropdown': MyDropdown,
