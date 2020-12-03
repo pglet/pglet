@@ -144,8 +144,8 @@ try {
           checkbox id=agree label='I agree to the terms of services'"
 
     pglet_send "add stack at=0 id=buttons horizontal=true
-            button id=submit text=Submit primary=yes event=btn_event
-            button id=cancel event=btn_event2"
+            button id=submit text=Submit primary=yes data=btn_event
+            button id=cancel data=btn_event2"
     
     Start-Sleep -s 2
 
