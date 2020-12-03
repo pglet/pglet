@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { TextField } from '@fluentui/react';
+import { TextField, ITextFieldProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Textbox = React.memo<IControlProps>(({control}) => {
@@ -26,7 +26,7 @@ export const Textbox = React.memo<IControlProps>(({control}) => {
     ws.updateControlProps(payload);
   }
 
-  const textFieldProps = {
+  const textFieldProps: ITextFieldProps = {
     value: control.value ? control.value : "",
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
