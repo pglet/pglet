@@ -291,17 +291,41 @@ func set(session *Session, cmd *command.Command) (result string, err error) {
 
 func clean(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// clean <control-id>
-	if len(cmd.Values) < 1 {
-		return "", errors.New("'clean' command should have control ID specified")
+	// command format:
+	//    clean [id_1] [id_2] ... [at=index]
+
+	ids := make([]string, 0)
+	if len(cmd.Values) == 0 {
+		// clean page if no IDs specified
+		ids = append(ids, PageID)
+	} else {
+		ids = append(ids, cmd.Values...)
+	}
+
+	at := -1
+	if a, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		at = a
+	}
+
+	if at != -1 && len(ids) > 1 {
+		return "", errors.New("'at' cannot be specified with a list of IDs")
 	}
 
 	// control ID
-	for _, id := range cmd.Values {
+	for i, id := range ids {
 		ctrl, ok := session.Controls[id]
 		if !ok {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		if at != -1 {
+			childIDs := ctrl.GetChildrenIds()
+			if at > len(childIDs)-1 {
+				return "", fmt.Errorf("'at' is out of range")
+			}
+
+			ids[i] = childIDs[at]
+			ctrl, _ = session.Controls[ids[i]]
 		}
 
 		session.cleanControl(ctrl)
@@ -309,27 +333,49 @@ func clean(session *Session, cmd *command.Command) (result string, err error) {
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
-		IDs: cmd.Values,
+		IDs: ids,
 	}))
 	return "", nil
 }
 
 func remove(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// clean <control-id>
-	if len(cmd.Values) < 1 {
-		return "", errors.New("'remove' command should have control ID specified")
+	// command format:
+	//    remove [id_1] [id_2] ... [at=index]
+
+	at := -1
+	if a, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		at = a
 	}
 
-	for _, id := range cmd.Values {
+	ids := make([]string, 0)
+	if len(cmd.Values) == 0 && at == -1 {
+		return "", errors.New("'page' control cannot be removed")
+	} else if len(cmd.Values) == 0 {
+		ids = append(ids, PageID)
+	} else {
+		ids = append(ids, cmd.Values...)
+	}
+
+	if at != -1 && len(ids) > 1 {
+		return "", errors.New("'at' cannot be specified with a list of IDs")
+	}
+
+	// control ID
+	for i, id := range ids {
 		ctrl, ok := session.Controls[id]
 		if !ok {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
 		}
 
-		if ctrl.ParentID() == "" {
-			return "", fmt.Errorf("root control '%s' cannot be deleted", id)
+		if at != -1 {
+			childIDs := ctrl.GetChildrenIds()
+			if at > len(childIDs)-1 {
+				return "", fmt.Errorf("'at' is out of range")
+			}
+
+			ids[i] = childIDs[at]
+			ctrl, _ = session.Controls[ids[i]]
 		}
 
 		session.deleteControl(ctrl)
@@ -337,7 +383,7 @@ func remove(session *Session, cmd *command.Command) (result string, err error) {
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
-		IDs: cmd.Values,
+		IDs: ids,
 	}))
 	return "", nil
 }
