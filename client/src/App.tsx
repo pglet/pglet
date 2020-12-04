@@ -11,6 +11,7 @@ export const App: React.FunctionComponent = () => {
         <Route path="/p/:accountName/:pageName" children={<PageLanding />} />
         <Route path="/p/:accountName" children={<AccountLanding />} />
         <Route path="/sample" children={<FluentSample />} />
+        <Route path="/" children={<PageLanding />} />
       </Switch>
     </Router>
   );

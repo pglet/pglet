@@ -7,7 +7,7 @@ import { IControlProps } from './IControlProps'
 
 export const MyDropdown = React.memo<IControlProps>(({control}) => {
 
-  console.log(`render Dropdown: ${control.i}`);
+  //console.log(`render Dropdown: ${control.i}`);
 
   const ws = useContext(WebSocketContext);
 
@@ -15,7 +15,7 @@ export const MyDropdown = React.memo<IControlProps>(({control}) => {
   
   const handleChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {
 
-    console.log("DROPDOWN:", option);
+    //console.log("DROPDOWN:", option);
 
     const payload = [
       {

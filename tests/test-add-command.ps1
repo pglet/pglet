@@ -97,7 +97,7 @@ function pglet_send {
 
 try {
 
-    $res = (pglet page page1)
+    $res = (pglet page index)
 
     if ($res -match "(?<pipeName>[^\s]+)\s(?<url>[^\s]+)") {
         $pipeName = $Matches["pipeName"]

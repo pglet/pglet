@@ -3,7 +3,7 @@ import { Text } from '@fluentui/react';
 
 const MyText = React.memo(({ control }) => {
 
-  console.log(`render Text: ${control.i}`);
+  //console.log(`render Text: ${control.i}`);
 
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 

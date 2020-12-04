@@ -6,7 +6,7 @@ import { IControlProps } from './IControlProps'
 
 export const MyStack = React.memo<IControlProps>(({control}) => {
 
-    console.log(`render stack: ${control.i}`);
+    //console.log(`render stack: ${control.i}`);
 
     // stack props
     const stackProps: IStackProps = {

@@ -41,9 +41,9 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
         };
 
         socket.onmessage = function (evt) {
-            console.log("WebSocket onmessage:", evt.data);
+            //console.log("WebSocket onmessage:", evt.data);
             var data = JSON.parse(evt.data);
-            console.log(data);
+            console.log("WebSocket onmessage:", data);
 
             if (data.action === "registerWebClient") {
                 if (data.payload.error) {

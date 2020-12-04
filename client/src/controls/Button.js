@@ -4,7 +4,7 @@ import { PrimaryButton, DefaultButton } from '@fluentui/react';
 
 const button = React.memo(({control}) => {
 
-  console.log(`render Button: ${control.i}`);
+  //console.log(`render Button: ${control.i}`);
 
   const ws = useContext(WebSocketContext);
 

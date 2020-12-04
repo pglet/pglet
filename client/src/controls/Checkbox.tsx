@@ -7,7 +7,7 @@ import { IControlProps } from './IControlProps'
 
 export const MyCheckbox = React.memo<IControlProps>(({control}) => {
 
-  console.log(`render Checkbox: ${control.i}`);
+  //console.log(`render Checkbox: ${control.i}`);
 
   const ws = useContext(WebSocketContext);
 

@@ -7,7 +7,7 @@ import { IControlProps } from './IControlProps'
 
 export const Textbox = React.memo<IControlProps>(({control}) => {
 
-  console.log(`render Textbox: ${control.i}`);
+  //console.log(`render Textbox: ${control.i}`);
 
   const ws = useContext(WebSocketContext);
 

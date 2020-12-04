@@ -9,6 +9,14 @@ const PageLanding = () => {
 
     let { accountName, pageName } = useParams();
 
+    if (!accountName) {
+        accountName = "public";
+    }
+
+    if (!pageName) {
+        pageName = "index";
+    }
+
     let fullPageName = `${accountName}/${pageName}`;
 
     const ws = useContext(WebSocketContext);

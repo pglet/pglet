@@ -6,7 +6,7 @@ import { Stack } from '@fluentui/react';
 
 const Page = React.memo(({ control }) => {
 
-  console.log(`render page: ${control.i}`);
+  //console.log(`render page: ${control.i}`);
 
   // page title
   let title = "Pglet";

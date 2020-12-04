@@ -4,7 +4,7 @@ import { IControlProps } from './IControlProps'
 
 export const Progress = React.memo<IControlProps>(({control}) => {
 
-  console.log(`render Progress: ${control.i}`);
+  //console.log(`render Progress: ${control.i}`);
 
   const progressProps: IProgressIndicatorProps = {
     percentComplete: control.value ? parseInt(control.value) / 100 : undefined,
