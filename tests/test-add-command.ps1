@@ -99,6 +99,8 @@ try {
 
     $res = (pglet page index)
 
+    Write-Host "Page URL: $res"
+
     if ($res -match "(?<pipeName>[^\s]+)\s(?<url>[^\s]+)") {
         $pipeName = $Matches["pipeName"]
         $pageUrl = $Matches["url"]
@@ -174,7 +176,7 @@ try {
         }
     }
 } catch {
-    Write-Host "$_"
+    Write-Host "ERROR: $_"
 } finally {
     $pipe.Close()
     $eventPipe.Close()

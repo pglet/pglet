@@ -13,6 +13,7 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/kbinani/screenshot v0.0.0-20191211154542-3a185f1ce18f
 	github.com/keegancsmith/rpc v1.3.0
+	github.com/lxn/win v0.0.0-20201111105847-2a20daff6a55 // indirect
 	github.com/pglet/npipe v0.0.0-20200920205735-40be968c9c38
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1

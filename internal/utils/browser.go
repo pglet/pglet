@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -37,11 +37,11 @@ func OpenBrowser(url string, posSize string) {
 	}
 
 	if width == -1 {
-		width = defWidth
+		width = defWidth / 2
 	}
 
 	if height == -1 {
-		height = defHeight
+		height = defHeight / 2
 	}
 
 	if x == -1 {
@@ -96,12 +96,11 @@ func openDefaultBrowser(url string) {
 func openChrome(chromePath string, url string, x int, y int, width int, height int) {
 
 	// create temp profile dir
-	profilePath := path.Join(os.TempDir(), "pglet-chrome-profile")
-	fmt.Println(profilePath)
+	homeDir, _ := os.UserHomeDir()
+	profilePath := filepath.Join(homeDir, ".pglet-chrome-profile")
 
 	_, err := os.Stat(profilePath)
 	if !os.IsNotExist(err) {
-		fmt.Println("Delete profile path")
 		os.RemoveAll(profilePath)
 	}
 	os.MkdirAll(profilePath, os.ModePerm)
@@ -112,10 +111,13 @@ func openChrome(chromePath string, url string, x int, y int, width int, height i
 		fmt.Sprintf("--window-position=%d,%d", x, y),
 		fmt.Sprintf("--window-size=%d,%d", width, height),
 		fmt.Sprintf("--app=%s", url),
-		"--no-first-run",
-		"--noerrdialogs",
-		"--no-default-browser-check",
-		"--start-maximized").Start()
+		// "--inprivate",
+		// "--incognito",
+		// "--disable-sync",
+		// "--no-first-run",
+		// "--noerrdialogs",
+		// "--no-default-browser-check",
+	).Start()
 
 	if err != nil {
 		log.Warnln("Error opening Chrome window:", err)
@@ -152,10 +154,10 @@ func findChrome() string {
 	paths := []string{
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-		fmt.Sprintf(`%s\Microsoft\Edge\Application\msedge.exe`, progFilesX86),
-		fmt.Sprintf(`%s\Microsoft\Edge\Application\msedge.exe`, progFiles),
 		fmt.Sprintf(`%s\Google\Chrome\Application\chrome.exe`, progFilesX86),
 		fmt.Sprintf(`%s\Google\Chrome\Application\chrome.exe`, progFiles),
+		fmt.Sprintf(`%s\Microsoft\Edge\Application\msedge.exe`, progFilesX86),
+		fmt.Sprintf(`%s\Microsoft\Edge\Application\msedge.exe`, progFiles),
 	}
 
 	for _, path := range paths {

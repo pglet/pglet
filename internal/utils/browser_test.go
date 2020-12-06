@@ -7,7 +7,7 @@ import (
 
 func TestOpenBrowser(t *testing.T) {
 
-	OpenBrowser("http://google.com", "100, 200, 800, 600")
+	OpenBrowser("http://localhost:3000", "100, 200, 800, 600")
 	//t.Errorf("ddd")
 }
 
