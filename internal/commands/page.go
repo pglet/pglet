@@ -45,8 +45,8 @@ func newPageCommand() *cobra.Command {
 				log.Fatalln("Connect page error:", err)
 			}
 
-			if !noWindow {
-				utils.OpenBrowser(results.PageURL)
+			if !noWindow && !web {
+				utils.OpenBrowser(results.PageURL, "")
 			}
 
 			// output connection ID and page URL to be consumed by a client

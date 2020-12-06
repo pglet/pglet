@@ -47,7 +47,10 @@ func newAppCommand() *cobra.Command {
 			}
 
 			connectArgs.PageName = results.PageName
-			utils.OpenBrowser(results.PageURL)
+
+			if !noWindow && !web {
+				utils.OpenBrowser(results.PageURL, "")
+			}
 
 			fmt.Println(results.PageURL)
 
