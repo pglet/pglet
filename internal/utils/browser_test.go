@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+func TestOpenBrowserDefault(t *testing.T) {
+
+	OpenBrowser("http://localhost:3000", "400, 400")
+	//t.Errorf("ddd")
+}
+
 func TestOpenBrowser(t *testing.T) {
 
 	OpenBrowser("http://localhost:3000", "100, 200, 800, 600")

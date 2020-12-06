@@ -12,6 +12,7 @@ import (
 
 	"github.com/andybrewer/mack"
 	"github.com/kbinani/screenshot"
+	"github.com/lxn/win"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -132,6 +133,7 @@ func openSafari(url string, x int, y int, width int, height int) {
 }
 
 func getMonitorSize() (width int, height int) {
+	scale := getMonitorScale()
 	n := screenshot.NumActiveDisplays()
 
 	for i := 0; i < n; i++ {
@@ -140,12 +142,20 @@ func getMonitorSize() (width int, height int) {
 		if bounds.Min.X == 0 && bounds.Min.Y == 0 {
 			// primary monitor
 			// calculate default window size and position
-			width = bounds.Max.X
-			height = bounds.Max.Y
+			width = bounds.Max.X / scale
+			height = bounds.Max.Y / scale
 		}
 	}
 
 	return
+}
+
+func getMonitorScale() int {
+	if runtime.GOOS == "windows" {
+		hwnd := win.GetDesktopWindow()
+		return int(win.GetDpiForWindow(hwnd)) / 96
+	}
+	return 1
 }
 
 func findChrome() string {
