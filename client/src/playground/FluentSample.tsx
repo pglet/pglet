@@ -47,17 +47,17 @@ export const FluentSample: React.FunctionComponent = () => {
           <Text variant="xxLarge" styles={boldStyle}>
             Welcome to Your UI Fabric App
           </Text>
-          <Text variant="large">For a guide on how to customize this project, check out the UI Fabric documentation.</Text>
+          <Text variant="large" styles={{ root: { width: "200px", height: "100px" }}}>For a guide on how to customize this project, check out the UI Fabric documentation.</Text>
           <Text variant="large" styles={boldStyle}>
-            Essential Links
+            Essential <b><i>Links</i></b>
           </Text>
         </Stack>
         <Stack {...columnProps}>
-          <TextField label="First name" />
+          <TextField label="First name" styles={{ root: { width: "200px", height: "100px" }}} />
           <TextField label="Last name" />
           <Stack horizontal tokens={{ childrenGap: 10 }}>
-            <ButtonType text="Button 2" />
-            <PrimaryButton text="Button 3" />
+            <ButtonType text="Button 2" styles={{ root: { padding: "30px", margin: "30px 0" }}} />
+            <PrimaryButton text="Button 3" styles={{ root: { width: "200px", height: "100px" }}} />
           </Stack>
         </Stack>
       </Stack>

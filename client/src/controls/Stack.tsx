@@ -1,6 +1,6 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
-import ControlsList from './ControlsList'
+import { ControlsList } from './ControlsList'
 import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
@@ -16,7 +16,10 @@ export const MyStack = React.memo<IControlProps>(({control}) => {
         verticalAlign: control.verticalalign ? control.verticalalign : "start",
         styles: {
             root: {
-                width: control.width ? control.width : "100%"
+                width: control.width ? control.width : "100%",
+                height: control.height !== undefined ? control.height : undefined,
+                padding: control.padding !== undefined ? control.padding : undefined,
+                margin: control.margin !== undefined ? control.margin : undefined
             }
         },
     };
@@ -31,5 +34,3 @@ export const MyStack = React.memo<IControlProps>(({control}) => {
         <ControlsList controls={childControls} />
     </Stack>
 })
-
-export default MyStack

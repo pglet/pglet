@@ -31,7 +31,15 @@ export const MyCheckbox = React.memo<IControlProps>(({control}) => {
 
   const checkboxProps: ICheckboxProps = {
     checked: control.value === "true",
-    label: control.label ? control.label : null
+    label: control.label ? control.label : null,
+    styles: {
+      root: {
+        width: control.width !== undefined ? control.width : undefined,
+        height: control.height !== undefined ? control.height : undefined,
+        padding: control.padding !== undefined ? control.padding : undefined,
+        margin: control.margin !== undefined ? control.margin : undefined   
+      }
+    }
   };
 
   return <Checkbox {...checkboxProps} onChange={handleChange} />;

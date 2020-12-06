@@ -1,10 +1,11 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
-import ControlsList from './ControlsList'
+import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
+import { IControlProps } from './IControlProps'
 
-const Page = React.memo(({ control }) => {
+export const Page = React.memo<IControlProps>(({control}) => {
 
   //console.log(`render page: ${control.i}`);
 
@@ -16,27 +17,27 @@ const Page = React.memo(({ control }) => {
   useTitle(title)
 
   // stack props
-  const stackProps = {
+  const stackProps: IStackProps = {
     verticalFill: control.verticalFill ? control.verticalFill : false,
     horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
     verticalAlign: control.verticalalign ? control.verticalalign : "start",
     styles: {
       root: {
         width: control.width ? control.width : "100%",
-        padding: control.padding ? control.padding : "10px"
+        height: control.height !== undefined ? control.height : undefined,
+        padding: control.padding ? control.padding : "10px",
+        margin: control.margin !== undefined ? control.margin : undefined
       }
     },
   };
 
-  const stackTokens = {
+  const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
 
-  const childControls = useSelector(state => control.c.map(childId => state.page.controls[childId]), shallowEqual);
+  const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
 
   return <Stack tokens={stackTokens} {...stackProps}>
     <ControlsList controls={childControls} />
   </Stack>
 })
-
-export default Page

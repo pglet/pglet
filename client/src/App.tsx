@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import PageLanding from './controls/PageLanding'
-import AccountLanding from './controls/AccountLanding';
-import { FluentSample } from './FluentSample';
+import { PageLanding } from './controls/PageLanding'
+import { AccountLanding } from './controls/AccountLanding';
+import { FluentSample } from './playground/FluentSample';
 
 export const App: React.FunctionComponent = () => {
   return (

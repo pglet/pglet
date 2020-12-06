@@ -32,7 +32,15 @@ export const MyDropdown = React.memo<IControlProps>(({control}) => {
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
     errorMessage: control.errormessage ? control.errormessage : null,
-    options: []
+    options: [],
+    styles: {
+      root: {
+        width: control.width !== undefined ? control.width : undefined,
+        height: control.height !== undefined ? control.height : undefined,
+        padding: control.padding !== undefined ? control.padding : undefined,
+        margin: control.margin !== undefined ? control.margin : undefined   
+      }
+    }
   };
 
   dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) => control.c.map((childId: any) =>
