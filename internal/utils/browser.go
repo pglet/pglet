@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/andybrewer/mack"
-	"github.com/kbinani/screenshot"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,12 +22,10 @@ func OpenBrowser(url string, posSize string) {
 		return
 	}
 
-	x := -1
-	y := -1
+	x := 100
+	y := 100
 	width := -1
 	height := -1
-
-	defWidth, defHeight := getMonitorSize()
 
 	sizeParts := strings.Split(posSize, ",")
 	if len(sizeParts) > 3 {
@@ -42,26 +39,10 @@ func OpenBrowser(url string, posSize string) {
 		height, _ = strconv.Atoi(strings.TrimSpace(sizeParts[1]))
 	}
 
-	if width == -1 {
-		width = defWidth / 2
-	}
-
-	if height == -1 {
-		height = defHeight / 2
-	}
-
-	if x == -1 {
-		x = defWidth/2 - width/2
-	}
-
-	if y == -1 {
-		y = defHeight/2 - height/2
-	}
-
 	chromePath := findChrome()
-	if chromePath != "" {
+	if chromePath != "" && width > 0 && height > 0 {
 		openChrome(chromePath, url, x, y, width, height)
-	} else if runtime.GOOS == "darwin" {
+	} else if runtime.GOOS == "darwin" && width > 0 && height > 0 {
 		openSafari(url, x, y, width, height)
 	} else {
 		openDefaultBrowser(url)
@@ -135,24 +116,6 @@ func openSafari(url string, x int, y int, width int, height int) {
 		fmt.Sprintf("open location \"%s\"", url),
 		fmt.Sprintf("set bounds of front window to {%d, %d, %d, %d}", x, y, width, height),
 		"activate")
-}
-
-func getMonitorSize() (width int, height int) {
-	scale := getMonitorScale()
-	n := screenshot.NumActiveDisplays()
-
-	for i := 0; i < n; i++ {
-		bounds := screenshot.GetDisplayBounds(i)
-
-		if bounds.Min.X == 0 && bounds.Min.Y == 0 {
-			// primary monitor
-			// calculate default window size and position
-			width = bounds.Max.X / scale
-			height = bounds.Max.Y / scale
-		}
-	}
-
-	return
 }
 
 func findChrome() string {

@@ -98,7 +98,7 @@ for:
   - HOMEBREW_NO_AUTO_UPDATE=1 brew install yarn
 
   build_script:
-  - nvm use 12
+  - nvm use 14
   - cd client
   - yarn
   - yarn build

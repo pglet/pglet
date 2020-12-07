@@ -31,18 +31,6 @@ func TestOpenBrowser2(t *testing.T) {
 	//t.Errorf("ddd")
 }
 
-func TestOpenSafari(t *testing.T) {
-
-	width, height := getMonitorSize()
-	openSafari("http://google.com", 100, 100, width, height)
-	//t.Errorf("ddd")
-}
-
-func TestResolution(t *testing.T) {
-	width, height := getMonitorSize()
-	fmt.Println("width:", width, "height:", height)
-}
-
 func TestFindChrome(t *testing.T) {
 	path := findChrome()
 	fmt.Println("path:", path)

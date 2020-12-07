@@ -18,6 +18,7 @@ func newPageCommand() *cobra.Command {
 	var token string
 	var uds bool
 	var noWindow bool
+	var window string
 
 	var cmd = &cobra.Command{
 		Use:   "page [[namespace/]<page_name>]",
@@ -46,7 +47,7 @@ func newPageCommand() *cobra.Command {
 			}
 
 			if !noWindow && !web {
-				utils.OpenBrowser(results.PageURL, "")
+				utils.OpenBrowser(results.PageURL, window)
 			}
 
 			// output connection ID and page URL to be consumed by a client
@@ -59,6 +60,7 @@ func newPageCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
+	cmd.Flags().StringVarP(&window, "window", "", "", "open page in a window with specified dimensions and position: [x,y,]width,height")
 	cmd.Flags().BoolVarP(&noWindow, "no-window", "", false, "do not open browser window")
 
 	return cmd
