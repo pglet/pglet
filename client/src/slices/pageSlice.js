@@ -69,16 +69,16 @@ const pageSlice = createSlice({
             action.payload.forEach(props => {
                 const ctrl = state.controls[props.i];
                 if (ctrl) {
-                    for(var propName in Object.getOwnPropertyNames(props)) {
+                    Object.getOwnPropertyNames(props).forEach(propName => {
                         if (propName === 'i') {
-                            continue
+                            return
                         }
                         let v = ctrl[propName]
                         if (!v) {
                             v = ""
                         }
-                        ctrl[propName] += props[propName]
-                    }
+                        ctrl[propName] = v + props[propName]
+                    })
                 }
             })
             //console.log(current(state))

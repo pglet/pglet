@@ -170,9 +170,10 @@ try {
         $bio = pglet_send "get bio value"
         Write-Host "Bio: $bio"
 
-        for ($i = 0; $i -lt 101; $i++) {
-            pglet_send "setf prog value=$($i) label='Step $i...'" | out-null
-            Start-Sleep -ms 10
+        for ($i = 0; $i -lt 11; $i++) {
+            pglet_send "setf prog value=$($i * 10) label='Step $i...'" | out-null
+            pglet_send "appendf bio value='\nline1_$($i)'" | out-null
+            Start-Sleep -ms 200
         }
     }
 } catch {

@@ -349,7 +349,7 @@ func appendHandler(session *Session, cmd *command.Command) (result string, err e
 	}
 
 	// broadcast control updates to all connected web clients
-	session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
+	session.broadcastCommandToWebClients(NewMessage(AppendControlPropsAction, payload))
 	return "", nil
 }
 
