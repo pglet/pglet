@@ -33,6 +33,8 @@ var (
 		command.Addf:    add,
 		command.Set:     set,
 		command.Setf:    set,
+		command.Append:  appendHandler,
+		command.Appendf: appendHandler,
 		command.Get:     get,
 		command.Clean:   clean,
 		command.Cleanf:  clean,
@@ -277,6 +279,68 @@ func set(session *Session, cmd *command.Command) (result string, err error) {
 		for n, v := range batchCmd.Attrs {
 			if !IsSystemAttr(n) {
 				ctrl.SetAttr(n, v)
+				props[n] = v
+			}
+		}
+
+		payload.Props = append(payload.Props, props)
+	}
+
+	// broadcast control updates to all connected web clients
+	session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
+	return "", nil
+}
+
+func appendHandler(session *Session, cmd *command.Command) (result string, err error) {
+
+	batch := make([]*command.Command, 0)
+
+	// top command
+	if len(cmd.Values) > 0 {
+		// single command
+		batch = append(batch, cmd)
+	}
+
+	// sub-commands
+	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
+		}
+
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
+		}
+		childCmd.Name = "append"
+		batch = append(batch, childCmd)
+	}
+
+	payload := &AppendControlPropsPayload{
+		Props: make([]map[string]string, 0, 0),
+	}
+
+	for _, batchCmd := range batch {
+		// command format must be:
+		// append control-id property=value property=value ...
+		if len(batchCmd.Values) < 1 {
+			return "", errors.New("'append' command should have control ID specified")
+		}
+
+		// control ID
+		id := batchCmd.Values[0]
+
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		props := make(map[string]string)
+		props["i"] = id
+
+		// set control properties, except system ones
+		for n, v := range batchCmd.Attrs {
+			if !IsSystemAttr(n) {
+				ctrl.AppendAttr(n, v)
 				props[n] = v
 			}
 		}

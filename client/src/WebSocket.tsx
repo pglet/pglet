@@ -6,6 +6,7 @@ import {
     addPageControlsSuccess,
     addPageControlsError,
     changeProps,
+    appendProps,
     cleanControl,
     removeControl
 } from './slices/pageSlice'
@@ -59,6 +60,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 }
             } else if (data.action === "updateControlProps") {
                 dispatch(changeProps(data.payload.props));
+            } else if (data.action === "appendControlProps") {
+                dispatch(appendProps(data.payload.props));
             } else if (data.action === "cleanControl") {
                 dispatch(cleanControl(data.payload));
             } else if (data.action === "removeControl") {

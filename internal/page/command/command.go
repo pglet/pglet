@@ -14,6 +14,8 @@ const (
 	Addf           = "addf"
 	Set            = "set"
 	Setf           = "setf"
+	Append         = "append"
+	Appendf        = "appendf"
 	Get            = "get"
 	Clean          = "clean"
 	Cleanf         = "cleanf"
@@ -24,16 +26,18 @@ const (
 
 var (
 	supportedCommands = map[string]*CommandMetadata{
-		Add:     &CommandMetadata{Name: Add, ShouldReturn: true},
-		Addf:    &CommandMetadata{Name: Addf, ShouldReturn: false},
-		Set:     &CommandMetadata{Name: Set, ShouldReturn: true},
-		Setf:    &CommandMetadata{Name: Setf, ShouldReturn: false},
-		Get:     &CommandMetadata{Name: Get, ShouldReturn: true},
-		Clean:   &CommandMetadata{Name: Clean, ShouldReturn: true},
-		Cleanf:  &CommandMetadata{Name: Cleanf, ShouldReturn: false},
-		Remove:  &CommandMetadata{Name: Remove, ShouldReturn: true},
-		Removef: &CommandMetadata{Name: Removef, ShouldReturn: false},
-		Quit:    &CommandMetadata{Name: Quit, ShouldReturn: false},
+		Add:     {Name: Add, ShouldReturn: true},
+		Addf:    {Name: Addf, ShouldReturn: false},
+		Set:     {Name: Set, ShouldReturn: true},
+		Setf:    {Name: Setf, ShouldReturn: false},
+		Append:  {Name: Set, ShouldReturn: true},
+		Appendf: {Name: Setf, ShouldReturn: false},
+		Get:     {Name: Get, ShouldReturn: true},
+		Clean:   {Name: Clean, ShouldReturn: true},
+		Cleanf:  {Name: Cleanf, ShouldReturn: false},
+		Remove:  {Name: Remove, ShouldReturn: true},
+		Removef: {Name: Removef, ShouldReturn: false},
+		Quit:    {Name: Quit, ShouldReturn: false},
 	}
 )
 

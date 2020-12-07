@@ -55,6 +55,10 @@ func (ctl *Control) SetAttr(name string, value interface{}) {
 	(*ctl)[name] = value
 }
 
+func (ctl *Control) AppendAttr(name string, value string) {
+	(*ctl)[name] = (*ctl)[name].(string) + value
+}
+
 // ID returns control's ID.
 func (ctl *Control) ID() string {
 	return (*ctl)["i"].(string)

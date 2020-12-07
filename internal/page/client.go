@@ -34,6 +34,8 @@ const (
 
 	UpdateControlPropsAction = "updateControlProps"
 
+	AppendControlPropsAction = "appendControlProps"
+
 	RemoveControlAction = "removeControl"
 
 	CleanControlAction = "cleanControl"
@@ -106,6 +108,10 @@ type AddPageControlsPayload struct {
 
 type UpdateControlPropsPayload struct {
 	Props []map[string]interface{} `json:"props"`
+}
+
+type AppendControlPropsPayload struct {
+	Props []map[string]string `json:"props"`
 }
 
 type RemoveControlPayload struct {

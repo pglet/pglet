@@ -63,7 +63,26 @@ const pageSlice = createSlice({
                 }
             })
             //console.log(current(state))
-        },   
+        },
+        appendProps(state, action) {
+
+            action.payload.forEach(props => {
+                const ctrl = state.controls[props.i];
+                if (ctrl) {
+                    for(var propName in Object.getOwnPropertyNames(props)) {
+                        if (propName === 'i') {
+                            continue
+                        }
+                        let v = ctrl[propName]
+                        if (!v) {
+                            v = ""
+                        }
+                        ctrl[propName] += props[propName]
+                    }
+                }
+            })
+            //console.log(current(state))
+        },  
         cleanControl(state, action) {
             const { ids } = action.payload
 
@@ -111,13 +130,8 @@ export const {
     registerWebClientError,
     addPageControlsSuccess,
     addPageControlsError,
-    createNode,
-    increment,
-    toggleExpand,
-    addChild,
-    removeChild,
     changeProps,
-    deleteNode,
+    appendProps,
     cleanControl,
     removeControl
 } = pageSlice.actions
