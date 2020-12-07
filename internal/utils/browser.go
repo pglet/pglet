@@ -119,10 +119,10 @@ func openChrome(chromePath string, url string, x int, y int, width int, height i
 		fmt.Sprintf("--app=%s", url),
 		// "--inprivate",
 		// "--incognito",
-		// "--disable-sync",
-		// "--no-first-run",
-		// "--noerrdialogs",
-		// "--no-default-browser-check",
+		"--disable-sync",
+		"--no-first-run",
+		"--noerrdialogs",
+		"--no-default-browser-check",
 	).Start()
 
 	if err != nil {
@@ -159,8 +159,8 @@ func findChrome() string {
 	progFiles := os.Getenv("ProgramFiles")
 	progFilesX86 := os.Getenv("ProgramFiles(x86)")
 	paths := []string{
-		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+		//"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+		//"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 		fmt.Sprintf(`%s\Google\Chrome\Application\chrome.exe`, progFilesX86),
 		fmt.Sprintf(`%s\Google\Chrome\Application\chrome.exe`, progFiles),
 		fmt.Sprintf(`%s\Microsoft\Edge\Application\msedge.exe`, progFilesX86),

@@ -25,9 +25,9 @@ func TestOpenBrowserWidthHeightOnly(t *testing.T) {
 	//t.Errorf("ddd")
 }
 
-func TestOpenBrowser(t *testing.T) {
+func TestOpenBrowser2(t *testing.T) {
 
-	OpenBrowser("http://localhost:3000", "100, 200, 800, 600")
+	OpenBrowser("http://localhost:3000", "100, 200, 600, 600")
 	//t.Errorf("ddd")
 }
 
