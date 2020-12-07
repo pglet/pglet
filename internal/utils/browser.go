@@ -18,11 +18,17 @@ import (
 // Source: https://gist.github.com/hyg/9c4afcd91fe24316cbf0
 func OpenBrowser(url string, posSize string) {
 
-	defWidth, defHeight := getMonitorSize()
+	if posSize == "" {
+		openDefaultBrowser(url)
+		return
+	}
+
 	x := -1
 	y := -1
 	width := -1
 	height := -1
+
+	defWidth, defHeight := getMonitorSize()
 
 	sizeParts := strings.Split(posSize, ",")
 	if len(sizeParts) > 3 {
