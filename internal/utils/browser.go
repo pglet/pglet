@@ -12,7 +12,6 @@ import (
 
 	"github.com/andybrewer/mack"
 	"github.com/kbinani/screenshot"
-	"github.com/lxn/win"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -148,14 +147,6 @@ func getMonitorSize() (width int, height int) {
 	}
 
 	return
-}
-
-func getMonitorScale() int {
-	if runtime.GOOS == "windows" {
-		hwnd := win.GetDesktopWindow()
-		return int(win.GetDpiForWindow(hwnd)) / 96
-	}
-	return 1
 }
 
 func findChrome() string {
