@@ -156,19 +156,19 @@ func (c *Client) readHandler(message []byte) error {
 
 	switch msg.Action {
 	case RegisterWebClientAction:
-		registerWebClient(c, msg)
+		c.registerWebClient(msg)
 
 	case RegisterHostClientAction:
-		registerHostClient(c, msg)
+		c.registerHostClient(msg)
 
 	case PageCommandFromHostAction:
-		executeCommandFromHostClient(c, msg)
+		c.executeCommandFromHostClient(msg)
 
 	case PageEventFromWebAction:
-		processPageEventFromWebClient(c, msg)
+		c.processPageEventFromWebClient(msg)
 
 	case UpdateControlPropsAction:
-		updateControlPropsFromWebClient(c, msg)
+		c.updateControlPropsFromWebClient(msg)
 	}
 
 	return nil
@@ -178,13 +178,13 @@ func (c *Client) send(message []byte) {
 	c.conn.Send(message)
 }
 
-func registerWebClient(client *Client, message *Message) {
+func (c *Client) registerWebClient(message *Message) {
 	log.Println("Registering as web client")
 	payload := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// assign client role
-	client.role = WebClient
+	c.role = WebClient
 
 	// subscribe as web client
 	page := Pages().Get(payload.PageName)
@@ -213,7 +213,7 @@ func registerWebClient(client *Client, message *Message) {
 			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
 
-		client.registerSession(session)
+		c.registerSession(session)
 
 		if page.IsApp {
 			// pick connected host client from page pool and notify about new session created
@@ -248,10 +248,10 @@ func registerWebClient(client *Client, message *Message) {
 		Payload: responsePayload,
 	})
 
-	client.send(responseMsg)
+	c.send(responseMsg)
 }
 
-func registerHostClient(client *Client, message *Message) {
+func (c *Client) registerHostClient(message *Message) {
 	log.Println("Registering as host client")
 	payload := new(RegisterHostClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
@@ -263,7 +263,7 @@ func registerHostClient(client *Client, message *Message) {
 	}
 
 	// assign client role
-	client.role = HostClient
+	c.role = HostClient
 
 	pageName, err := parsePageName(payload.PageName)
 	if err == nil {
@@ -284,11 +284,11 @@ func registerHostClient(client *Client, message *Message) {
 				session = NewSession(page, ZeroSession)
 				page.AddSession(session)
 			}
-			client.registerSession(session)
+			c.registerSession(session)
 			responsePayload.SessionID = session.ID
 		} else {
 			// register host client as an app server
-			client.registerPage(page)
+			c.registerPage(page)
 		}
 	} else {
 		responsePayload.Error = err.Error()
@@ -301,10 +301,10 @@ func registerHostClient(client *Client, message *Message) {
 		Payload: responsePayloadRaw,
 	})
 
-	client.send(response)
+	c.send(response)
 }
 
-func executeCommandFromHostClient(client *Client, message *Message) {
+func (c *Client) executeCommandFromHostClient(message *Message) {
 	log.Println("Page command from host client")
 
 	payload := new(PageCommandRequestPayload)
@@ -341,10 +341,10 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 		Payload: responsePayloadRaw,
 	})
 
-	client.send(response)
+	c.send(response)
 }
 
-func processPageEventFromWebClient(client *Client, message *Message) {
+func (client *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *Session
@@ -379,7 +379,7 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 	}
 }
 
-func updateControlPropsFromWebClient(client *Client, message *Message) {
+func (client *Client) updateControlPropsFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *Session
@@ -421,14 +421,15 @@ func (c *Client) registerSession(session *Session) {
 	c.sessions[session] = true
 }
 
-func (c *Client) unregister() {
+func (client *Client) unregister() {
+
 	// unregister from all sessions
-	for session := range c.sessions {
-		session.unregisterClient(c)
+	for session := range client.sessions {
+		session.unregisterClient(client)
 	}
 
 	// unregister from all pages
-	for page := range c.pages {
-		page.unregisterClient(c)
+	for page := range client.pages {
+		page.unregisterClient(client)
 	}
 }

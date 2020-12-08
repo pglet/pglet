@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { useEffect, useContext } from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
 import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
+import { WebSocketContext } from '../WebSocket';
 
 export const Page = React.memo<IControlProps>(({control}) => {
 
   //console.log(`render page: ${control.i}`);
+
+  const ws = useContext(WebSocketContext);
 
   // page title
   let title = "Pglet";
@@ -15,6 +18,17 @@ export const Page = React.memo<IControlProps>(({control}) => {
     title = control.title
   }
   useTitle(title)
+
+  useEffect(() => {
+    // https://danburzo.github.io/react-recipes/recipes/use-effect.html
+    // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
+    const handleWindowClose = (e: any) => {
+      console.log('zzaede');
+      ws.pageEventFromWeb(control.i, 'close', control.data);
+    }
+    window.addEventListener("beforeunload", handleWindowClose);
+    return () => window.removeEventListener("beforeunload", handleWindowClose);
+  }, [control, ws]);
 
   // stack props
   const stackProps: IStackProps = {

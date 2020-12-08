@@ -24,7 +24,7 @@ export const Button = React.memo<IControlProps>(({control}) => {
   };
 
   const handleClick = () => {
-    ws.pageEventFromWeb(control.i, 'clicked', control.data)
+    ws.pageEventFromWeb(control.i, 'click', control.data)
   }
 
   return <ButtonType onClick={handleClick} {...buttonProps} />;
