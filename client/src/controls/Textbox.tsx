@@ -33,12 +33,15 @@ export const Textbox = React.memo<IControlProps>(({control}) => {
     errorMessage: control.errormessage ? control.errormessage : null,
     description: control.description ? control.description : null,
     multiline: control.multiline ? true : false,
+    type: control.password ? "password" : undefined,
+    canRevealPassword: control.password ? true : undefined,
+    required: control.required ? true : undefined,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined        
+        margin: control.margin !== undefined ? control.margin : undefined  
       }
     }
   };
