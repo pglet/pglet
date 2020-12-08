@@ -38,6 +38,6 @@ export const PageLanding = () => {
     if (err) {
         return <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>{err}</MessageBar>
     } else {
-        return <Page control={root} />
+        return <Page control={root} pageName={fullPageName} />
     }
 }

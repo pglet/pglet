@@ -3,17 +3,17 @@ import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
 import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IPageProps } from './IPageProps'
 import { WebSocketContext } from '../WebSocket';
 
-export const Page = React.memo<IControlProps>(({control}) => {
+export const Page = React.memo<IPageProps>(({control, pageName}) => {
 
   //console.log(`render page: ${control.i}`);
 
   const ws = useContext(WebSocketContext);
 
   // page title
-  let title = "Pglet";
+  let title = `${pageName} - pglet`;
   if (control.title) {
     title = control.title
   }
