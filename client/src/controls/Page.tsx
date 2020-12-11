@@ -23,12 +23,17 @@ export const Page = React.memo<IPageProps>(({control, pageName}) => {
     // https://danburzo.github.io/react-recipes/recipes/use-effect.html
     // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
     const handleWindowClose = (e: any) => {
-      console.log('zzaede');
       ws.pageEventFromWeb(control.i, 'close', control.data);
     }
     window.addEventListener("beforeunload", handleWindowClose);
     return () => window.removeEventListener("beforeunload", handleWindowClose);
   }, [control, ws]);
+
+  const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
+
+  if (control.visible === "false") {
+    return null;
+  }
 
   // stack props
   const stackProps: IStackProps = {
@@ -48,8 +53,6 @@ export const Page = React.memo<IPageProps>(({control, pageName}) => {
   const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
-
-  const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
 
   return <Stack tokens={stackTokens} {...stackProps}>
     <ControlsList controls={childControls} />

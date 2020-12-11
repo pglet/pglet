@@ -23,6 +23,9 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
     }
 
     const renderChild = (control: any) => {
+        if (control.visible === "false") {
+            return null;
+        }
         const ControlType = controlTypes[control.t];
         return <ControlType key={control.i} control={control} />
     }

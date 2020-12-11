@@ -145,13 +145,15 @@ try {
             option key=blue text=Blue
           checkbox id=agree label='I agree to the terms of services'"
 
-    pglet_send "add stack at=0 id=buttons horizontal=true
+    pglet_send "add stack at=0 id=buttons horizontal=true visible=false
             button id=submit text=Submit primary=yes data=btn_event
             button id=cancel data=btn_event2"
     
     Start-Sleep -s 2
 
     pglet_send "add button id=b1 to=buttons"
+    pglet_send "set page"
+    pglet_send "set buttons visible=true"
 
     pglet_send "set fullName value='John Smith'"
     Start-Sleep -s 2
