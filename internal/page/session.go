@@ -149,6 +149,13 @@ func add(session *Session, cmd *command.Command) (result string, err error) {
 
 		controlType := batchItem.Command.Values[0]
 
+		// other values go to boolean properties
+		if len(batchItem.Command.Values) > 1 {
+			for _, v := range batchItem.Command.Values[1:] {
+				batchItem.Command.Attrs[v] = "true"
+			}
+		}
+
 		parentID := ""
 		parentAt := -1
 
@@ -270,6 +277,13 @@ func set(session *Session, cmd *command.Command) (result string, err error) {
 		ctrl, ok := session.Controls[id]
 		if !ok {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		// other values go to boolean properties
+		if len(batchCmd.Values) > 1 {
+			for _, v := range batchCmd.Values[1:] {
+				batchCmd.Attrs[v] = "true"
+			}
 		}
 
 		props := make(map[string]interface{})

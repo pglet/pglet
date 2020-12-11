@@ -56,8 +56,8 @@ export const FluentSample: React.FunctionComponent = () => {
           <TextField label="First name" styles={{ root: { width: "200px", height: "100px" }}} />
           <TextField label="Last name" />
           <Stack horizontal tokens={{ childrenGap: 10 }}>
-            <ButtonType text="Button 2" styles={{ root: { padding: "30px", margin: "30px 0" }}} />
-            <PrimaryButton text="Button 3" styles={{ root: { width: "200px", height: "100px" }}} />
+            <ButtonType text="Button 2" iconProps={{ iconName: "Installation" }} />
+            <PrimaryButton text="Button 3" iconProps={{ iconName: "Filter" }} styles={{ root: { width: "200px", height: "100px" }}} />
           </Stack>
         </Stack>
       </Stack>
