@@ -5,9 +5,11 @@ import { changeProps } from '../slices/pageSlice'
 import { Checkbox, ICheckboxProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const MyCheckbox = React.memo<IControlProps>(({control}) => {
+export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Checkbox: ${control.i}`);
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
 
@@ -32,6 +34,7 @@ export const MyCheckbox = React.memo<IControlProps>(({control}) => {
   const checkboxProps: ICheckboxProps = {
     checked: control.value === "true",
     label: control.label ? control.label : null,
+    disabled: disabled,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,

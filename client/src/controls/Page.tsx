@@ -35,6 +35,8 @@ export const Page = React.memo<IPageProps>(({control, pageName}) => {
     return null;
   }
 
+  let disabled = (control.disabled === "true")
+
   // stack props
   const stackProps: IStackProps = {
     verticalFill: control.verticalFill ? control.verticalFill : false,
@@ -55,6 +57,6 @@ export const Page = React.memo<IPageProps>(({control, pageName}) => {
   }
 
   return <Stack tokens={stackTokens} {...stackProps}>
-    <ControlsList controls={childControls} />
+    <ControlsList controls={childControls} parentDisabled={disabled} />
   </Stack>
 })

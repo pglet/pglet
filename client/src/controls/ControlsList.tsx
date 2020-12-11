@@ -8,7 +8,7 @@ import { Progress } from './Progress'
 import { Button } from './Button'
 import { MyText } from './Text'
 
-export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls }) => {
+export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
     //console.log(`render ControlsList: ${id}`);
 
@@ -27,7 +27,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
             return null;
         }
         const ControlType = controlTypes[control.t];
-        return <ControlType key={control.i} control={control} />
+        return <ControlType key={control.i} control={control} parentDisabled={parentDisabled} />
     }
 
     return controls.map(renderChild);

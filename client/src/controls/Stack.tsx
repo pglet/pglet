@@ -4,9 +4,11 @@ import { ControlsList } from './ControlsList'
 import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const MyStack = React.memo<IControlProps>(({control}) => {
+export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
 
     //console.log(`render stack: ${control.i}`);
+
+    let disabled = (control.disabled === 'true') || parentDisabled;
 
     // stack props
     const stackProps: IStackProps = {
@@ -31,6 +33,6 @@ export const MyStack = React.memo<IControlProps>(({control}) => {
     const childControls = useSelector((state: any) => control.c.map((childId: any) => state.page.controls[childId]), shallowEqual);
 
     return <Stack tokens={stackTokens} {...stackProps}>
-        <ControlsList controls={childControls} />
+        <ControlsList controls={childControls} parentDisabled={disabled} />
     </Stack>
 })

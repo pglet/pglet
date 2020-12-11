@@ -135,7 +135,7 @@ try {
     #     row
     #         button id=b1"
 
-    pglet_send "add to=page at=0
+    $stackId = (pglet_send "add to=page at=0
         stack width=600px horizontalAlign=stretch
           textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
           textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true
@@ -143,7 +143,7 @@ try {
             option key=red text=Red
             option key=green text=Green
             option key=blue text=Blue
-          checkbox id=agree label='I agree to the terms of services'"
+          checkbox id=agree label='I agree to the terms of services'").split(' ')[0]
 
     pglet_send "add stack at=0 id=buttons horizontal=true visible=false
             button id=submit text=Submit primary=yes data=btn_event
@@ -166,6 +166,10 @@ try {
     while($true) {
         pglet_event
 
+        pglet_send "set
+            buttons disabled=true
+            $stackId disabled=true"
+
         $fullName = pglet_send "get fullName value"
         Write-Host "Full name: $fullName"
 
@@ -177,6 +181,10 @@ try {
             pglet_send "appendf bio value='\nline1_$($i)'" | out-null
             Start-Sleep -ms 200
         }
+
+        pglet_send "set
+            buttons disabled=false
+            $stackId disabled=false"
     }
 } catch {
     Write-Host "ERROR: $_"

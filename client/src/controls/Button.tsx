@@ -1,18 +1,21 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
-import { PrimaryButton, DefaultButton } from '@fluentui/react';
+import { PrimaryButton, DefaultButton, IButtonProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const Button = React.memo<IControlProps>(({control}) => {
+export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Button: ${control.i}`);
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
 
   let ButtonType = (control.primary) ? PrimaryButton : DefaultButton;
 
-  let buttonProps = {
+  let buttonProps: IButtonProps = {
     text: control.text ? control.text : control.i,
+    disabled: disabled,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,

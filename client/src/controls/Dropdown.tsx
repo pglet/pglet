@@ -5,9 +5,10 @@ import { changeProps } from '../slices/pageSlice'
 import { Dropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const MyDropdown = React.memo<IControlProps>(({control}) => {
+export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Dropdown: ${control.i}`);
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
 
@@ -33,6 +34,7 @@ export const MyDropdown = React.memo<IControlProps>(({control}) => {
     placeholder: control.placeholder ? control.placeholder : null,
     errorMessage: control.errormessage ? control.errormessage : null,
     options: [],
+    disabled: disabled,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,

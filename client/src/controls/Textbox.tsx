@@ -5,9 +5,10 @@ import { changeProps } from '../slices/pageSlice'
 import { TextField, ITextFieldProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const Textbox = React.memo<IControlProps>(({control}) => {
+export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Textbox: ${control.i}`);
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
 
@@ -36,6 +37,7 @@ export const Textbox = React.memo<IControlProps>(({control}) => {
     type: control.password ? "password" : undefined,
     canRevealPassword: control.password ? true : undefined,
     required: control.required ? true : undefined,
+    disabled: disabled,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,
