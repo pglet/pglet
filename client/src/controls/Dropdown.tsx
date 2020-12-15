@@ -18,15 +18,18 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
 
     //console.log("DROPDOWN:", option);
 
+    let selectedKey = option!.key as string
+
     const payload = [
       {
         i: control.i,
-        "value": option!.key
+        "value": selectedKey
       }
     ];
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
+    ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
   const dropdownProps: IDropdownProps = {

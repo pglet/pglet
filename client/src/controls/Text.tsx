@@ -14,6 +14,8 @@ export const MyText = React.memo<IControlProps>(({control}) => {
     block: control.block !== undefined ? control.block : undefined,
     styles: {
       root: {
+        fontWeight: control.bold === 'true' ? 'bold' : undefined,
+        fontStyle: control.italic === 'true' ? 'italic' : undefined,
         textAlign: control.align !== undefined ? control.align : undefined,
         width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
