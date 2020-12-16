@@ -176,6 +176,8 @@ try {
         $bio = pglet_send "get bio value"
         Write-Host "Bio: $bio"
 
+        $spinner1 = pglet_send "add spinner label='Doing something...' labelPosition=right"
+
         for ($i = 0; $i -lt 11; $i++) {
             pglet_send "setf prog value=$($i * 10) label='Step $i...'" | out-null
             pglet_send "appendf bio value='\nline1_$($i)'" | out-null
@@ -185,6 +187,8 @@ try {
         pglet_send "set
             buttons disabled=false
             $stackId disabled=false"
+
+        pglet_send "remove $spinner1"
     }
 } catch {
     Write-Host "ERROR: $_"

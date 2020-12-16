@@ -13,7 +13,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
     // stack props
     const stackProps: IStackProps = {
         horizontal: control.horizontal ? control.horizontal : false,
-        verticalFill: control.verticalFill ? control.verticalFill : false,
+        verticalFill: control.verticalfill ? control.verticalfill : false,
         horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         verticalAlign: control.verticalalign ? control.verticalalign : "start",
         styles: {
