@@ -51,7 +51,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
   dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) => control.c.map((childId: any) =>
     state.page.controls[childId])
       .filter((oc: any) => oc.t === 'option')
-      .map((oc: any) => ({ key: oc.key, text: oc.text})), shallowEqual);  
+      .map((oc: any) => ({ key: oc.key, text: oc.text ? oc.text : oc.key})), shallowEqual);  
 
   if (control.value) {
     dropdownProps.defaultSelectedKey = control.value;
