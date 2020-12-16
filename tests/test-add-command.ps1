@@ -137,7 +137,7 @@ try {
 
     $stackId = (pglet_send "add to=page at=0
         stack width=600px horizontalAlign=stretch
-          textbox id=fullName value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
+          textbox id=fullName align=right value='someone' label=Name placeholder='Your name, please' description='That\'s your name'
           textbox id=bio label='Bio' description='A few words about yourself' value='Line1\nLine2' multiline=true
           dropdown id=color label='Your favorite color' placeholder='Select color'
             option key=red text=Red

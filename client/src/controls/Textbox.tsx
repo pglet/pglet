@@ -44,7 +44,10 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
         margin: control.margin !== undefined ? control.margin : undefined  
-      }
+      },
+      field: {
+        textAlign: control.align !== undefined ? control.align : undefined,
+      },
     }
   };
 
