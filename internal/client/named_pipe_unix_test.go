@@ -24,7 +24,7 @@ func TestCommandLoop(t *testing.T) {
 			cmd := pc.nextCommand()
 			t.Log(cmd)
 
-			pc.writeResult(fmt.Sprintf("%s - OK", strings.TrimSpace(strings.Split(cmd, "\n")[0])))
+			pc.writeResult(fmt.Sprintf("%s - OK", strings.TrimSpace(cmd)))
 		}
 	}()
 

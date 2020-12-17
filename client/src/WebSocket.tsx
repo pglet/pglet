@@ -1,4 +1,4 @@
-import React, { createContext } from 'react'
+import React from 'react'
 import { useDispatch } from 'react-redux';
 import {
     registerWebClientSuccess,
@@ -6,63 +6,29 @@ import {
     addPageControlsSuccess,
     addPageControlsError,
     changeProps,
+    appendProps,
     cleanControl,
     removeControl
 } from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-const WebSocketContext = createContext(null)
+export interface IWebSocket {
+    socket: ReconnectingWebSocket;
+    registerWebClient(pageName: string): void;
+    pageEventFromWeb(eventTarget: string, eventName: string, eventData: string): void;
+    updateControlProps(props: any): void;
+}
+
+const WebSocketContext = React.createContext<IWebSocket>(undefined!)
 
 export { WebSocketContext }
 
-export default ({ children }) => {
-    let socket;
-    let ws;
+export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
+    let socket : ReconnectingWebSocket | null = null;
 
     const dispatch = useDispatch();
 
-    const registerWebClient = (pageName) => {
-
-        console.log("Call registerWebClient()")
-        var msg = {
-            action: "registerWebClient",
-            payload: {
-                pageName: pageName
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    const pageEventFromWeb = (eventTarget, eventName, eventData) => {
-
-        console.log("Call pageEventFromWeb()")
-        var msg = {
-            action: "pageEventFromWeb",
-            payload: {
-                eventTarget: eventTarget,
-                eventName: eventName,
-                eventData: eventData
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    const updateControlProps = (props) => {
-
-        console.log("Call updateControlProps()")
-        var msg = {
-            action: "updateControlProps",
-            payload: {
-                props
-            }
-        }
-
-        socket.send(JSON.stringify(msg));
-    }
-
-    if (!socket) {
+    if (socket == null) {
         const wsProtocol = document.location.protocol === "https:" ? "wss:" : "ws:";
         socket = new ReconnectingWebSocket(`${wsProtocol}//${document.location.host}/ws`);
 
@@ -76,9 +42,9 @@ export default ({ children }) => {
         };
 
         socket.onmessage = function (evt) {
-            console.log("WebSocket onmessage:", evt.data);
+            //console.log("WebSocket onmessage:", evt.data);
             var data = JSON.parse(evt.data);
-            console.log(data);
+            console.log("WebSocket onmessage:", data);
 
             if (data.action === "registerWebClient") {
                 if (data.payload.error) {
@@ -94,19 +60,64 @@ export default ({ children }) => {
                 }
             } else if (data.action === "updateControlProps") {
                 dispatch(changeProps(data.payload.props));
+            } else if (data.action === "appendControlProps") {
+                dispatch(appendProps(data.payload.props));
             } else if (data.action === "cleanControl") {
                 dispatch(cleanControl(data.payload));
             } else if (data.action === "removeControl") {
                 dispatch(removeControl(data.payload));
             }
         };
+    }
 
-        ws = {
-            socket: socket,
-            registerWebClient,
-            pageEventFromWeb,
-            updateControlProps
+    const registerWebClient = (pageName: string) => {
+
+        console.log("Call registerWebClient()")
+        var msg = {
+            action: "registerWebClient",
+            payload: {
+                pageName: pageName
+            }
         }
+
+        socket!.send(JSON.stringify(msg));
+    }
+
+    const pageEventFromWeb = (eventTarget: string, eventName: string, eventData: string) => {
+
+        console.log("Call pageEventFromWeb()")
+        var msg = {
+            action: "pageEventFromWeb",
+            payload: {
+                eventTarget: eventTarget,
+                eventName: eventName,
+                eventData: eventData
+            }
+        }
+
+        socket!.send(JSON.stringify(msg));
+    }
+
+    const updateControlProps = (props: any) => {
+
+        var msg = {
+            action: "updateControlProps",
+            payload: {
+                props
+            }
+        }
+
+        const msgJson = JSON.stringify(msg);
+
+        console.log("Call updateControlProps()", msgJson)
+        socket!.send(msgJson);
+    }
+
+    const ws: IWebSocket = {
+        socket: socket,
+        registerWebClient,
+        pageEventFromWeb,
+        updateControlProps
     }
 
     return (

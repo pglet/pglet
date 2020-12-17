@@ -1,7 +1,5 @@
 import React from 'react'
 
-const AccountLanding = () => {
+export const AccountLanding: React.FC = () => {
     return <h1>Account landing</h1>
 }
-
-export default AccountLanding
