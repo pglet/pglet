@@ -333,15 +333,17 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 		responsePayload.Error = "Page not found or access denied"
 	}
 
-	// send response
-	responsePayloadRaw, _ := json.Marshal(responsePayload)
+	if payload.Command.ShouldReturn() {
+		// send response
+		responsePayloadRaw, _ := json.Marshal(responsePayload)
 
-	response, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Payload: responsePayloadRaw,
-	})
+		response, _ := json.Marshal(&Message{
+			ID:      message.ID,
+			Payload: responsePayloadRaw,
+		})
 
-	c.send(response)
+		c.send(response)
+	}
 }
 
 func (client *Client) processPageEventFromWebClient(message *Message) {
