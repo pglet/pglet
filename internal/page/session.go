@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -23,7 +25,7 @@ const (
 	PageID = "page"
 )
 
-type commandHandler = func(*Session, command.Command) (string, error)
+type commandHandler = func(*Session, *command.Command) (string, error)
 
 var (
 	commandHandlers = map[string]commandHandler{
@@ -31,6 +33,8 @@ var (
 		command.Addf:    add,
 		command.Set:     set,
 		command.Setf:    set,
+		command.Append:  appendHandler,
+		command.Appendf: appendHandler,
 		command.Get:     get,
 		command.Clean:   clean,
 		command.Cleanf:  clean,
@@ -50,6 +54,11 @@ type Session struct {
 	clientsMutex  sync.RWMutex
 }
 
+type AddCommandBatchItem struct {
+	Command *command.Command
+	Control *Control
+}
+
 // NewSession creates a new instance of Page.
 func NewSession(page *Page, id string) *Session {
 	s := &Session{}
@@ -62,83 +71,153 @@ func NewSession(page *Page, id string) *Session {
 }
 
 // ExecuteCommand executes command and returns the result
-func (session *Session) ExecuteCommand(command command.Command) (result string, err error) {
+func (session *Session) ExecuteCommand(cmd *command.Command) (result string, err error) {
 	session.Lock()
 	defer session.Unlock()
 
 	log.Printf("Execute command for page %s session %s: %+v\n",
-		session.Page.Name, session.ID, command)
+		session.Page.Name, session.ID, cmd)
 
-	commandHandler := commandHandlers[command.Name]
+	commandHandler := commandHandlers[strings.ToLower(cmd.Name)]
 	if commandHandler == nil {
-		return "", fmt.Errorf("command '%s' does not have a handler", command.Name)
+		return "", fmt.Errorf("Unknown command: %s", cmd.Name)
 	}
 
-	return commandHandler(session, command)
+	return commandHandler(session, cmd)
 }
 
-func add(session *Session, command command.Command) (result string, err error) {
-
-	controlsFragment := command.Attrs["controls"]
-
-	// first value must be control type
-	if len(command.Values) == 0 && controlsFragment == "" {
-		return "", errors.New("Control type is not specified")
-	}
-
-	controlType := command.Values[0]
+func add(session *Session, cmd *command.Command) (result string, err error) {
 
 	// parent ID
-	parentID := command.Attrs["to"]
-
-	if parentID == "" {
-		parentID = getPageID()
+	topParentID := cmd.Attrs["to"]
+	topParentAt := -1
+	if ta, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		topParentAt = ta
 	}
 
-	// control ID
-	id := command.Attrs["id"]
-	if id == "" {
-		id = session.NextControlID()
-	} else {
-		// generate unique ID
-		parentIDs := getControlParentIDs(parentID)
-		id = strings.Join(append(parentIDs, id), ControlIDSeparator)
+	if topParentID == "" {
+		topParentID = getPageID()
 	}
 
-	ctrl := NewControl(controlType, parentID, id)
+	//log.Println("COMMAND:", utils.ToJSON(cmd))
 
-	for k, v := range command.Attrs {
-		if !IsSystemAttr(k) {
-			ctrl.SetAttr(k, v)
+	// "Add" commands to process
+	batch := make([]*AddCommandBatchItem, 0)
+
+	// top command
+	indent := 0
+	if len(cmd.Values) > 0 {
+		// single command
+		batch = append(batch, &AddCommandBatchItem{
+			Command: cmd,
+		})
+		indent = 2
+	}
+
+	// sub-commands
+	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
 		}
+
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
+		}
+		childCmd.Name = "add"
+		childCmd.Indent += indent
+		batch = append(batch, &AddCommandBatchItem{
+			Command: childCmd,
+		})
 	}
 
-	session.AddControl(ctrl)
+	// list of control IDs
+	ids := make([]string, 0)
 
-	// output page
-	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	// log.Println(string(pJSON))
+	// list of controls to broadcast
+	payload := &AddPageControlsPayload{
+		Controls: make([]*Control, 0),
+	}
 
-	// update controls of all connected web cliens
-	msg := NewMessage(AddPageControlsAction, &AddPageControlsPayload{
-		Controls: []*Control{ctrl},
-	})
+	// process batch
+	for i, batchItem := range batch {
 
-	// broadcast command to all connected web clients
-	session.broadcastCommandToWebClients(msg)
-	return id, nil
+		// first value must be control type
+		if len(batchItem.Command.Values) == 0 {
+			return "", errors.New("Control type is not specified")
+		}
+
+		controlType := batchItem.Command.Values[0]
+
+		// other values go to boolean properties
+		if len(batchItem.Command.Values) > 1 {
+			for _, v := range batchItem.Command.Values[1:] {
+				batchItem.Command.Attrs[v] = "true"
+			}
+		}
+
+		parentID := ""
+		parentAt := -1
+
+		// find nearest parentID
+		for pi := i - 1; pi >= 0; pi-- {
+			if batch[pi].Command.Indent < batchItem.Command.Indent {
+				parentID = batch[pi].Control.ID()
+				break
+			}
+		}
+
+		// parent wasn't found - use the topmost one
+		if parentID == "" {
+			parentID = topParentID
+			parentAt = topParentAt
+		}
+
+		// control ID
+		id := batchItem.Command.Attrs["id"]
+		if id == "" {
+			id = session.NextControlID()
+		} else {
+			// generate unique ID
+			parentIDs := getControlParentIDs(parentID)
+			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
+		}
+
+		batchItem.Control = NewControl(controlType, parentID, id)
+
+		if parentAt != -1 {
+			batchItem.Control.SetAttr("at", parentAt)
+			topParentAt++
+		}
+
+		for k, v := range batchItem.Command.Attrs {
+			if !IsSystemAttr(k) {
+				batchItem.Control.SetAttr(k, v)
+			}
+		}
+
+		session.AddControl(batchItem.Control)
+		ids = append(ids, id)
+		payload.Controls = append(payload.Controls, batchItem.Control)
+	}
+
+	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))
+
+	// broadcast new controls to all connected web clients
+	session.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, payload))
+	return strings.Join(ids, " "), nil
 }
 
-func get(session *Session, command command.Command) (result string, err error) {
+func get(session *Session, cmd *command.Command) (result string, err error) {
 
 	// command format must be:
 	// get <control-id> <property>
-	if len(command.Values) < 2 {
+	if len(cmd.Values) < 2 {
 		return "", errors.New("'get' command should have control ID and property specified")
 	}
 
 	// control ID
-	id := command.Values[0]
+	id := cmd.Values[0]
 
 	ctrl, ok := session.Controls[id]
 	if !ok {
@@ -146,7 +225,7 @@ func get(session *Session, command command.Command) (result string, err error) {
 	}
 
 	// control property
-	prop := command.Values[1]
+	prop := cmd.Values[1]
 
 	v := ctrl.GetAttr(prop)
 
@@ -157,98 +236,232 @@ func get(session *Session, command command.Command) (result string, err error) {
 	return v.(string), nil
 }
 
-func set(session *Session, command command.Command) (result string, err error) {
+func set(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// get <control-id> <property>
-	if len(command.Values) < 1 {
-		return "", errors.New("'set' command should have control ID specified")
+	batch := make([]*command.Command, 0)
+
+	// top command
+	if len(cmd.Values) > 0 {
+		// single command
+		batch = append(batch, cmd)
 	}
 
-	// control ID
-	id := command.Values[0]
-
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
-	}
-
-	props := make(map[string]interface{})
-	props["i"] = id
-
-	// set control properties, except system ones
-	for n, v := range command.Attrs {
-		if !IsSystemAttr(n) {
-			ctrl.SetAttr(n, v)
-			props[n] = v
+	// sub-commands
+	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
 		}
+
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
+		}
+		childCmd.Name = "set"
+		batch = append(batch, childCmd)
 	}
 
 	payload := &UpdateControlPropsPayload{
 		Props: make([]map[string]interface{}, 0, 0),
 	}
 
-	payload.Props = append(payload.Props, props)
+	for _, batchCmd := range batch {
+		// command format must be:
+		// get <control-id> <property>
+		if len(batchCmd.Values) < 1 {
+			return "", errors.New("'set' command should have control ID specified")
+		}
+
+		// control ID
+		id := batchCmd.Values[0]
+
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		// other values go to boolean properties
+		if len(batchCmd.Values) > 1 {
+			for _, v := range batchCmd.Values[1:] {
+				batchCmd.Attrs[v] = "true"
+			}
+		}
+
+		props := make(map[string]interface{})
+		props["i"] = id
+
+		// set control properties, except system ones
+		for n, v := range batchCmd.Attrs {
+			if !IsSystemAttr(n) {
+				ctrl.SetAttr(n, v)
+				props[n] = v
+			}
+		}
+
+		payload.Props = append(payload.Props, props)
+	}
 
 	// broadcast control updates to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
 	return "", nil
 }
 
-func clean(session *Session, command command.Command) (result string, err error) {
+func appendHandler(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// clean <control-id>
-	if len(command.Values) < 1 {
-		return "", errors.New("'clean' command should have control ID specified")
+	batch := make([]*command.Command, 0)
+
+	// top command
+	if len(cmd.Values) > 0 {
+		// single command
+		batch = append(batch, cmd)
+	}
+
+	// sub-commands
+	for _, line := range cmd.Lines {
+		if utils.WhiteSpaceOnly(line) {
+			continue
+		}
+
+		childCmd, err := command.Parse(line, false)
+		if err != nil {
+			return "", err
+		}
+		childCmd.Name = "append"
+		batch = append(batch, childCmd)
+	}
+
+	payload := &AppendControlPropsPayload{
+		Props: make([]map[string]string, 0, 0),
+	}
+
+	for _, batchCmd := range batch {
+		// command format must be:
+		// append control-id property=value property=value ...
+		if len(batchCmd.Values) < 1 {
+			return "", errors.New("'append' command should have control ID specified")
+		}
+
+		// control ID
+		id := batchCmd.Values[0]
+
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
+
+		props := make(map[string]string)
+		props["i"] = id
+
+		// set control properties, except system ones
+		for n, v := range batchCmd.Attrs {
+			if !IsSystemAttr(n) {
+				ctrl.AppendAttr(n, v)
+				props[n] = v
+			}
+		}
+
+		payload.Props = append(payload.Props, props)
+	}
+
+	// broadcast control updates to all connected web clients
+	session.broadcastCommandToWebClients(NewMessage(AppendControlPropsAction, payload))
+	return "", nil
+}
+
+func clean(session *Session, cmd *command.Command) (result string, err error) {
+
+	// command format:
+	//    clean [id_1] [id_2] ... [at=index]
+
+	ids := make([]string, 0)
+	if len(cmd.Values) == 0 {
+		// clean page if no IDs specified
+		ids = append(ids, PageID)
+	} else {
+		ids = append(ids, cmd.Values...)
+	}
+
+	at := -1
+	if a, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		at = a
+	}
+
+	if at != -1 && len(ids) > 1 {
+		return "", errors.New("'at' cannot be specified with a list of IDs")
 	}
 
 	// control ID
-	id := command.Values[0]
+	for i, id := range ids {
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
 
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
+		if at != -1 {
+			childIDs := ctrl.GetChildrenIds()
+			if at > len(childIDs)-1 {
+				return "", fmt.Errorf("'at' is out of range")
+			}
+
+			ids[i] = childIDs[at]
+			ctrl, _ = session.Controls[ids[i]]
+		}
+
+		session.cleanControl(ctrl)
 	}
-
-	session.cleanControl(ctrl)
-
-	// output page
-	// pJSON, _ := json.MarshalIndent(session.Controls, "", "  ")
-	// log.Println(string(pJSON))
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
-		ID: id,
+		IDs: ids,
 	}))
 	return "", nil
 }
 
-func remove(session *Session, command command.Command) (result string, err error) {
+func remove(session *Session, cmd *command.Command) (result string, err error) {
 
-	// command format must be:
-	// clean <control-id>
-	if len(command.Values) < 1 {
-		return "", errors.New("'clean' command should have control ID specified")
+	// command format:
+	//    remove [id_1] [id_2] ... [at=index]
+
+	at := -1
+	if a, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		at = a
+	}
+
+	ids := make([]string, 0)
+	if len(cmd.Values) == 0 && at == -1 {
+		return "", errors.New("'page' control cannot be removed")
+	} else if len(cmd.Values) == 0 {
+		ids = append(ids, PageID)
+	} else {
+		ids = append(ids, cmd.Values...)
+	}
+
+	if at != -1 && len(ids) > 1 {
+		return "", errors.New("'at' cannot be specified with a list of IDs")
 	}
 
 	// control ID
-	id := command.Values[0]
+	for i, id := range ids {
+		ctrl, ok := session.Controls[id]
+		if !ok {
+			return "", fmt.Errorf("control with ID '%s' not found", id)
+		}
 
-	ctrl, ok := session.Controls[id]
-	if !ok {
-		return "", fmt.Errorf("control with ID '%s' not found", id)
+		if at != -1 {
+			childIDs := ctrl.GetChildrenIds()
+			if at > len(childIDs)-1 {
+				return "", fmt.Errorf("'at' is out of range")
+			}
+
+			ids[i] = childIDs[at]
+			ctrl, _ = session.Controls[ids[i]]
+		}
+
+		session.deleteControl(ctrl)
 	}
-
-	if ctrl.ParentID() == "" {
-		return "", fmt.Errorf("root control '%s' cannot be deleted", id)
-	}
-
-	session.deleteControl(ctrl)
 
 	// broadcast command to all connected web clients
 	session.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
-		ID: id,
+		IDs: ids,
 	}))
 	return "", nil
 }
@@ -295,7 +508,11 @@ func (session *Session) AddControl(ctrl *Control) error {
 		}
 
 		// update parent's childIds
-		parentctrl.AddChildID(ctrl.ID())
+		if at := ctrl.At(); at != -1 {
+			parentctrl.InsertChildID(ctrl.ID(), at)
+		} else {
+			parentctrl.AddChildID(ctrl.ID())
+		}
 	}
 
 	return nil

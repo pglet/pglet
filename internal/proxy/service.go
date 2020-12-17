@@ -72,7 +72,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Server, args.Public, args.Private)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -298,12 +298,9 @@ func buildWSEndPointURL(serverURL string) string {
 	return u.String()
 }
 
-func getServerURL(server string, public bool, private bool) (string, error) {
-	if public && private {
-		return "", errors.New("the page or app cannot be both public and private")
-	}
+func getServerURL(web bool, server string) (string, error) {
 
-	if server == "" && (public || private) {
+	if server == "" && web {
 		return pgletIoURL, nil
 	} else if server == "" {
 		return "", nil

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -26,7 +26,7 @@ type namedPipe struct {
 }
 
 func newNamedPipe(id string) (*namedPipe, error) {
-	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
+	pipeName := filepath.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
 	pc := &namedPipe{
 		id:              id,
