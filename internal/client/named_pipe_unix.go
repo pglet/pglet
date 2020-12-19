@@ -5,10 +5,11 @@ package client
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -25,7 +26,7 @@ type namedPipe struct {
 }
 
 func newNamedPipe(id string) (*namedPipe, error) {
-	pipeName := path.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
+	pipeName := filepath.Join(os.TempDir(), fmt.Sprintf("pglet_pipe_%s", id))
 
 	pc := &namedPipe{
 		id:              id,
@@ -80,7 +81,7 @@ func (pc *namedPipe) read() string {
 				break
 			}
 
-			//fmt.Printf("read: %d\n", bytesRead)
+			//log.Printf("read: %d\n", bytesRead)
 		}
 		input.Close()
 		return string(result)

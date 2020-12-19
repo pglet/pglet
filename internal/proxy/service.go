@@ -1,20 +1,30 @@
 package proxy
 
 import (
+	"context"
 	"encoding/json"
-	"log"
+	"errors"
+	"fmt"
 	"net"
 	"net/http"
-	"net/rpc"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/alexflint/go-filemutex"
+	"github.com/keegancsmith/rpc"
 	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/server"
+)
+
+const (
+	pgletIoURL = "https://app.pglet.io"
 )
 
 var (
@@ -39,11 +49,11 @@ func newService() *Service {
 	return ps
 }
 
-func (ps *Service) getHostClient(pageURI string) *client.HostClient {
+func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 	ps.hcMutex.Lock()
 	defer ps.hcMutex.Unlock()
 
-	wsURL := buildWSEndPointURL(pageURI)
+	wsURL := buildWSEndPointURL(serverURL)
 
 	hc, ok := ps.hostClients[wsURL]
 	if !ok {
@@ -51,37 +61,56 @@ func (ps *Service) getHostClient(pageURI string) *client.HostClient {
 		err := hc.Start()
 
 		if err != nil {
-			log.Fatalf("Cannot connect to %s: %v\n", wsURL, err)
+			return nil, fmt.Errorf("Cannot connect to %s: %v", wsURL, err)
 		}
 		ps.hostClients[wsURL] = hc
 	}
-	return hc
+	return hc, nil
 }
 
 // ConnectSharedPage establishes a new connection to the specified shared page and returns file name of control pipe.
-func (ps *Service) ConnectSharedPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
-	hc := ps.getHostClient(*pageURI)
-	pageName := getPageNameFromURI(*pageURI)
+	pageName := args.PageName
+	serverURL, err := getServerURL(args.Web, args.Server)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
 
 	log.Println("Connecting to shared page:", pageName)
 
 	// call server
-	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    false,
 	})
 
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
-	err := json.Unmarshal(*result, payload)
+	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
-		log.Fatalln("Error calling ConnectSharedPage:", err)
+		log.Errorln("Error parsing ConnectSharedPage response:", err)
+		return err
 	}
 
+	if payload.Error != "" {
+		log.Errorln("Error calling ConnectSharedPage:", payload.Error)
+		return errors.New(payload.Error)
+	}
+
+	results.PageName = payload.PageName
+	results.PageURL = getPageURL(serverURL, payload.PageName)
+
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, payload.SessionID, hc)
+	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds)
 	if err != nil {
 		return err
 	}
@@ -91,38 +120,86 @@ func (ps *Service) ConnectSharedPage(pageURI *string, pipeName *string) error {
 	// register pipe client, so it can receive events from pages/sessions
 	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.CommandPipeName()
+	results.PipeName = pc.CommandPipeName()
 
 	return nil
 }
 
 // ConnectAppPage waits for new web clients connecting specified page, creates a new session and returns file name of control pipe.
-func (ps *Service) ConnectAppPage(pageURI *string, pipeName *string) error {
+func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
-	hc := ps.getHostClient(*pageURI)
-	pageName := getPageNameFromURI(*pageURI)
+	pageName := args.PageName
+	serverURL, err := getServerURL(args.Web, args.Server)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
 
 	log.Println("Connecting to app page:", pageName)
 
 	// call server
-	result := hc.Call(page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
 		PageName: pageName,
 		IsApp:    true,
 	})
 
 	// parse response
 	payload := &page.RegisterHostClientResponsePayload{}
-	err := json.Unmarshal(*result, payload)
+	err = json.Unmarshal(*result, payload)
 
 	if err != nil {
-		log.Fatalln("Error calling ConnectSharedPage:", err)
+		log.Errorln("Error parsing ConnectAppPage response:", err)
+		return err
 	}
 
+	if payload.Error != "" {
+		log.Errorln("Error calling ConnectAppPage:", payload.Error)
+		return errors.New(payload.Error)
+	}
+
+	log.Println("Connected to app page:", payload.PageName)
+
+	results.PageName = payload.PageName
+	results.PageURL = getPageURL(serverURL, payload.PageName)
+
+	return nil
+}
+
+func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
+
+	pageName := args.PageName
+	serverURL, err := getServerURL(args.Web, args.Server)
+
+	if err != nil {
+		return err
+	}
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
+
+	log.Println("Waiting for a new app session:", pageName)
+
+	var sessionID string
+
 	// wait for new session
-	sessionID := <-hc.PageNewSessions(pageName)
+	select {
+	case sessionID = <-hc.PageNewSessions(pageName):
+		break
+	case <-ctx.Done():
+		return errors.New("abort waiting for new session")
+	}
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, sessionID, hc)
+	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds)
 	if err != nil {
 		return err
 	}
@@ -132,12 +209,15 @@ func (ps *Service) ConnectAppPage(pageURI *string, pipeName *string) error {
 	// register pipe client, so it can receive events from pages/sessions
 	hc.RegisterPipeClient(pc)
 
-	*pipeName = pc.CommandPipeName()
+	results.PageName = pageName
+	results.PageURL = getPageURL(serverURL, pageName)
+	results.PipeName = pc.CommandPipeName()
 
 	return nil
 }
 
-func RunService() {
+func Start(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	log.Println("Starting Proxy service...")
 
@@ -161,33 +241,84 @@ func RunService() {
 	proxySvc := newService()
 	rpc.Register(proxySvc)
 	rpc.HandleHTTP()
-	l, e := net.Listen("unix", sockAddr)
+
+	lc := net.ListenConfig{}
+	l, e := lc.Listen(ctx, "unix", sockAddr)
+
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
-	log.Println("Waiting for connections...")
-	err = http.Serve(l, nil)
-	log.Println(err)
-}
 
-func buildWSEndPointURL(pageURI string) string {
-	u, err := url.Parse(pageURI)
-	if err != nil {
-		log.Fatalln("Cannot parse page URI:", err)
+	srv := &http.Server{}
+
+	go func() {
+		if err := srv.Serve(l); err != nil && err != http.ErrServerClosed {
+			log.Println("Serve error:", err)
+		}
+	}()
+
+	log.Println("Waiting for connections...")
+
+	<-ctx.Done()
+
+	log.Println("Stopping proxy service...")
+
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err = srv.Shutdown(ctxShutDown); err != nil {
+		log.Fatalf("Proxy service shutdown failed:%+s", err)
 	}
 
-	u.Scheme = "ws"
+	log.Println("Proxy service exited")
+}
+
+func buildWSEndPointURL(serverURL string) string {
+
+	if serverURL == "" {
+		return ""
+	}
+
+	u, err := url.Parse(serverURL)
+	if err != nil {
+		log.Fatalln("Cannot parse server URL:", err)
+	}
+
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+
 	u.Path = "ws"
 	u.RawQuery = ""
 
 	return u.String()
 }
 
-func getPageNameFromURI(pageURI string) string {
-	u, err := url.Parse(pageURI)
-	if err != nil {
-		log.Fatalln("Cannot parse page URI:", err)
+func getServerURL(web bool, server string) (string, error) {
+
+	if server == "" && web {
+		return pgletIoURL, nil
+	} else if server == "" {
+		return "", nil
 	}
 
-	return strings.ToLower(strings.Trim(u.Path, "/"))
+	serverURL := strings.Trim(server, "/")
+
+	if !strings.Contains(serverURL, "://") {
+		// scheme is specified
+		serverURL = "http://" + serverURL
+	}
+
+	return serverURL, nil
+}
+
+func getPageURL(serverURL string, pageName string) string {
+	if serverURL == "" {
+		serverURL = fmt.Sprintf("http://localhost:%d", server.Port)
+	}
+	return fmt.Sprintf("%s/p/%s", serverURL, pageName)
 }

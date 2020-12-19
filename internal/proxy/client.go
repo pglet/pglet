@@ -1,19 +1,39 @@
 package proxy
 
 import (
-	"log"
-	"net/rpc"
+	"context"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/keegancsmith/rpc"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	connectAttempts = 20
 )
 
+var (
+	browserOpened = false
+)
+
 type Client struct {
 	client *rpc.Client
+}
+
+type ConnectPageArgs struct {
+	PageName string
+	Web      bool
+	Server   string
+	Token    string
+	Uds      bool
+}
+
+type ConnectPageResults struct {
+	PipeName string
+	PageName string
+	PageURL  string
 }
 
 func (proxy *Client) Start() {
@@ -27,7 +47,7 @@ func (proxy *Client) Start() {
 
 			// start Proxy service
 			startProxyService()
-			time.Sleep(1 * time.Second)
+			time.Sleep(200 * time.Millisecond)
 		} else {
 			//log.Println("Connected to Proxy service")
 			return
@@ -37,27 +57,33 @@ func (proxy *Client) Start() {
 	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
 }
 
-func (proxy *Client) ConnectSharedPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("Service.ConnectSharedPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectSharedPage", &args, &results)
 	return
 }
 
-func (proxy *Client) ConnectAppPage(pageName string) (pipeFilename string, err error) {
-	err = proxy.client.Call("Service.ConnectAppPage", &pageName, &pipeFilename)
+func (proxy *Client) ConnectAppPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.ConnectAppPage", &args, &results)
+	return
+}
+
+func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
+	err = proxy.client.Call(ctx, "Service.WaitAppSession", &args, &results)
 	return
 }
 
 func startProxyService() {
-	log.Println("Starting Proxy service")
-	// run proxy
+	log.Traceln("Starting Pglet server")
+
+	// run server
 	execPath, _ := os.Executable()
 
-	cmd := exec.Command(execPath, "proxy")
+	cmd := exec.Command(execPath, "server")
 	err := cmd.Start()
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	log.Println("Proxy service process started with PID:", cmd.Process.Pid)
+	log.Traceln("Server process started with PID:", cmd.Process.Pid)
 }

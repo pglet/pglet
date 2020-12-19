@@ -3,19 +3,15 @@ package page
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
+	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/page/connection"
 )
 
 const (
-	PUBLISH     = "publish"
-	SUBSCRIBE   = "subscribe"
-	UNSUBSCRIBE = "unsubscribe"
-
 	// RegisterWebClientAction registers WS client as web (browser) client
 	RegisterWebClientAction = "registerWebClient"
 
@@ -35,37 +31,30 @@ const (
 	PageEventToHostAction = "pageEventToHost"
 
 	AddPageControlsAction = "addPageControls"
+
+	UpdateControlPropsAction = "updateControlProps"
+
+	AppendControlPropsAction = "appendControlProps"
+
+	RemoveControlAction = "removeControl"
+
+	CleanControlAction = "cleanControl"
 )
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 512
-)
-
-type ClientRole int
+type ClientRole string
 
 const (
-	None ClientRole = iota
-	WebClient
-	HostClient
+	None       ClientRole = "None"
+	WebClient             = "Web"
+	HostClient            = "Host"
 )
 
 type Client struct {
 	id       string
 	role     ClientRole
-	conn     *websocket.Conn
+	conn     connection.Conn
 	sessions map[*Session]bool
 	pages    map[*Page]bool
-	send     chan []byte
 }
 
 type RegisterHostClientRequestPayload struct {
@@ -75,6 +64,7 @@ type RegisterHostClientRequestPayload struct {
 
 type RegisterHostClientResponsePayload struct {
 	SessionID string `json:"sessionID"`
+	PageName  string `json:"pageName"`
 	Error     string `json:"error"`
 }
 
@@ -84,8 +74,8 @@ type RegisterWebClientRequestPayload struct {
 }
 
 type RegisterWebClientResponsePayload struct {
-	SessionID string `json:"sessionID"`
-	Error     string `json:"error"`
+	Session *Session `json:"session"`
+	Error   string   `json:"error"`
 }
 
 type SessionCreatedPayload struct {
@@ -94,9 +84,9 @@ type SessionCreatedPayload struct {
 }
 
 type PageCommandRequestPayload struct {
-	PageName  string  `json:"pageName"`
-	SessionID string  `json:"sessionID"`
-	Command   Command `json:"command"`
+	PageName  string          `json:"pageName"`
+	SessionID string          `json:"sessionID"`
+	Command   command.Command `json:"command"`
 }
 
 type PageCommandResponsePayload struct {
@@ -116,120 +106,46 @@ type AddPageControlsPayload struct {
 	Controls []*Control `json:"controls"`
 }
 
-type readPumpHandler = func(*Client, []byte) error
+type UpdateControlPropsPayload struct {
+	Props []map[string]interface{} `json:"props"`
+}
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+type AppendControlPropsPayload struct {
+	Props []map[string]string `json:"props"`
+}
+
+type RemoveControlPayload struct {
+	IDs []string `json:"ids"`
+}
+
+type CleanControlPayload struct {
+	IDs []string `json:"ids"`
 }
 
 func autoID() string {
 	return uuid.New().String()
 }
 
-func newClient(conn *websocket.Conn) *Client {
-	return &Client{
+func NewClient(conn connection.Conn) *Client {
+	c := &Client{
 		id:       autoID(),
 		conn:     conn,
 		sessions: make(map[*Session]bool),
 		pages:    make(map[*Page]bool),
-		send:     make(chan []byte, 256),
 	}
-}
 
-func (c *Client) readLoop(readHandler readPumpHandler) {
-	defer func() {
+	go func() {
+		conn.Start(c.readHandler)
 		c.unregister()
-		c.conn.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		fmt.Println("received pong")
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
-	})
-	for {
-		_, message, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
 
-		err = readHandler(c, message)
-		if err != nil {
-			log.Printf("error processing message: %v", err)
-			break
-		}
-	}
+	log.Printf("New Client %s is connected, total: %d\n", c.id, 0)
+
+	return c
 }
 
-func (c *Client) writeLoop() {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
-	for {
-		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Add queued messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
-		case <-ticker.C:
-			fmt.Println("send ping")
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
-	}
-}
-
-func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
-
-	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
-	}
-
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	client := newClient(conn)
-
-	fmt.Printf("New Client %s is connected, total: %d\n", client.id, 0)
-
-	// start read/write loops
-	go client.readLoop(readHandler)
-	go client.writeLoop()
-}
-
-func readHandler(c *Client, message []byte) error {
-	fmt.Printf("Message from %s: %v\n", c.id, string(message))
+func (c *Client) readHandler(message []byte) error {
+	log.Printf("Message from %s: %v\n", c.id, string(message))
 
 	// decode message
 	msg := &Message{}
@@ -240,35 +156,41 @@ func readHandler(c *Client, message []byte) error {
 
 	switch msg.Action {
 	case RegisterWebClientAction:
-		registerWebClient(c, msg)
+		c.registerWebClient(msg)
 
 	case RegisterHostClientAction:
-		registerHostClient(c, msg)
+		c.registerHostClient(msg)
 
 	case PageCommandFromHostAction:
-		executeCommandFromHostClient(c, msg)
+		c.executeCommandFromHostClient(msg)
 
 	case PageEventFromWebAction:
-		processPageEventFromWebClient(c, msg)
+		c.processPageEventFromWebClient(msg)
+
+	case UpdateControlPropsAction:
+		c.updateControlPropsFromWebClient(msg)
 	}
 
 	return nil
 }
 
-func registerWebClient(client *Client, message *Message) {
-	fmt.Println("Registering as web client")
+func (c *Client) send(message []byte) {
+	c.conn.Send(message)
+}
+
+func (c *Client) registerWebClient(message *Message) {
+	log.Println("Registering as web client")
 	payload := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	// assign client role
-	client.role = WebClient
+	c.role = WebClient
 
 	// subscribe as web client
 	page := Pages().Get(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
-		SessionID: "",
-		Error:     "",
+		Error: "",
 	}
 
 	if page == nil {
@@ -291,7 +213,7 @@ func registerWebClient(client *Client, message *Message) {
 			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
 
-		client.registerSession(session)
+		c.registerSession(session)
 
 		if page.IsApp {
 			// pick connected host client from page pool and notify about new session created
@@ -310,12 +232,12 @@ func registerWebClient(client *Client, message *Message) {
 			for c := range page.clients {
 				if c.role == HostClient {
 					c.registerSession(session)
-					c.send <- msg
+					c.send(msg)
 				}
 			}
 		}
 
-		response.SessionID = session.ID
+		response.Session = session
 	}
 
 	responsePayload, _ := json.Marshal(response)
@@ -326,41 +248,50 @@ func registerWebClient(client *Client, message *Message) {
 		Payload: responsePayload,
 	})
 
-	client.send <- responseMsg
+	c.send(responseMsg)
 }
 
-func registerHostClient(client *Client, message *Message) {
-	fmt.Println("Registering as host client")
+func (c *Client) registerHostClient(message *Message) {
+	log.Println("Registering as host client")
 	payload := new(RegisterHostClientRequestPayload)
 	json.Unmarshal(message.Payload, payload)
 
 	responsePayload := &RegisterHostClientResponsePayload{
 		SessionID: "",
+		PageName:  "",
 		Error:     "",
 	}
 
 	// assign client role
-	client.role = HostClient
+	c.role = HostClient
 
-	// retrieve page and then create if not exists
-	page := Pages().Get(payload.PageName)
-	if page == nil {
-		page = NewPage(payload.PageName, payload.IsApp)
-		Pages().Add(page)
-	}
+	pageName, err := parsePageName(payload.PageName)
+	if err == nil {
 
-	if !page.IsApp {
-		// retrieve zero session
-		session := page.GetSession(ZeroSession)
-		if session == nil {
-			session = NewSession(page, ZeroSession)
-			page.AddSession(session)
+		responsePayload.PageName = pageName.String()
+
+		// retrieve page and then create if not exists
+		page := Pages().Get(responsePayload.PageName)
+		if page == nil {
+			page = NewPage(responsePayload.PageName, payload.IsApp)
+			Pages().Add(page)
 		}
-		client.registerSession(session)
-		responsePayload.SessionID = session.ID
+
+		if !page.IsApp {
+			// retrieve zero session
+			session := page.GetSession(ZeroSession)
+			if session == nil {
+				session = NewSession(page, ZeroSession)
+				page.AddSession(session)
+			}
+			c.registerSession(session)
+			responsePayload.SessionID = session.ID
+		} else {
+			// register host client as an app server
+			c.registerPage(page)
+		}
 	} else {
-		// register host client as an app server
-		client.registerPage(page)
+		responsePayload.Error = err.Error()
 	}
 
 	responsePayloadRaw, _ := json.Marshal(responsePayload)
@@ -370,11 +301,11 @@ func registerHostClient(client *Client, message *Message) {
 		Payload: responsePayloadRaw,
 	})
 
-	client.send <- response
+	c.send(response)
 }
 
-func executeCommandFromHostClient(client *Client, message *Message) {
-	fmt.Println("Page command from host client")
+func (c *Client) executeCommandFromHostClient(message *Message) {
+	log.Println("Page command from host client")
 
 	payload := new(PageCommandRequestPayload)
 	json.Unmarshal(message.Payload, payload)
@@ -390,7 +321,7 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 		session := page.GetSession(payload.SessionID)
 		if session != nil {
 			// process command
-			result, err := session.ExecuteCommand(payload.Command)
+			result, err := session.ExecuteCommand(&payload.Command)
 			responsePayload.Result = result
 			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)
@@ -402,18 +333,20 @@ func executeCommandFromHostClient(client *Client, message *Message) {
 		responsePayload.Error = "Page not found or access denied"
 	}
 
-	// send response
-	responsePayloadRaw, _ := json.Marshal(responsePayload)
+	if payload.Command.ShouldReturn() {
+		// send response
+		responsePayloadRaw, _ := json.Marshal(responsePayload)
 
-	response, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Payload: responsePayloadRaw,
-	})
+		response, _ := json.Marshal(&Message{
+			ID:      message.ID,
+			Payload: responsePayloadRaw,
+		})
 
-	client.send <- response
+		c.send(response)
+	}
 }
 
-func processPageEventFromWebClient(client *Client, message *Message) {
+func (client *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *Session
@@ -422,7 +355,7 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 		break
 	}
 
-	fmt.Println("Page event from browser:", message.Payload,
+	log.Println("Page event from browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
 	payload := new(PageEventPayload)
@@ -443,9 +376,41 @@ func processPageEventFromWebClient(client *Client, message *Message) {
 	// re-send events to all connected host clients
 	for c := range session.clients {
 		if c.role == HostClient {
-			c.send <- msg
+			c.send(msg)
 		}
 	}
+}
+
+func (client *Client) updateControlPropsFromWebClient(message *Message) {
+
+	// web client can have only one session assigned
+	var session *Session
+	for s := range client.sessions {
+		session = s
+		break
+	}
+
+	payload := new(UpdateControlPropsPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	log.Println("Update control props from web browser:", string(message.Payload),
+		"PageName:", session.Page.Name, "SessionID:", session.ID, "Props:", payload.Props)
+
+	log.Printf("%+v", payload.Props)
+
+	// update control tree
+	session.UpdateControlProps(payload.Props)
+
+	// re-send the message to all connected web clients
+	go func() {
+		msg, _ := json.Marshal(message)
+
+		for c := range session.clients {
+			if c.role == WebClient && c.id != client.id {
+				c.send(msg)
+			}
+		}
+	}()
 }
 
 func (c *Client) registerPage(page *Page) {
@@ -458,14 +423,15 @@ func (c *Client) registerSession(session *Session) {
 	c.sessions[session] = true
 }
 
-func (c *Client) unregister() {
+func (client *Client) unregister() {
+
 	// unregister from all sessions
-	for session := range c.sessions {
-		session.unregisterClient(c)
+	for session := range client.sessions {
+		session.unregisterClient(client)
 	}
 
 	// unregister from all pages
-	for page := range c.pages {
-		page.unregisterClient(c)
+	for page := range client.pages {
+		page.unregisterClient(client)
 	}
 }

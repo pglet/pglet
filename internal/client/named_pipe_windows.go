@@ -6,10 +6,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/npipe"
 )
@@ -40,6 +41,17 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		events:          make(chan string),
 	}
 
+	var err error
+	pc.commandListener, err = npipe.Listen(`\\.\pipe\` + pc.commandPipeName)
+	if err != nil {
+		return nil, err
+	}
+
+	pc.eventListener, err = npipe.Listen(`\\.\pipe\` + pc.eventPipeName)
+	if err != nil {
+		return nil, err
+	}
+
 	go pc.commandLoop()
 	go pc.eventLoop()
 
@@ -55,15 +67,10 @@ func (pc *namedPipe) nextCommand() string {
 }
 
 func (pc *namedPipe) commandLoop() {
-	log.Println("Starting command loop - ", pc.commandPipeName)
-
-	var err error
-	pc.commandListener, err = npipe.Listen(`\\.\pipe\` + pc.commandPipeName)
-	if err != nil {
-		// handle error
-	}
+	log.Println("Starting command loop:", pc.commandPipeName)
 
 	for {
+		var err error
 		pc.conn, err = pc.commandListener.Accept()
 		if err != nil {
 			log.Println("Command listener connection error:", err)
@@ -81,6 +88,7 @@ func (pc *namedPipe) commandLoop() {
 				if cmdText == "" {
 					log.Println("Disconnected from command pipe")
 					return
+					//continue
 				}
 
 				pc.commands <- cmdText
@@ -149,13 +157,7 @@ func (pc *namedPipe) emitEvent(evt string) {
 
 func (pc *namedPipe) eventLoop() {
 
-	log.Println("Starting event loop - ", pc.eventPipeName)
-
-	var err error
-	pc.eventListener, err = npipe.Listen(`\\.\pipe\` + pc.eventPipeName)
-	if err != nil {
-		// handle error
-	}
+	log.Println("Starting event loop:", pc.eventPipeName)
 
 	for {
 		conn, err := pc.eventListener.Accept()

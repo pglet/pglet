@@ -2,6 +2,7 @@ skip_branch_with_pr: true
 
 environment:
   GO_VERSION: 1.15.3
+  GO_TAGS: --tags release
   GITHUB_TOKEN:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
 
@@ -39,11 +40,19 @@ for:
   install:
   - ps: .\install_go.ps1
   - set GOPATH=%USERPROFILE%\go
+  - set PATH=%GOPATH%\bin;%PATH%
   - echo %GOPATH%
   - echo %GOROOT%
 
   build_script:
-  - go install github.com/pglet/pglet/cmd/pglet
+  - ps: Install-Product node 12 x64
+  - cd client
+  - yarn
+  - yarn build
+  - cd ..
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - .\build.cmd
   - dir %USERPROFILE%\Go\bin
 
   test_script:
@@ -62,7 +71,14 @@ for:
   - ./install_go.sh
 
   build_script:
-  - go install github.com/pglet/pglet/cmd/pglet
+  - nvm use 12
+  - cd client
+  - yarn
+  - yarn build
+  - cd ..
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - ./build.sh
   - ls $GOPATH/bin
 
   test_script:
@@ -79,9 +95,17 @@ for:
 
   install:
   - ./install_go.sh
+  - HOMEBREW_NO_AUTO_UPDATE=1 brew install yarn
 
   build_script:
-  - go install github.com/pglet/pglet/cmd/pglet
+  - nvm use 14
+  - cd client
+  - yarn
+  - yarn build
+  - cd ..
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - ./build.sh
   - ls $GOPATH/bin
 
   test_script:
@@ -103,6 +127,14 @@ for:
       goreleaser --version
 
   build_script:
+  - nvm use 12
+  - cd client
+  - yarn
+  - GENERATE_SOURCEMAP=false yarn build
+  - ls -alR build
+  - cd ..
+  - go get -u github.com/jteeuwen/go-bindata/...
+  - go-bindata -o internal/server/bindata.go --pkg server client/build/...    
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser

@@ -1,35 +1,52 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/pglet/pglet/internal/page"
+	page_connection "github.com/pglet/pglet/internal/page/connection"
 )
 
 const (
-	DefaultServerPort   int    = 5000
 	apiRoutePrefix      string = "/api"
-	contentRootFolder   string = "./tests" //"./client/build"
+	contentRootFolder   string = "client/build"
 	siteDefaultDocument string = "index.html"
 )
 
-func Start(serverPort int) {
+var (
+	Port int = 5000
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
+	defer wg.Done()
+
+	Port = serverPort
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 
 	// Serve frontend static files
-	router.Use(static.Serve("/", static.LocalFile(contentRootFolder, true)))
+	router.Use(static.Serve("/", BinaryFileSystem(contentRootFolder, "")))
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		page.WebsocketHandler(c.Writer, c.Request)
+		websocketHandler(c.Writer, c.Request)
 	})
 
 	// Setup route group for the API
@@ -48,14 +65,63 @@ func Start(serverPort int) {
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {
-		fmt.Println(c.Request.RequestURI)
 		if !strings.HasPrefix(c.Request.RequestURI, apiRoutePrefix+"/") {
-			c.File(contentRootFolder + "/" + siteDefaultDocument)
+			// SPA index.html
+			indexData, _ := Asset(contentRootFolder + "/" + siteDefaultDocument)
+			c.Data(http.StatusOK, "text/html", indexData)
+		} else {
+			// API not found
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": "API endpoint not found",
+			})
 		}
 	})
 
+	log.Println("Starting server on port", serverPort)
+
 	// Start and run the server
-	router.Run(fmt.Sprintf(":%d", serverPort))
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", serverPort),
+		Handler: router,
+	}
+
+	// Initializing the server in a goroutine so that
+	// it won't block the graceful shutdown handling below
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Println("Shutting down server...")
+
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctxShutDown); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exited")
+}
+
+func websocketHandler(w http.ResponseWriter, r *http.Request) {
+
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	wsc := page_connection.NewWebSocket(conn)
+	page.NewClient(wsc)
 }
 
 func userHandler(c *gin.Context) {
@@ -69,7 +135,7 @@ func userHandler(c *gin.Context) {
 			"username": "admin",
 		})
 	} else {
-		// Joke ID is invalid
+		// User ID is invalid
 		c.AbortWithStatus(http.StatusNotFound)
 	}
 }
@@ -79,7 +145,7 @@ func pageHandler(c *gin.Context) {
 	accountName := c.Param("accountName")
 	pageName := c.Param("pageName")
 	sessionID := c.Query("sessionID")
-	fmt.Println("sessionID:", sessionID)
+	log.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
 	page := page.Pages().Get(fullPageName)

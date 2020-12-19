@@ -1,13 +1,15 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
+	"github.com/pglet/pglet/internal/client/connection"
 	"github.com/pglet/pglet/internal/page"
 )
 
@@ -18,8 +20,8 @@ type HostClient struct {
 
 	connectOnce sync.Once
 
-	// active WebSocket connection
-	conn *websocket.Conn
+	// active connection
+	conn connection.Conn
 
 	// pageSessionClients by "pageName:sessionID"
 	pageSessionClients map[string]map[*PipeClient]bool
@@ -31,12 +33,6 @@ type HostClient struct {
 	// new page sessions
 	newSessions map[string]chan string
 	nsLock      sync.RWMutex
-
-	// send channel
-	send chan []byte
-
-	// used to break read/write loops
-	done chan bool
 }
 
 func NewHostClient(wsURL string) *HostClient {
@@ -46,8 +42,14 @@ func NewHostClient(wsURL string) *HostClient {
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.newSessions = make(map[string]chan string)
 
-	hc.send = make(chan []byte)
-	hc.done = make(chan bool)
+	if wsURL == "" {
+		// local/loopback connection
+		hc.conn = connection.NewLocal()
+	} else {
+		// WebSocket connection
+		hc.conn = connection.NewWebSocket(wsURL)
+	}
+
 	return hc
 }
 
@@ -55,86 +57,40 @@ func (hc *HostClient) Start() (err error) {
 
 	// connect only once
 	hc.connectOnce.Do(func() {
-		log.Println("Connecting to:", hc.wsURL)
-
-		hc.conn, _, err = websocket.DefaultDialer.Dial(hc.wsURL, nil)
-
-		if err != nil {
-			return
-		}
-
-		go hc.readLoop()
-		go hc.writeLoop()
+		err = hc.conn.Start(hc.readHandler)
 	})
 
 	return
 }
 
-func (hc *HostClient) readLoop() {
-	defer close(hc.done)
+func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
+	message := &page.Message{}
+	err = json.Unmarshal(bytesMessage, message)
+	if err == nil {
 
-	for {
-		_, bytesMessage, err := hc.conn.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			return
-		}
+		//log.Println("Message to host client:", message)
 
-		message := &page.Message{}
-		err = json.Unmarshal(bytesMessage, message)
-		if err == nil {
-			if message.ID != "" {
-				// this is callback message
-				result, ok := hc.calls[message.ID]
-				if ok {
-					delete(hc.calls, message.ID)
-					result <- &message.Payload
-				}
-			} else if message.Action == page.PageEventToHostAction {
-				// event
-				hc.broadcastPageEvent(&message.Payload)
-			} else if message.Action == page.SessionCreatedAction {
-				// new session
-				hc.notifySession(&message.Payload)
+		if message.ID != "" {
+			// this is callback message
+			result, ok := hc.calls[message.ID]
+			if ok {
+				delete(hc.calls, message.ID)
+				result <- &message.Payload
 			}
-		} else {
-			log.Printf("Unsupported message received: %s", bytesMessage)
+		} else if message.Action == page.PageEventToHostAction {
+			// event
+			hc.broadcastPageEvent(&message.Payload)
+		} else if message.Action == page.SessionCreatedAction {
+			// new session
+			hc.notifySession(&message.Payload)
 		}
+	} else {
+		log.Printf("Unsupported message received: %s", bytesMessage)
 	}
+	return
 }
 
-func (hc *HostClient) writeLoop() {
-	for {
-		select {
-		case message, ok := <-hc.send:
-			if !ok {
-				err := hc.conn.Close()
-				if err != nil {
-					log.Fatalln(err)
-				}
-				return
-			}
-
-			w, err := hc.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Add queued messages to the current websocket message.
-			n := len(hc.send)
-			for i := 0; i < n; i++ {
-				w.Write(<-hc.send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
-		}
-	}
-}
-
-func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage {
+func (hc *HostClient) Call(ctx context.Context, action string, payload interface{}) *json.RawMessage {
 
 	// assign unique ID to the message
 	messageID := uuid.New().String()
@@ -148,15 +104,20 @@ func (hc *HostClient) Call(action string, payload interface{}) *json.RawMessage 
 	})
 
 	// create and register result channel
-	result := make(chan *json.RawMessage)
+	result := make(chan *json.RawMessage, 1)
 	hc.calls[messageID] = result
 
 	// send message
-	hc.send <- msg
+	hc.conn.Send(msg)
 
 	// wait for result to arrive
 	// TODO - implement timeout
-	return <-result
+	select {
+	case <-ctx.Done():
+		return nil
+	case r := <-result:
+		return r
+	}
 }
 
 func (hc *HostClient) CallAndForget(action string, payload interface{}) {
@@ -169,7 +130,7 @@ func (hc *HostClient) CallAndForget(action string, payload interface{}) {
 	})
 
 	// send message
-	hc.send <- msg
+	hc.conn.Send(msg)
 }
 
 func (hc *HostClient) RegisterPipeClient(pc *PipeClient) {
@@ -202,14 +163,17 @@ func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 		return err
 	}
 
+	log.Println("Event:", payload)
+
 	// iterate through all pipe clients
 	key := getPageSessionKey(payload.PageName, payload.SessionID)
 	clients, ok := hc.pageSessionClients[key]
 
 	if ok {
 		for client := range clients {
-			client.emitEvent(fmt.Sprintf("%s %s %s",
-				payload.EventTarget, payload.EventName, payload.EventData))
+			eventMessage := fmt.Sprintf("%s %s %s",
+				payload.EventTarget, payload.EventName, payload.EventData)
+			client.emitEvent(eventMessage)
 		}
 	}
 

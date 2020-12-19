@@ -1,11 +1,16 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"runtime"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/page"
+	"github.com/pglet/pglet/internal/page/command"
 	"github.com/pglet/pglet/internal/utils"
 )
 
@@ -17,10 +22,16 @@ type PipeClient struct {
 	hostClient *HostClient
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
-	pipe, err := newNamedPipe(id)
+	var err error
+	var p pipe
+	if uds && runtime.GOOS != "windows" {
+		p, err = newUnixDomainSocket(id)
+	} else {
+		p, err = newNamedPipe(id)
+	}
 
 	if err != nil {
 		return nil, err
@@ -30,7 +41,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient) (*PipeClie
 		id:         id,
 		pageName:   pageName,
 		sessionID:  sessionID,
-		pipe:       pipe,
+		pipe:       p,
 		hostClient: hc,
 	}
 
@@ -56,39 +67,52 @@ func (pc *PipeClient) commandLoop() {
 		cmdText := pc.pipe.nextCommand()
 
 		// parse command
-		command, err := page.ParseCommand(cmdText)
+		cmd, err := command.Parse(strings.Trim(cmdText, "\n"), true)
 		if err != nil {
-			log.Fatalln(err)
+			log.Errorln(err)
+			pc.pipe.writeResult(fmt.Sprintf("error %s", err))
+			continue
 		}
 
-		log.Printf("Send command: %+v", command)
+		log.Printf("Send command: %+v", cmd)
 
-		if command.Name == page.Quit {
+		if cmd.Name == command.Quit {
 			pc.close()
 			return
 		}
 
-		rawResult := pc.hostClient.Call(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-			PageName:  pc.pageName,
-			SessionID: pc.sessionID,
-			Command:   *command,
-		})
+		if cmd.ShouldReturn() {
+			// call and wait for result
+			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+				PageName:  pc.pageName,
+				SessionID: pc.sessionID,
+				Command:   *cmd,
+			})
 
-		// parse response
-		payload := &page.PageCommandResponsePayload{}
-		err = json.Unmarshal(*rawResult, payload)
+			// parse response
+			payload := &page.PageCommandResponsePayload{}
+			err = json.Unmarshal(*rawResult, payload)
 
-		if err != nil {
-			log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+			if err != nil {
+				log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+			}
+
+			// save command results
+			if payload.Error != "" {
+				pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
+			} else {
+				linesCount := utils.CountRune(payload.Result, '\n')
+				pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, payload.Result))
+			}
+
+		} else {
+			// fire and forget
+			pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+				PageName:  pc.pageName,
+				SessionID: pc.sessionID,
+				Command:   *cmd,
+			})
 		}
-
-		// save command results
-		result := payload.Result
-		if payload.Error != "" {
-			result = fmt.Sprintf("error %s", payload.Error)
-		}
-
-		pc.pipe.writeResult("aaa" + result)
 	}
 }
 
