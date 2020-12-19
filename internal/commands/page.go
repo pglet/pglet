@@ -13,7 +13,6 @@ import (
 func newPageCommand() *cobra.Command {
 
 	var web bool
-	var private bool
 	var server string
 	var token string
 	var uds bool
@@ -23,7 +22,7 @@ func newPageCommand() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "page [[namespace/]<page_name>]",
 		Short: "Connect to a shared page",
-		Long:  `Page command is ...`,
+		Long:  `Page command creates a new shared page and opens connection to it.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
 			client.Start()
@@ -35,7 +34,6 @@ func newPageCommand() *cobra.Command {
 
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
 				PageName: pageName,
-				Private:  private,
 				Web:      web,
 				Server:   server,
 				Token:    token,
@@ -56,7 +54,6 @@ func newPageCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the page available as public at pglet.io service or a self-hosted Pglet server")
-	cmd.Flags().BoolVarP(&private, "private", "", false, "makes the page available as private at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")

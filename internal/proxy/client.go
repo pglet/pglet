@@ -25,7 +25,6 @@ type Client struct {
 type ConnectPageArgs struct {
 	PageName string
 	Web      bool
-	Private  bool
 	Server   string
 	Token    string
 	Uds      bool

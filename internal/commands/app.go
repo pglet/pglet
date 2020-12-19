@@ -13,7 +13,6 @@ import (
 func newAppCommand() *cobra.Command {
 
 	var web bool
-	var private bool
 	var server string
 	var token string
 	var uds bool
@@ -23,7 +22,7 @@ func newAppCommand() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "app [[namespace/]<page_name>]",
 		Short: "Connect to an app",
-		Long:  `App command is ...`,
+		Long:  `App command creates a new multi-user app and waits for new web user connections.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
 			client.Start()
@@ -35,7 +34,6 @@ func newAppCommand() *cobra.Command {
 
 			connectArgs := &proxy.ConnectPageArgs{
 				PageName: pageName,
-				Private:  private,
 				Web:      web,
 				Server:   server,
 				Token:    token,
@@ -67,7 +65,6 @@ func newAppCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the app available as public at pglet.io service or a self-hosted Pglet server")
-	cmd.Flags().BoolVarP(&private, "private", "", false, "makes the app available as private at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the app on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
