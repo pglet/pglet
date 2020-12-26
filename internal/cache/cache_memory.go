@@ -59,7 +59,7 @@ func (c *memoryCache) getEntry(key string) *cacheEntry {
 	if entry == nil {
 		return nil
 	}
-	if entry.expires.IsZero() && time.Now().After(entry.expires) {
+	if !entry.expires.IsZero() && time.Now().After(entry.expires) {
 		// remove expired entry
 		delete(c.entries, key)
 		return nil
