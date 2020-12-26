@@ -201,7 +201,7 @@ func (c *Client) registerWebClient(message *Message) {
 		if !page.IsApp {
 			// shared page
 			// retrieve zero session
-			session = page.sessions[ZeroSession]
+			session = page.GetSession(ZeroSession)
 
 			log.Printf("Connected to zero session of %s page\n", page.Name)
 		} else {
