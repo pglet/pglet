@@ -20,7 +20,7 @@ type PageName struct {
 func ParsePageName(pageName string) (*PageName, error) {
 
 	p := &PageName{}
-	p.Name = strings.Trim(strings.ReplaceAll(pageName, "\\", "/"), "/")
+	p.Name = strings.ToLower(strings.Trim(strings.ReplaceAll(pageName, "\\", "/"), "/"))
 
 	if strings.Count(p.Name, "/") > 1 {
 		return nil, errors.New("Page name must be in format {page} or {namespace}/{page}")

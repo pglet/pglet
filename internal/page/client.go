@@ -114,7 +114,7 @@ func (c *Client) registerWebClient(message *Message) {
 			// app page
 			// create new session
 			session = model.NewSession(page, uuid.New().String())
-			store.AddSession(page, session)
+			store.AddSession(session)
 
 			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
@@ -143,7 +143,10 @@ func (c *Client) registerWebClient(message *Message) {
 			// }
 		}
 
-		response.Session = session
+		response.Session = SessionPayload{
+			ID:       session.ID,
+			Controls: store.GetAllSessionControls(session),
+		}
 	}
 
 	responsePayload, _ := json.Marshal(response)
@@ -188,7 +191,7 @@ func (c *Client) registerHostClient(message *Message) {
 			session := store.GetSession(page, ZeroSession)
 			if session == nil {
 				session = model.NewSession(page, ZeroSession)
-				store.AddSession(page, session)
+				store.AddSession(session)
 			}
 			c.registerSession(session)
 			responsePayload.SessionID = session.ID
@@ -227,8 +230,8 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 		session := store.GetSession(page, payload.SessionID)
 		if session != nil {
 			// process command
-			handler := newCommandHandler(session, &payload.Command)
-			result, err := handler.execute()
+			handler := newSessionHandler(session)
+			result, err := handler.execute(&payload.Command)
 			responsePayload.Result = result
 			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)
@@ -306,7 +309,8 @@ func (client *Client) updateControlPropsFromWebClient(message *Message) {
 	log.Printf("%+v", payload.Props)
 
 	// update control tree
-	UpdateControlProps(session, payload.Props)
+	handler := newSessionHandler(session)
+	handler.updateControlProps(payload.Props)
 
 	// re-send the message to all connected web clients
 	// go func() {

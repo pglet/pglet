@@ -93,6 +93,11 @@ func CountRune(s string, r rune) int {
 }
 
 func ToJSON(v interface{}) string {
+	json, _ := json.Marshal(v)
+	return string(json)
+}
+
+func ToJSONIndent(v interface{}) string {
 	json, _ := json.MarshalIndent(v, "", "  ")
 	return string(json)
 }

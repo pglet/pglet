@@ -49,10 +49,32 @@ func HashSet(key string, args ...interface{}) {
 
 }
 
-func AddSet(key string, value string) {
+func HashGetString(key string, field string) string {
+	// TODO
+	return ""
+}
+
+func HashGetAll(key string) map[string]string {
+	return nil
+}
+
+func HashRemove(key string, args ...string) {
+
+}
+
+func SetGet(key string) []string {
+	// TODO
+	return nil
+}
+
+func SetAdd(key string, value string) {
 	// TODO
 }
 
-func RemoveSet(key string, value string) {
+func SetRemove(key string, value string) {
+	// TODO
+}
+
+func Remove(key string) {
 	// TODO
 }

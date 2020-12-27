@@ -38,12 +38,16 @@ type RegisterHostClientResponsePayload struct {
 
 type RegisterWebClientRequestPayload struct {
 	PageName string `json:"pageName"`
-	IsApp    bool   `json:"isApp"`
 }
 
 type RegisterWebClientResponsePayload struct {
-	Session *model.Session `json:"session"`
+	Session SessionPayload `json:"session"`
 	Error   string         `json:"error"`
+}
+
+type SessionPayload struct {
+	ID       string                    `json:"id"`
+	Controls map[string]*model.Control `json:"controls"`
 }
 
 type SessionCreatedPayload struct {

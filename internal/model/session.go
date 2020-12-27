@@ -1,7 +1,7 @@
 package model
 
 type Session struct {
-	Page *Page  `json:"page"`
+	Page *Page  `json:"-"`
 	ID   string `json:"id"`
 }
 

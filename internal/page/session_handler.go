@@ -8,7 +8,9 @@ import (
 
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/store"
 	"github.com/pglet/pglet/internal/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,39 +20,21 @@ const (
 	ControlAutoIDPrefix = "_"
 	// ControlIDSeparator is a symbol between parts of control ID
 	ControlIDSeparator = ":"
-	// PageID is a reserved page ID
-	PageID = "page"
+	// ReservedPageID is a reserved page ID
+	ReservedPageID = "page"
 )
 
-type commandHandlerFn = func(*model.Session, *command.Command) (string, error)
+type commandHandlerFn = func(*command.Command) (string, error)
 
-type commandHandler struct {
+type sessionHandler struct {
 	session  *model.Session
-	cmd      *command.Command
 	handlers map[string]commandHandlerFn
 }
 
-func newCommandHandler(session *model.Session, cmd *command.Command) commandHandler {
-	h := commandHandler{
+func newSessionHandler(session *model.Session) sessionHandler {
+	return sessionHandler{
 		session: session,
-		cmd:     cmd,
 	}
-
-	h.handlers = map[string]commandHandlerFn{
-		command.Add:     h.add,
-		command.Addf:    h.add,
-		command.Set:     set,
-		command.Setf:    set,
-		command.Append:  appendHandler,
-		command.Appendf: appendHandler,
-		command.Get:     get,
-		command.Clean:   clean,
-		command.Cleanf:  clean,
-		command.Remove:  remove,
-		command.Removef: remove,
-	}
-
-	return h
 }
 
 type AddCommandBatchItem struct {
@@ -59,22 +43,36 @@ type AddCommandBatchItem struct {
 }
 
 // ExecuteCommand executes command and returns the result
-func (h *commandHandler) execute() (result string, err error) {
+func (h *sessionHandler) execute(cmd *command.Command) (result string, err error) {
 	// session.Lock()
 	// defer session.Unlock()
 
-	// log.Printf("Execute command for page %s session %s: %+v\n",
-	// 	session.Page.Name, session.ID, cmd)
+	log.Printf("Execute command for page %s session %s: %+v\n",
+		h.session.Page.Name, h.session.ID, cmd)
 
-	handler := h.handlers[strings.ToLower(h.cmd.Name)]
-	if handler == nil {
-		return "", fmt.Errorf("Unknown command: %s", h.cmd.Name)
+	handlers := map[string]commandHandlerFn{
+		command.Add:     h.add,
+		command.Addf:    h.add,
+		command.Set:     h.set,
+		command.Setf:    h.set,
+		command.Append:  h.appendHandler,
+		command.Appendf: h.appendHandler,
+		command.Get:     h.get,
+		command.Clean:   h.clean,
+		command.Cleanf:  h.clean,
+		command.Remove:  h.remove,
+		command.Removef: h.remove,
 	}
 
-	return handler(h.session, h.cmd)
+	handler := handlers[strings.ToLower(cmd.Name)]
+	if handler == nil {
+		return "", fmt.Errorf("Unknown command: %s", cmd.Name)
+	}
+
+	return handler(cmd)
 }
 
-func (h *commandHandler) add(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
@@ -84,7 +82,7 @@ func (h *commandHandler) add(session *model.Session, cmd *command.Command) (resu
 	}
 
 	if topParentID == "" {
-		topParentID = getPageID()
+		topParentID = ReservedPageID
 	}
 
 	//log.Println("COMMAND:", utils.ToJSON(cmd))
@@ -164,10 +162,10 @@ func (h *commandHandler) add(session *model.Session, cmd *command.Command) (resu
 		// control ID
 		id := batchItem.Command.Attrs["id"]
 		if id == "" {
-			id = nextControlID(session)
+			id = h.nextControlID()
 		} else {
 			// generate unique ID
-			parentIDs := getControlParentIDs(parentID)
+			parentIDs := h.getControlParentIDs(parentID)
 			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 		}
 
@@ -184,7 +182,7 @@ func (h *commandHandler) add(session *model.Session, cmd *command.Command) (resu
 			}
 		}
 
-		AddControl(session, batchItem.Control)
+		h.addControl(batchItem.Control)
 		ids = append(ids, id)
 		payload.Controls = append(payload.Controls, batchItem.Control)
 	}
@@ -192,11 +190,11 @@ func (h *commandHandler) add(session *model.Session, cmd *command.Command) (resu
 	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))
 
 	// broadcast new controls to all connected web clients
-	broadcastCommandToWebClients(session, NewMessage(AddPageControlsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, payload))
 	return strings.Join(ids, " "), nil
 }
 
-func get(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) get(cmd *command.Command) (result string, err error) {
 
 	// command format must be:
 	// get <control-id> <property>
@@ -207,7 +205,7 @@ func get(session *model.Session, cmd *command.Command) (result string, err error
 	// control ID
 	id := cmd.Values[0]
 
-	ctrl := GetControl(session, id)
+	ctrl := h.getControl(id)
 	if ctrl == nil {
 		return "", fmt.Errorf("control with ID '%s' not found", id)
 	}
@@ -224,7 +222,7 @@ func get(session *model.Session, cmd *command.Command) (result string, err error
 	return v.(string), nil
 }
 
-func set(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) set(cmd *command.Command) (result string, err error) {
 
 	batch := make([]*command.Command, 0)
 
@@ -262,7 +260,7 @@ func set(session *model.Session, cmd *command.Command) (result string, err error
 		// control ID
 		id := batchCmd.Values[0]
 
-		ctrl := GetControl(session, id)
+		ctrl := h.getControl(id)
 		if ctrl == nil {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
 		}
@@ -289,11 +287,11 @@ func set(session *model.Session, cmd *command.Command) (result string, err error
 	}
 
 	// broadcast control updates to all connected web clients
-	broadcastCommandToWebClients(session, NewMessage(UpdateControlPropsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
 	return "", nil
 }
 
-func appendHandler(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) appendHandler(cmd *command.Command) (result string, err error) {
 
 	batch := make([]*command.Command, 0)
 
@@ -331,7 +329,7 @@ func appendHandler(session *model.Session, cmd *command.Command) (result string,
 		// control ID
 		id := batchCmd.Values[0]
 
-		ctrl := GetControl(session, id)
+		ctrl := h.getControl(id)
 		if ctrl == nil {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
 		}
@@ -351,11 +349,11 @@ func appendHandler(session *model.Session, cmd *command.Command) (result string,
 	}
 
 	// broadcast control updates to all connected web clients
-	broadcastCommandToWebClients(session, NewMessage(AppendControlPropsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage(AppendControlPropsAction, payload))
 	return "", nil
 }
 
-func clean(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) clean(cmd *command.Command) (result string, err error) {
 
 	// command format:
 	//    clean [id_1] [id_2] ... [at=index]
@@ -363,7 +361,7 @@ func clean(session *model.Session, cmd *command.Command) (result string, err err
 	ids := make([]string, 0)
 	if len(cmd.Values) == 0 {
 		// clean page if no IDs specified
-		ids = append(ids, PageID)
+		ids = append(ids, ReservedPageID)
 	} else {
 		ids = append(ids, cmd.Values...)
 	}
@@ -379,7 +377,7 @@ func clean(session *model.Session, cmd *command.Command) (result string, err err
 
 	// control ID
 	for i, id := range ids {
-		ctrl := GetControl(session, id)
+		ctrl := h.getControl(id)
 		if ctrl == nil {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
 		}
@@ -391,20 +389,20 @@ func clean(session *model.Session, cmd *command.Command) (result string, err err
 			}
 
 			ids[i] = childIDs[at]
-			ctrl = GetControl(session, ids[i])
+			ctrl = h.getControl(ids[i])
 		}
 
-		cleanControl(session, ctrl)
+		h.cleanControl(ctrl)
 	}
 
 	// broadcast command to all connected web clients
-	broadcastCommandToWebClients(session, NewMessage(CleanControlAction, &CleanControlPayload{
+	h.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
 		IDs: ids,
 	}))
 	return "", nil
 }
 
-func remove(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *sessionHandler) remove(cmd *command.Command) (result string, err error) {
 
 	// command format:
 	//    remove [id_1] [id_2] ... [at=index]
@@ -418,7 +416,7 @@ func remove(session *model.Session, cmd *command.Command) (result string, err er
 	if len(cmd.Values) == 0 && at == -1 {
 		return "", errors.New("'page' control cannot be removed")
 	} else if len(cmd.Values) == 0 {
-		ids = append(ids, PageID)
+		ids = append(ids, ReservedPageID)
 	} else {
 		ids = append(ids, cmd.Values...)
 	}
@@ -429,7 +427,7 @@ func remove(session *model.Session, cmd *command.Command) (result string, err er
 
 	// control ID
 	for i, id := range ids {
-		ctrl := GetControl(session, id)
+		ctrl := h.getControl(id)
 		if ctrl == nil {
 			return "", fmt.Errorf("control with ID '%s' not found", id)
 		}
@@ -441,26 +439,26 @@ func remove(session *model.Session, cmd *command.Command) (result string, err er
 			}
 
 			ids[i] = childIDs[at]
-			ctrl = GetControl(session, ids[i])
+			ctrl = h.getControl(ids[i])
 		}
 
-		deleteControl(session, ctrl)
+		h.deleteControl(ctrl)
 	}
 
 	// broadcast command to all connected web clients
-	broadcastCommandToWebClients(session, NewMessage(RemoveControlAction, &RemoveControlPayload{
+	h.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
 		IDs: ids,
 	}))
 	return "", nil
 }
 
-func UpdateControlProps(session *model.Session, props []map[string]interface{}) {
+func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
 	// session.Lock()
 	// defer session.Unlock()
 
 	for _, p := range props {
 		id := p["i"].(string)
-		if ctrl := GetControl(session, id); ctrl != nil {
+		if ctrl := h.getControl(id); ctrl != nil {
 
 			// patch control properties
 			for n, v := range p {
@@ -473,24 +471,21 @@ func UpdateControlProps(session *model.Session, props []map[string]interface{}) 
 }
 
 // nextControlID returns the next auto-generated control ID
-func nextControlID(session *model.Session) string {
-	// nextID := fmt.Sprintf("%s%d", ControlAutoIDPrefix, session.nextControlID)
-	// session.nextControlID++
-	// return nextID
-	return ""
+func (h *sessionHandler) nextControlID() string {
+	return fmt.Sprintf("%s%d", ControlAutoIDPrefix, store.GetSessionNextControlID(h.session))
 }
 
-// AddControl adds a control to a page
-func AddControl(session *model.Session, ctrl *model.Control) error {
-	if GetControl(session, ctrl.ID()) != nil {
+// addControl adds a control to a page
+func (h *sessionHandler) addControl(ctrl *model.Control) error {
+	if h.getControl(ctrl.ID()) != nil {
 		return nil
 	}
-	AddSessionControl(session, ctrl)
+	store.SetSessionControl(h.session, ctrl)
 
 	// find parent
 	parentID := ctrl.ParentID()
 	if parentID != "" {
-		parentctrl := GetControl(session, parentID)
+		parentctrl := h.getControl(parentID)
 
 		if parentctrl == nil {
 			return fmt.Errorf("parent control with id '%s' not found", parentID)
@@ -507,66 +502,62 @@ func AddControl(session *model.Session, ctrl *model.Control) error {
 	return nil
 }
 
-func getControlParentIDs(parentID string) []string {
+func (h *sessionHandler) getControlParentIDs(parentID string) []string {
 	var result []string
 	result = make([]string, 0)
 	idParts := strings.Split(parentID, ControlIDSeparator)
 	for _, idPart := range idParts {
-		if !isAutoID(idPart) {
+		if !h.isAutoID(idPart) {
 			result = append(result, idPart)
 		}
 	}
 	return result
 }
 
-func cleanControl(session *model.Session, ctrl *model.Control) {
+func (h *sessionHandler) cleanControl(ctrl *model.Control) {
 
 	// delete all descendants
-	for _, descID := range getAllDescendantIds(session, ctrl) {
-		DeleteSessionControl(session, descID)
+	for _, descID := range h.getAllDescendantIds(ctrl) {
+		h.deleteSessionControl(descID)
 	}
 
 	// clean up children collection
 	ctrl.RemoveChildren()
 }
 
-func deleteControl(session *model.Session, ctrl *model.Control) {
+func (h *sessionHandler) deleteControl(ctrl *model.Control) {
 
 	// delete all descendants
-	for _, descID := range getAllDescendantIds(session, ctrl) {
-		DeleteSessionControl(session, descID)
+	for _, descID := range h.getAllDescendantIds(ctrl) {
+		h.deleteSessionControl(descID)
 	}
 
 	// delete control itself
-	DeleteSessionControl(session, ctrl.ID())
+	h.deleteSessionControl(ctrl.ID())
 
 	// remove control from parent's children collection
-	GetControl(session, ctrl.ParentID()).RemoveChild(ctrl.ID())
+	h.getControl(ctrl.ParentID()).RemoveChild(ctrl.ID())
 }
 
-func getAllDescendantIds(session *model.Session, ctrl *model.Control) []string {
-	return getAllDescendantIdsRecursively(session, make([]string, 0, 0), ctrl.ID())
+func (h *sessionHandler) getAllDescendantIds(ctrl *model.Control) []string {
+	return h.getAllDescendantIdsRecursively(make([]string, 0, 0), ctrl.ID())
 }
 
-func getAllDescendantIdsRecursively(session *model.Session, descendantIds []string, ID string) []string {
-	ctrl := GetControl(session, ID)
+func (h *sessionHandler) getAllDescendantIdsRecursively(descendantIds []string, ID string) []string {
+	ctrl := h.getControl(ID)
 	childrenIds := ctrl.GetChildrenIds()
 	result := append(descendantIds, childrenIds...)
 	for _, childID := range childrenIds {
-		result = append(result, getAllDescendantIdsRecursively(session, make([]string, 0, 0), childID)...)
+		result = append(result, h.getAllDescendantIdsRecursively(make([]string, 0, 0), childID)...)
 	}
 	return result
 }
 
-func getPageID() string {
-	return PageID
+func (h *sessionHandler) isAutoID(id string) bool {
+	return id == ReservedPageID || strings.HasPrefix(id, ControlAutoIDPrefix)
 }
 
-func isAutoID(id string) bool {
-	return id == PageID || strings.HasPrefix(id, ControlAutoIDPrefix)
-}
-
-func broadcastCommandToWebClients(session *model.Session, msg *Message) {
+func (h *sessionHandler) broadcastCommandToWebClients(msg *Message) {
 
 	// serializedMsg, _ := json.Marshal(msg)
 
@@ -577,14 +568,10 @@ func broadcastCommandToWebClients(session *model.Session, msg *Message) {
 	// }
 }
 
-func AddSessionControl(session *model.Session, ctrl *model.Control) {
-
+func (h *sessionHandler) getControl(ctrlID string) *model.Control {
+	return store.GetSessionControl(h.session, ctrlID)
 }
 
-func GetControl(session *model.Session, ctrlID string) *model.Control {
-	return nil
-}
-
-func DeleteSessionControl(session *model.Session, ctrlID string) {
-	// TODO
+func (h *sessionHandler) deleteSessionControl(ctrlID string) {
+	store.DeleteSessionControl(h.session, ctrlID)
 }
