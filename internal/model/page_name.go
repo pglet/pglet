@@ -1,4 +1,4 @@
-package page
+package model
 
 import (
 	"errors"
@@ -12,7 +12,12 @@ const (
 	publicNamespace = "public"
 )
 
-func parsePageName(pageName string) (*PageName, error) {
+type PageName struct {
+	Namespace string
+	Name      string
+}
+
+func ParsePageName(pageName string) (*PageName, error) {
 
 	p := &PageName{}
 	p.Name = strings.Trim(strings.ReplaceAll(pageName, "\\", "/"), "/")

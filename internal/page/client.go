@@ -7,8 +7,9 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/connection"
+	"github.com/pglet/pglet/internal/store"
 )
 
 const (
@@ -53,73 +54,8 @@ type Client struct {
 	id       string
 	role     ClientRole
 	conn     connection.Conn
-	sessions map[*Session]bool
-	pages    map[*Page]bool
-}
-
-type RegisterHostClientRequestPayload struct {
-	PageName string `json:"pageName"`
-	IsApp    bool   `json:"isApp"`
-}
-
-type RegisterHostClientResponsePayload struct {
-	SessionID string `json:"sessionID"`
-	PageName  string `json:"pageName"`
-	Error     string `json:"error"`
-}
-
-type RegisterWebClientRequestPayload struct {
-	PageName string `json:"pageName"`
-	IsApp    bool   `json:"isApp"`
-}
-
-type RegisterWebClientResponsePayload struct {
-	Session *Session `json:"session"`
-	Error   string   `json:"error"`
-}
-
-type SessionCreatedPayload struct {
-	PageName  string `json:"pageName"`
-	SessionID string `json:"sessionID"`
-}
-
-type PageCommandRequestPayload struct {
-	PageName  string          `json:"pageName"`
-	SessionID string          `json:"sessionID"`
-	Command   command.Command `json:"command"`
-}
-
-type PageCommandResponsePayload struct {
-	Result string `json:"result"`
-	Error  string `json:"error"`
-}
-
-type PageEventPayload struct {
-	PageName    string `json:"pageName"`
-	SessionID   string `json:"sessionID"`
-	EventTarget string `json:"eventTarget"`
-	EventName   string `json:"eventName"`
-	EventData   string `json:"eventData"`
-}
-
-type AddPageControlsPayload struct {
-	Controls []*Control `json:"controls"`
-}
-
-type UpdateControlPropsPayload struct {
-	Props []map[string]interface{} `json:"props"`
-}
-
-type AppendControlPropsPayload struct {
-	Props []map[string]string `json:"props"`
-}
-
-type RemoveControlPayload struct {
-	IDs []string `json:"ids"`
-}
-
-type CleanControlPayload struct {
-	IDs []string `json:"ids"`
+	sessions map[*model.Session]bool
+	//pages    map[*Page]bool
 }
 
 func autoID() string {
@@ -130,8 +66,8 @@ func NewClient(conn connection.Conn) *Client {
 	c := &Client{
 		id:       autoID(),
 		conn:     conn,
-		sessions: make(map[*Session]bool),
-		pages:    make(map[*Page]bool),
+		sessions: make(map[*model.Session]bool),
+		//pages:    make(map[*Page]bool),
 	}
 
 	go func() {
@@ -187,7 +123,7 @@ func (c *Client) registerWebClient(message *Message) {
 	c.role = WebClient
 
 	// subscribe as web client
-	page := Pages().Get(payload.PageName)
+	page := store.GetPage(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
 		Error: "",
@@ -196,19 +132,19 @@ func (c *Client) registerWebClient(message *Message) {
 	if page == nil {
 		response.Error = "Page not found or access denied"
 	} else {
-		var session *Session
+		var session *model.Session
 
 		if !page.IsApp {
 			// shared page
 			// retrieve zero session
-			session = page.GetSession(ZeroSession)
+			session = store.GetSession(page, ZeroSession)
 
 			log.Printf("Connected to zero session of %s page\n", page.Name)
 		} else {
 			// app page
 			// create new session
-			session = NewSession(page, uuid.New().String())
-			page.AddSession(session)
+			session = model.NewSession(page, uuid.New().String())
+			store.AddSession(page, session)
 
 			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
@@ -217,24 +153,24 @@ func (c *Client) registerWebClient(message *Message) {
 
 		if page.IsApp {
 			// pick connected host client from page pool and notify about new session created
-			sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
-				PageName:  page.Name,
-				SessionID: session.ID,
-			})
+			// sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+			// 	PageName:  page.Name,
+			// 	SessionID: session.ID,
+			// })
 
-			msg, _ := json.Marshal(&Message{
-				Action:  SessionCreatedAction,
-				Payload: sessionCreatedPayloadRaw,
-			})
+			// msg, _ := json.Marshal(&Message{
+			// 	Action:  SessionCreatedAction,
+			// 	Payload: sessionCreatedPayloadRaw,
+			// })
 
 			// TODO
 			// pick first host client for now
-			for c := range page.clients {
-				if c.role == HostClient {
-					c.registerSession(session)
-					c.send(msg)
-				}
-			}
+			// for c := range page.clients {
+			// 	if c.role == HostClient {
+			// 		c.registerSession(session)
+			// 		c.send(msg)
+			// 	}
+			// }
 		}
 
 		response.Session = session
@@ -265,24 +201,24 @@ func (c *Client) registerHostClient(message *Message) {
 	// assign client role
 	c.role = HostClient
 
-	pageName, err := parsePageName(payload.PageName)
+	pageName, err := model.ParsePageName(payload.PageName)
 	if err == nil {
 
 		responsePayload.PageName = pageName.String()
 
 		// retrieve page and then create if not exists
-		page := Pages().Get(responsePayload.PageName)
+		page := store.GetPage(responsePayload.PageName)
 		if page == nil {
-			page = NewPage(responsePayload.PageName, payload.IsApp)
-			Pages().Add(page)
+			page = model.NewPage(responsePayload.PageName, payload.IsApp)
+			store.AddPage(page)
 		}
 
 		if !page.IsApp {
 			// retrieve zero session
-			session := page.GetSession(ZeroSession)
+			session := store.GetSession(page, ZeroSession)
 			if session == nil {
-				session = NewSession(page, ZeroSession)
-				page.AddSession(session)
+				session = model.NewSession(page, ZeroSession)
+				store.AddSession(page, session)
 			}
 			c.registerSession(session)
 			responsePayload.SessionID = session.ID
@@ -316,12 +252,12 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 
 	// retrieve page and session
-	page := Pages().Get(payload.PageName)
+	page := store.GetPage(payload.PageName)
 	if page != nil {
-		session := page.GetSession(payload.SessionID)
+		session := store.GetSession(page, payload.SessionID)
 		if session != nil {
 			// process command
-			result, err := session.ExecuteCommand(&payload.Command)
+			result, err := ExecuteCommand(session, &payload.Command)
 			responsePayload.Result = result
 			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)
@@ -349,7 +285,7 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 func (client *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
-	var session *Session
+	var session *model.Session
 	for s := range client.sessions {
 		session = s
 		break
@@ -366,25 +302,25 @@ func (client *Client) processPageEventFromWebClient(message *Message) {
 	payload.SessionID = session.ID
 
 	// message to host clients
-	msgPayload, _ := json.Marshal(&payload)
+	//msgPayload, _ := json.Marshal(&payload)
 
-	msg, _ := json.Marshal(&Message{
-		Action:  PageEventToHostAction,
-		Payload: msgPayload,
-	})
+	// msg, _ := json.Marshal(&Message{
+	// 	Action:  PageEventToHostAction,
+	// 	Payload: msgPayload,
+	// })
 
 	// re-send events to all connected host clients
-	for c := range session.clients {
-		if c.role == HostClient {
-			c.send(msg)
-		}
-	}
+	// for c := range session.clients {
+	// 	if c.role == HostClient {
+	// 		c.send(msg)
+	// 	}
+	// }
 }
 
 func (client *Client) updateControlPropsFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
-	var session *Session
+	var session *model.Session
 	for s := range client.sessions {
 		session = s
 		break
@@ -399,39 +335,39 @@ func (client *Client) updateControlPropsFromWebClient(message *Message) {
 	log.Printf("%+v", payload.Props)
 
 	// update control tree
-	session.UpdateControlProps(payload.Props)
+	UpdateControlProps(session, payload.Props)
 
 	// re-send the message to all connected web clients
-	go func() {
-		msg, _ := json.Marshal(message)
+	// go func() {
+	// 	msg, _ := json.Marshal(message)
 
-		for c := range session.clients {
-			if c.role == WebClient && c.id != client.id {
-				c.send(msg)
-			}
-		}
-	}()
+	// 	for c := range session.clients {
+	// 		if c.role == WebClient && c.id != client.id {
+	// 			c.send(msg)
+	// 		}
+	// 	}
+	// }()
 }
 
-func (c *Client) registerPage(page *Page) {
-	page.registerClient(c)
-	c.pages[page] = true
+func (c *Client) registerPage(page *model.Page) {
+	// page.registerClient(c)
+	// c.pages[page] = true
 }
 
-func (c *Client) registerSession(session *Session) {
-	session.registerClient(c)
+func (c *Client) registerSession(session *model.Session) {
+	//session.registerClient(c)
 	c.sessions[session] = true
 }
 
 func (client *Client) unregister() {
 
 	// unregister from all sessions
-	for session := range client.sessions {
-		session.unregisterClient(client)
-	}
+	// for session := range client.sessions {
+	// 	session.unregisterClient(client)
+	// }
 
 	// unregister from all pages
-	for page := range client.pages {
-		page.unregisterClient(client)
-	}
+	// for page := range client.pages {
+	// 	page.unregisterClient(client)
+	// }
 }

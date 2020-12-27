@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
+	"github.com/pglet/pglet/internal/store"
 )
 
 const (
@@ -148,12 +149,12 @@ func pageHandler(c *gin.Context) {
 	log.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-	page := page.Pages().Get(fullPageName)
+	page := store.GetPage(fullPageName)
 	if page == nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
 		return
 	}
-	session := page.GetSession(sessionID)
+	session := store.GetSession(page, sessionID)
 	if session == nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found"})
 		return

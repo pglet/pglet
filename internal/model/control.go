@@ -1,18 +1,9 @@
-package page
+package model
 
 import (
 	"encoding/json"
 
 	"github.com/pglet/pglet/internal/utils"
-)
-
-const (
-	Row     string = "row"
-	Col            = "col"
-	Label          = "label"
-	Textbox        = "textbox"
-	Link           = "link"
-	Button         = "button"
 )
 
 var (

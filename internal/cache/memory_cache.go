@@ -25,8 +25,8 @@ func newMemoryCache() cacher {
 }
 
 func (c *memoryCache) getString(key string) string {
-	c.Lock()
-	defer c.Unlock()
+	c.RLock()
+	defer c.RUnlock()
 
 	entry := c.getEntry(key)
 	if entry == nil {

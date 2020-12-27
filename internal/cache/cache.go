@@ -1,6 +1,9 @@
 package cache
 
-import "os"
+import (
+	"encoding/json"
+	"os"
+)
 
 type cacher interface {
 	getString(key string) string
@@ -26,4 +29,30 @@ func GetString(key string) string {
 
 func SetString(key string, value string, expireSeconds int) {
 	cache.setString(key, value, expireSeconds)
+}
+
+func GetObject(key string, result interface{}) {
+	s := cache.getString(key)
+	json.Unmarshal([]byte(s), result)
+}
+
+func SetObject(key string, value interface{}, expireSeconds int) {
+	payload, _ := json.Marshal(value)
+	cache.setString(key, string(payload), expireSeconds)
+}
+
+func Inc(key string, by int) int {
+	return 0
+}
+
+func HashSet(key string, args ...interface{}) {
+
+}
+
+func AddSet(key string, value string) {
+	// TODO
+}
+
+func RemoveSet(key string, value string) {
+	// TODO
 }
