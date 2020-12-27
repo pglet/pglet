@@ -12,36 +12,6 @@ import (
 	"github.com/pglet/pglet/internal/store"
 )
 
-const (
-	// RegisterWebClientAction registers WS client as web (browser) client
-	RegisterWebClientAction = "registerWebClient"
-
-	// RegisterHostClientAction registers WS client as host (script) client
-	RegisterHostClientAction = "registerHostClient"
-
-	// SessionCreatedAction notifies host clients about new sessions
-	SessionCreatedAction = "sessionCreated"
-
-	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
-	PageCommandFromHostAction = "pageCommandFromHost"
-
-	// PageEventFromWebAction receives click, change, expand/collapse and other events from browser
-	PageEventFromWebAction = "pageEventFromWeb"
-
-	// PageEventToHostAction redirects events from web to host clients
-	PageEventToHostAction = "pageEventToHost"
-
-	AddPageControlsAction = "addPageControls"
-
-	UpdateControlPropsAction = "updateControlProps"
-
-	AppendControlPropsAction = "appendControlProps"
-
-	RemoveControlAction = "removeControl"
-
-	CleanControlAction = "cleanControl"
-)
-
 type ClientRole string
 
 const (
@@ -257,7 +227,8 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 		session := store.GetSession(page, payload.SessionID)
 		if session != nil {
 			// process command
-			result, err := ExecuteCommand(session, &payload.Command)
+			handler := newCommandHandler(session, &payload.Command)
+			result, err := handler.execute()
 			responsePayload.Result = result
 			if err != nil {
 				responsePayload.Error = fmt.Sprint(err)
@@ -370,4 +341,26 @@ func (client *Client) unregister() {
 	// for page := range client.pages {
 	// 	page.unregisterClient(client)
 	// }
+}
+
+func registerSessionClient(session *model.Session, client *Client) {
+	// session.clientsMutex.Lock()
+	// defer session.clientsMutex.Unlock()
+
+	// if _, ok := session.clients[client]; !ok {
+	// 	log.Printf("Registering %v client %s to %s:%s",
+	// 		client.role, client.id, session.Page.Name, session.ID)
+
+	// 	session.clients[client] = true
+	// }
+}
+
+func unregisterSessionClient(session *model.Session, client *Client) {
+	// session.clientsMutex.Lock()
+	// defer session.clientsMutex.Unlock()
+
+	// log.Printf("Unregistering %v client %s from session %s:%s",
+	// 	client.role, client.id, session.Page.Name, session.ID)
+
+	// delete(session.clients, client)
 }

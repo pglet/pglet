@@ -22,12 +22,23 @@ const (
 	PageID = "page"
 )
 
-type commandHandler = func(*model.Session, *command.Command) (string, error)
+type commandHandlerFn = func(*model.Session, *command.Command) (string, error)
 
-var (
-	commandHandlers = map[string]commandHandler{
-		command.Add:     add,
-		command.Addf:    add,
+type commandHandler struct {
+	session  *model.Session
+	cmd      *command.Command
+	handlers map[string]commandHandlerFn
+}
+
+func newCommandHandler(session *model.Session, cmd *command.Command) commandHandler {
+	h := commandHandler{
+		session: session,
+		cmd:     cmd,
+	}
+
+	h.handlers = map[string]commandHandlerFn{
+		command.Add:     h.add,
+		command.Addf:    h.add,
 		command.Set:     set,
 		command.Setf:    set,
 		command.Append:  appendHandler,
@@ -38,7 +49,9 @@ var (
 		command.Remove:  remove,
 		command.Removef: remove,
 	}
-)
+
+	return h
+}
 
 type AddCommandBatchItem struct {
 	Command *command.Command
@@ -46,22 +59,22 @@ type AddCommandBatchItem struct {
 }
 
 // ExecuteCommand executes command and returns the result
-func ExecuteCommand(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *commandHandler) execute() (result string, err error) {
 	// session.Lock()
 	// defer session.Unlock()
 
 	// log.Printf("Execute command for page %s session %s: %+v\n",
 	// 	session.Page.Name, session.ID, cmd)
 
-	commandHandler := commandHandlers[strings.ToLower(cmd.Name)]
-	if commandHandler == nil {
-		return "", fmt.Errorf("Unknown command: %s", cmd.Name)
+	handler := h.handlers[strings.ToLower(h.cmd.Name)]
+	if handler == nil {
+		return "", fmt.Errorf("Unknown command: %s", h.cmd.Name)
 	}
 
-	return commandHandler(session, cmd)
+	return handler(h.session, h.cmd)
 }
 
-func add(session *model.Session, cmd *command.Command) (result string, err error) {
+func (h *commandHandler) add(session *model.Session, cmd *command.Command) (result string, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
@@ -151,7 +164,7 @@ func add(session *model.Session, cmd *command.Command) (result string, err error
 		// control ID
 		id := batchItem.Command.Attrs["id"]
 		if id == "" {
-			id = NextControlID(session)
+			id = nextControlID(session)
 		} else {
 			// generate unique ID
 			parentIDs := getControlParentIDs(parentID)
@@ -459,8 +472,8 @@ func UpdateControlProps(session *model.Session, props []map[string]interface{}) 
 	}
 }
 
-// NextControlID returns the next auto-generated control ID
-func NextControlID(session *model.Session) string {
+// nextControlID returns the next auto-generated control ID
+func nextControlID(session *model.Session) string {
 	// nextID := fmt.Sprintf("%s%d", ControlAutoIDPrefix, session.nextControlID)
 	// session.nextControlID++
 	// return nextID
@@ -574,26 +587,4 @@ func GetControl(session *model.Session, ctrlID string) *model.Control {
 
 func DeleteSessionControl(session *model.Session, ctrlID string) {
 	// TODO
-}
-
-func registerClient(session *model.Session, client *Client) {
-	// session.clientsMutex.Lock()
-	// defer session.clientsMutex.Unlock()
-
-	// if _, ok := session.clients[client]; !ok {
-	// 	log.Printf("Registering %v client %s to %s:%s",
-	// 		client.role, client.id, session.Page.Name, session.ID)
-
-	// 	session.clients[client] = true
-	// }
-}
-
-func unregisterClient(session *model.Session, client *Client) {
-	// session.clientsMutex.Lock()
-	// defer session.clientsMutex.Unlock()
-
-	// log.Printf("Unregistering %v client %s from session %s:%s",
-	// 	client.role, client.id, session.Page.Name, session.ID)
-
-	// delete(session.clients, client)
 }
