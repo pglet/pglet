@@ -6,8 +6,18 @@ import (
 )
 
 type cacher interface {
+	exists(key string) bool
 	getString(key string) string
 	setString(key string, value string, expireSeconds int)
+	inc(key string, by int) int
+	hashSet(key string, fields ...string)
+	hashGet(key string, field string) string
+	hashGetAll(key string) map[string]string
+	hashRemove(key string, fields ...string)
+	setGet(key string) []string
+	setAdd(key string, value string)
+	setRemove(key string, value string)
+	remove(key string)
 }
 
 var cache cacher
@@ -21,6 +31,10 @@ func Init() {
 	} else {
 		cache = newMemoryCache()
 	}
+}
+
+func Exists(key string) bool {
+	return cache.exists(key)
 }
 
 func GetString(key string) string {
@@ -42,39 +56,37 @@ func SetObject(key string, value interface{}, expireSeconds int) {
 }
 
 func Inc(key string, by int) int {
-	return 0
+	return cache.inc(key, by)
 }
 
-func HashSet(key string, args ...interface{}) {
-
+func HashSet(key string, fields ...string) {
+	cache.hashSet(key, fields...)
 }
 
-func HashGetString(key string, field string) string {
-	// TODO
-	return ""
+func HashGet(key string, field string) string {
+	return cache.hashGet(key, field)
 }
 
 func HashGetAll(key string) map[string]string {
-	return nil
+	return cache.hashGetAll(key)
 }
 
-func HashRemove(key string, args ...string) {
-
+func HashRemove(key string, fields ...string) {
+	cache.hashRemove(key, fields...)
 }
 
 func SetGet(key string) []string {
-	// TODO
-	return nil
+	return cache.setGet(key)
 }
 
 func SetAdd(key string, value string) {
-	// TODO
+	cache.setAdd(key, value)
 }
 
 func SetRemove(key string, value string) {
-	// TODO
+	cache.setRemove(key, value)
 }
 
 func Remove(key string) {
-	// TODO
+	cache.remove(key)
 }

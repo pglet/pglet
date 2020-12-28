@@ -37,13 +37,14 @@ func newSessionHandler(session *model.Session) sessionHandler {
 	}
 }
 
-type AddCommandBatchItem struct {
-	Command *command.Command
-	Control *model.Control
+type addCommandBatchItem struct {
+	command *command.Command
+	control *model.Control
 }
 
 // ExecuteCommand executes command and returns the result
 func (h *sessionHandler) execute(cmd *command.Command) (result string, err error) {
+	// TODO
 	// session.Lock()
 	// defer session.Unlock()
 
@@ -88,14 +89,14 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 	//log.Println("COMMAND:", utils.ToJSON(cmd))
 
 	// "Add" commands to process
-	batch := make([]*AddCommandBatchItem, 0)
+	batch := make([]*addCommandBatchItem, 0)
 
 	// top command
 	indent := 0
 	if len(cmd.Values) > 0 {
 		// single command
-		batch = append(batch, &AddCommandBatchItem{
-			Command: cmd,
+		batch = append(batch, &addCommandBatchItem{
+			command: cmd,
 		})
 		indent = 2
 	}
@@ -112,8 +113,8 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		}
 		childCmd.Name = "add"
 		childCmd.Indent += indent
-		batch = append(batch, &AddCommandBatchItem{
-			Command: childCmd,
+		batch = append(batch, &addCommandBatchItem{
+			command: childCmd,
 		})
 	}
 
@@ -129,16 +130,16 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 	for i, batchItem := range batch {
 
 		// first value must be control type
-		if len(batchItem.Command.Values) == 0 {
+		if len(batchItem.command.Values) == 0 {
 			return "", errors.New("Control type is not specified")
 		}
 
-		controlType := batchItem.Command.Values[0]
+		controlType := batchItem.command.Values[0]
 
 		// other values go to boolean properties
-		if len(batchItem.Command.Values) > 1 {
-			for _, v := range batchItem.Command.Values[1:] {
-				batchItem.Command.Attrs[v] = "true"
+		if len(batchItem.command.Values) > 1 {
+			for _, v := range batchItem.command.Values[1:] {
+				batchItem.command.Attrs[v] = "true"
 			}
 		}
 
@@ -147,8 +148,8 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 
 		// find nearest parentID
 		for pi := i - 1; pi >= 0; pi-- {
-			if batch[pi].Command.Indent < batchItem.Command.Indent {
-				parentID = batch[pi].Control.ID()
+			if batch[pi].command.Indent < batchItem.command.Indent {
+				parentID = batch[pi].control.ID()
 				break
 			}
 		}
@@ -160,7 +161,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		}
 
 		// control ID
-		id := batchItem.Command.Attrs["id"]
+		id := batchItem.command.Attrs["id"]
 		if id == "" {
 			id = h.nextControlID()
 		} else {
@@ -169,22 +170,22 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 		}
 
-		batchItem.Control = model.NewControl(controlType, parentID, id)
+		batchItem.control = model.NewControl(controlType, parentID, id)
 
 		if parentAt != -1 {
-			batchItem.Control.SetAttr("at", parentAt)
+			batchItem.control.SetAttr("at", parentAt)
 			topParentAt++
 		}
 
-		for k, v := range batchItem.Command.Attrs {
+		for k, v := range batchItem.command.Attrs {
 			if !model.IsSystemAttr(k) {
-				batchItem.Control.SetAttr(k, v)
+				batchItem.control.SetAttr(k, v)
 			}
 		}
 
-		h.addControl(batchItem.Control)
+		h.addControl(batchItem.control)
 		ids = append(ids, id)
-		payload.Controls = append(payload.Controls, batchItem.Control)
+		payload.Controls = append(payload.Controls, batchItem.control)
 	}
 
 	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))
@@ -282,6 +283,7 @@ func (h *sessionHandler) set(cmd *command.Command) (result string, err error) {
 				props[n] = v
 			}
 		}
+		store.SetSessionControl(h.session, ctrl)
 
 		payload.Props = append(payload.Props, props)
 	}
@@ -344,6 +346,7 @@ func (h *sessionHandler) appendHandler(cmd *command.Command) (result string, err
 				props[n] = v
 			}
 		}
+		store.SetSessionControl(h.session, ctrl)
 
 		payload.Props = append(payload.Props, props)
 	}
@@ -453,6 +456,7 @@ func (h *sessionHandler) remove(cmd *command.Command) (result string, err error)
 }
 
 func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
+	// TODO
 	// session.Lock()
 	// defer session.Unlock()
 
@@ -466,6 +470,8 @@ func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
 					ctrl.SetAttr(n, v)
 				}
 			}
+
+			store.SetSessionControl(h.session, ctrl)
 		}
 	}
 }
@@ -497,6 +503,7 @@ func (h *sessionHandler) addControl(ctrl *model.Control) error {
 		} else {
 			parentctrl.AddChildID(ctrl.ID())
 		}
+		store.SetSessionControl(h.session, ctrl)
 	}
 
 	return nil
@@ -523,6 +530,7 @@ func (h *sessionHandler) cleanControl(ctrl *model.Control) {
 
 	// clean up children collection
 	ctrl.RemoveChildren()
+	store.SetSessionControl(h.session, ctrl)
 }
 
 func (h *sessionHandler) deleteControl(ctrl *model.Control) {
@@ -536,7 +544,9 @@ func (h *sessionHandler) deleteControl(ctrl *model.Control) {
 	h.deleteSessionControl(ctrl.ID())
 
 	// remove control from parent's children collection
-	h.getControl(ctrl.ParentID()).RemoveChild(ctrl.ID())
+	parentCtrl := h.getControl(ctrl.ParentID())
+	parentCtrl.RemoveChild(ctrl.ID())
+	store.SetSessionControl(h.session, parentCtrl)
 }
 
 func (h *sessionHandler) getAllDescendantIds(ctrl *model.Control) []string {

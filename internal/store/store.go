@@ -88,7 +88,7 @@ func GetSessionNextControlID(session *model.Session) int {
 }
 
 func GetSessionControl(session *model.Session, ctrlID string) *model.Control {
-	cj := cache.HashGetString(fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrlID)
+	cj := cache.HashGet(fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrlID)
 	if cj == "" {
 		return nil
 	}

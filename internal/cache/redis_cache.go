@@ -34,6 +34,10 @@ func newRedisCache(redisAddr string, redisPassword string) cacher {
 	}
 }
 
+func (c *redisCache) exists(key string) bool {
+	return false
+}
+
 func (c *redisCache) getString(key string) string {
 	value, err := redis.String(c.conn.Do("GET", key))
 	if err != nil {
@@ -51,4 +55,40 @@ func (c *redisCache) setString(key string, value string, expireSeconds int) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (c *redisCache) inc(key string, by int) int {
+	return 0
+}
+
+func (c *redisCache) hashSet(key string, fields ...string) {
+
+}
+
+func (c *redisCache) hashGet(key string, field string) string {
+	return ""
+}
+
+func (c *redisCache) hashGetAll(key string) map[string]string {
+	return nil
+}
+
+func (c *redisCache) hashRemove(key string, fields ...string) {
+
+}
+
+func (c *redisCache) setGet(key string) []string {
+	return nil
+}
+
+func (c *redisCache) setAdd(key string, value string) {
+
+}
+
+func (c *redisCache) setRemove(key string, value string) {
+
+}
+
+func (c *redisCache) remove(key string) {
+
 }

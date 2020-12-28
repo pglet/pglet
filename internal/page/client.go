@@ -256,11 +256,11 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 }
 
-func (client *Client) processPageEventFromWebClient(message *Message) {
+func (c *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *model.Session
-	for s := range client.sessions {
+	for s := range c.sessions {
 		session = s
 		break
 	}
@@ -291,11 +291,11 @@ func (client *Client) processPageEventFromWebClient(message *Message) {
 	// }
 }
 
-func (client *Client) updateControlPropsFromWebClient(message *Message) {
+func (c *Client) updateControlPropsFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *model.Session
-	for s := range client.sessions {
+	for s := range c.sessions {
 		session = s
 		break
 	}
@@ -334,7 +334,7 @@ func (c *Client) registerSession(session *model.Session) {
 	c.sessions[session] = true
 }
 
-func (client *Client) unregister() {
+func (c *Client) unregister() {
 
 	// unregister from all sessions
 	// for session := range client.sessions {
