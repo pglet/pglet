@@ -25,7 +25,9 @@ type memoryCache struct {
 func newMemoryCache() cacher {
 	log.Println("Using in-memory cache")
 	return &memoryCache{
-		entries: make(map[string]*cacheEntry),
+		entries:            make(map[string]*cacheEntry),
+		channelSubscribers: make(map[string]map[chan []byte]bool),
+		subscribers:        make(map[chan []byte]string),
 	}
 }
 
@@ -235,15 +237,56 @@ func (c *memoryCache) deleteEntry(key string) {
 func (c *memoryCache) subscribe(channel string) chan []byte {
 	c.pubsubLock.Lock()
 	defer c.pubsubLock.Unlock()
-	return nil
+
+	subscribers := c.channelSubscribers[channel]
+	if subscribers == nil {
+		subscribers = make(map[chan []byte]bool)
+		c.channelSubscribers[channel] = subscribers
+	}
+
+	ch := make(chan []byte)
+	subscribers[ch] = true
+	c.subscribers[ch] = channel
+	return ch
 }
 
 func (c *memoryCache) unsubscribe(ch chan []byte) {
 	c.pubsubLock.Lock()
 	defer c.pubsubLock.Unlock()
+
+	channel := c.subscribers[ch]
+	if channel == "" {
+		return
+	}
+
+	subscribers := c.channelSubscribers[channel]
+	if subscribers == nil {
+		return
+	}
+
+	close(ch)
+	delete(subscribers, ch)
+
+	if len(subscribers) == 0 {
+		delete(c.channelSubscribers, channel)
+	}
 }
 
 func (c *memoryCache) send(channel string, message []byte) {
 	c.pubsubLock.RLock()
 	defer c.pubsubLock.RUnlock()
+
+	subscribers := c.channelSubscribers[channel]
+	if subscribers == nil {
+		return
+	}
+
+	for ch := range subscribers {
+		select {
+		case ch <- message:
+			// Message sent to subscriber
+		default:
+			// No listeners
+		}
+	}
 }

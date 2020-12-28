@@ -282,6 +282,10 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 		break
 	}
 
+	if session == nil {
+		return
+	}
+
 	log.Println("Page event from browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
