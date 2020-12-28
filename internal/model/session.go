@@ -4,11 +4,3 @@ type Session struct {
 	Page *Page  `json:"-"`
 	ID   string `json:"id"`
 }
-
-// NewSession creates a new instance of Page.
-func NewSession(page *Page, id string) *Session {
-	s := &Session{}
-	s.Page = page
-	s.ID = id
-	return s
-}

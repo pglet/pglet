@@ -70,27 +70,31 @@ func (ctl *Control) ParentID() string {
 
 // AddChildID appends the child to the parent control.
 func (ctl *Control) AddChildID(childID string) {
-	childIds, _ := (*ctl)["c"].([]string)
+	childIds, _ := (*ctl)["c"].([]interface{})
 	(*ctl)["c"] = append(childIds, childID)
 }
 
 func (ctl *Control) InsertChildID(childID string, at int) {
-	childIds, _ := (*ctl)["c"].([]string)
-	(*ctl)["c"] = utils.InsertString(childIds, childID, at)
+	childIds, _ := (*ctl)["c"].([]interface{})
+	(*ctl)["c"] = utils.SliceInsert(childIds, childID, at)
 }
 
 func (ctl *Control) RemoveChild(childID string) {
-	childIds, _ := (*ctl)["c"].([]string)
-	(*ctl)["c"] = utils.RemoveString(childIds, childID)
+	childIds, _ := (*ctl)["c"].([]interface{})
+	(*ctl)["c"] = utils.SliceRemove(childIds, childID)
 }
 
 func (ctl *Control) RemoveChildren() {
-	(*ctl)["c"] = make([]string, 0, 0)
+	(*ctl)["c"] = make([][]interface{}, 0, 0)
 }
 
 func (ctl *Control) GetChildrenIds() []string {
-	ids, _ := (*ctl)["c"].([]string)
-	return ids
+	ids, _ := (*ctl)["c"].([]interface{})
+	result := make([]string, len(ids))
+	for i, id := range ids {
+		result[i] = id.(string)
+	}
+	return result
 }
 
 func IsSystemAttr(attr string) bool {

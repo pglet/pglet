@@ -1,6 +1,7 @@
 package page
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/pubsub"
 	"github.com/pglet/pglet/internal/store"
 	"github.com/pglet/pglet/internal/utils"
 	log "github.com/sirupsen/logrus"
@@ -40,6 +42,18 @@ func newSessionHandler(session *model.Session) sessionHandler {
 type addCommandBatchItem struct {
 	command *command.Command
 	control *model.Control
+}
+
+// NewSession creates a new instance of Session.
+func newSession(page *model.Page, id string) *model.Session {
+	s := &model.Session{}
+	s.Page = page
+	s.ID = id
+
+	h := newSessionHandler(s)
+	h.addControl(model.NewControl("page", "", ReservedPageID))
+
+	return s
 }
 
 // ExecuteCommand executes command and returns the result
@@ -184,6 +198,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		}
 
 		h.addControl(batchItem.control)
+
 		ids = append(ids, id)
 		payload.Controls = append(payload.Controls, batchItem.control)
 	}
@@ -503,7 +518,7 @@ func (h *sessionHandler) addControl(ctrl *model.Control) error {
 		} else {
 			parentctrl.AddChildID(ctrl.ID())
 		}
-		store.SetSessionControl(h.session, ctrl)
+		store.SetSessionControl(h.session, parentctrl)
 	}
 
 	return nil
@@ -569,13 +584,11 @@ func (h *sessionHandler) isAutoID(id string) bool {
 
 func (h *sessionHandler) broadcastCommandToWebClients(msg *Message) {
 
-	// serializedMsg, _ := json.Marshal(msg)
+	serializedMsg, _ := json.Marshal(msg)
 
-	// for c := range session.clients {
-	// 	if c.role == WebClient {
-	// 		c.send(serializedMsg)
-	// 	}
-	// }
+	for _, clientID := range store.GetSessionWebClients(h.session) {
+		pubsub.Send(fmt.Sprintf("client-%s", clientID), serializedMsg)
+	}
 }
 
 func (h *sessionHandler) getControl(ctrlID string) *model.Control {

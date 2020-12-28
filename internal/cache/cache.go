@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"encoding/json"
 	"os"
 )
 
@@ -43,16 +42,6 @@ func GetString(key string) string {
 
 func SetString(key string, value string, expireSeconds int) {
 	cache.setString(key, value, expireSeconds)
-}
-
-func GetObject(key string, result interface{}) {
-	s := cache.getString(key)
-	json.Unmarshal([]byte(s), result)
-}
-
-func SetObject(key string, value interface{}, expireSeconds int) {
-	payload, _ := json.Marshal(value)
-	cache.setString(key, string(payload), expireSeconds)
 }
 
 func Inc(key string, by int) int {

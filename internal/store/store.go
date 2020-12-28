@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -26,8 +27,12 @@ const (
 // ==============================
 
 func GetPage(pageName string) *model.Page {
+	j := cache.GetString(fmt.Sprintf(pageKey, pageName))
+	if j == "" {
+		return nil
+	}
 	p := new(model.Page)
-	cache.GetObject(fmt.Sprintf(pageKey, pageName), &p)
+	json.Unmarshal([]byte(j), p)
 	return p
 }
 
@@ -37,7 +42,7 @@ func AddPage(page *model.Page) {
 
 	pageID := cache.Inc(pageNextIDKey, 1)
 	page.ID = pageID
-	cache.SetObject(fmt.Sprintf(pageKey, page.Name), page, 0)
+	cache.SetString(fmt.Sprintf(pageKey, page.Name), utils.ToJSON(page), 0)
 }
 
 //
@@ -61,14 +66,19 @@ func RemovePageHostClient(page *model.Page, clientID string) {
 // ==============================
 
 func GetSession(page *model.Page, sessionID string) *model.Session {
+
+	j := cache.GetString(fmt.Sprintf(sessionKey, page.ID, sessionID))
+	if j == "" {
+		return nil
+	}
 	session := new(model.Session)
-	cache.GetObject(fmt.Sprintf(sessionKey, page.ID, sessionID), &session)
+	json.Unmarshal([]byte(j), &session)
 	session.Page = page
 	return session
 }
 
 func AddSession(session *model.Session) {
-	cache.SetObject(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), session, 0)
+	cache.SetString(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), utils.ToJSON(session), 0)
 	cache.SetAdd(fmt.Sprintf(pageSessionsKey, session.Page.ID), session.ID)
 }
 

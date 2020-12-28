@@ -113,7 +113,7 @@ func (c *Client) registerWebClient(message *Message) {
 		} else {
 			// app page
 			// create new session
-			session = model.NewSession(page, uuid.New().String())
+			session = newSession(page, uuid.New().String())
 			store.AddSession(session)
 
 			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
@@ -190,7 +190,7 @@ func (c *Client) registerHostClient(message *Message) {
 			// retrieve zero session
 			session := store.GetSession(page, ZeroSession)
 			if session == nil {
-				session = model.NewSession(page, ZeroSession)
+				session = newSession(page, ZeroSession)
 				store.AddSession(session)
 			}
 			c.registerSession(session)
