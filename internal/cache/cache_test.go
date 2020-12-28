@@ -128,3 +128,27 @@ func TestSet(t *testing.T) {
 		t.Errorf("Set should not exist after removing all elements")
 	}
 }
+
+// func TestChannels(t *testing.T) {
+// 	ch1 := make(chan int)
+// 	log.Println(ch1)
+
+// 	go func() {
+// 		for {
+// 			select {
+// 			case msg, more := <-ch1:
+// 				if !more {
+// 					fmt.Println("Channel closed")
+// 					return
+// 				}
+// 				log.Println(msg)
+// 			}
+// 		}
+// 	}()
+
+// 	ch1 <- 1
+// 	ch1 <- 2
+// 	ch1 <- 3
+// 	close(ch1)
+// 	time.Sleep(3 * time.Second)
+// }

@@ -15,7 +15,7 @@ type Local struct {
 func NewLocal() *Local {
 	cws := &Local{
 		readCh:  make(chan []byte),
-		writeCh: make(chan []byte),
+		writeCh: make(chan []byte, 10),
 		done:    make(chan bool),
 	}
 	return cws

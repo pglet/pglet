@@ -17,6 +17,10 @@ type cacher interface {
 	setAdd(key string, value string)
 	setRemove(key string, value string)
 	remove(key string)
+	// pubsub
+	subscribe(channel string) chan []byte
+	unsubscribe(ch chan []byte)
+	send(channel string, message []byte)
 }
 
 var cache cacher
@@ -78,4 +82,20 @@ func SetRemove(key string, value string) {
 
 func Remove(key string) {
 	cache.remove(key)
+}
+
+//
+// PubSub
+// =============================
+
+func Subscribe(channel string) chan []byte {
+	return cache.subscribe(channel)
+}
+
+func Unsubscribe(ch chan []byte) {
+	cache.unsubscribe(ch)
+}
+
+func Send(channel string, message []byte) {
+	cache.send(channel, message)
 }

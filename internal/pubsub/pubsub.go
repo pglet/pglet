@@ -1,13 +1,17 @@
 package pubsub
 
+import (
+	"github.com/pglet/pglet/internal/cache"
+)
+
 func Subscribe(channel string) chan []byte {
-	return nil
+	return cache.Subscribe(channel)
 }
 
-func Unsubscribe(channel string) {
-
+func Unsubscribe(ch chan []byte) {
+	cache.Unsubscribe(ch)
 }
 
 func Send(channel string, message []byte) {
-
+	cache.Send(channel, message)
 }

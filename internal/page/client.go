@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/connection"
+	"github.com/pglet/pglet/internal/pubsub"
 	"github.com/pglet/pglet/internal/store"
 )
 
@@ -21,11 +22,12 @@ const (
 )
 
 type Client struct {
-	id       string
-	role     ClientRole
-	conn     connection.Conn
-	sessions map[*model.Session]bool
-	//pages    map[*Page]bool
+	id           string
+	role         ClientRole
+	conn         connection.Conn
+	subscription chan []byte
+	sessions     map[*model.Session]bool
+	pages        map[*model.Page]bool
 }
 
 func autoID() string {
@@ -37,8 +39,10 @@ func NewClient(conn connection.Conn) *Client {
 		id:       autoID(),
 		conn:     conn,
 		sessions: make(map[*model.Session]bool),
-		//pages:    make(map[*Page]bool),
+		pages:    make(map[*model.Page]bool),
 	}
+
+	go c.subscribe()
 
 	go func() {
 		conn.Start(c.readHandler)
@@ -48,6 +52,19 @@ func NewClient(conn connection.Conn) *Client {
 	log.Printf("New Client %s is connected, total: %d\n", c.id, 0)
 
 	return c
+}
+
+func (c *Client) subscribe() {
+	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
+	for {
+		select {
+		case msg, more := <-c.subscription:
+			if !more {
+				return
+			}
+			c.send(msg)
+		}
+	}
 }
 
 func (c *Client) readHandler(message []byte) error {
@@ -123,24 +140,24 @@ func (c *Client) registerWebClient(message *Message) {
 
 		if page.IsApp {
 			// pick connected host client from page pool and notify about new session created
-			// sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
-			// 	PageName:  page.Name,
-			// 	SessionID: session.ID,
-			// })
+			sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+				PageName:  page.Name,
+				SessionID: session.ID,
+			})
 
-			// msg, _ := json.Marshal(&Message{
-			// 	Action:  SessionCreatedAction,
-			// 	Payload: sessionCreatedPayloadRaw,
-			// })
+			msg, _ := json.Marshal(&Message{
+				Action:  SessionCreatedAction,
+				Payload: sessionCreatedPayloadRaw,
+			})
 
 			// TODO
 			// pick first host client for now
-			// for c := range page.clients {
-			// 	if c.role == HostClient {
-			// 		c.registerSession(session)
-			// 		c.send(msg)
-			// 	}
-			// }
+			// in the future we will implement load distribution algorithm
+			for _, clientID := range store.GetPageHostClients(page) {
+				store.AddSessionHostClient(session, clientID)
+				pubsub.Send(clientChannelName(clientID), msg)
+				break
+			}
 		}
 
 		response.Session = SessionPayload{
@@ -276,19 +293,17 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 	payload.SessionID = session.ID
 
 	// message to host clients
-	//msgPayload, _ := json.Marshal(&payload)
+	msgPayload, _ := json.Marshal(&payload)
 
-	// msg, _ := json.Marshal(&Message{
-	// 	Action:  PageEventToHostAction,
-	// 	Payload: msgPayload,
-	// })
+	msg, _ := json.Marshal(&Message{
+		Action:  PageEventToHostAction,
+		Payload: msgPayload,
+	})
 
 	// re-send events to all connected host clients
-	// for c := range session.clients {
-	// 	if c.role == HostClient {
-	// 		c.send(msg)
-	// 	}
-	// }
+	for _, clientID := range store.GetSessionHostClients(session) {
+		pubsub.Send(clientChannelName(clientID), msg)
+	}
 }
 
 func (c *Client) updateControlPropsFromWebClient(message *Message) {
@@ -313,58 +328,60 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) {
 	handler.updateControlProps(payload.Props)
 
 	// re-send the message to all connected web clients
-	// go func() {
-	// 	msg, _ := json.Marshal(message)
+	go func() {
+		msg, _ := json.Marshal(message)
 
-	// 	for c := range session.clients {
-	// 		if c.role == WebClient && c.id != client.id {
-	// 			c.send(msg)
-	// 		}
-	// 	}
-	// }()
+		for _, clientID := range store.GetSessionWebClients(session) {
+			if clientID != c.id {
+				pubsub.Send(clientChannelName(clientID), msg)
+			}
+		}
+	}()
 }
 
 func (c *Client) registerPage(page *model.Page) {
-	// page.registerClient(c)
-	// c.pages[page] = true
+
+	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
+
+	store.AddPageHostClient(page, c.id)
+	c.pages[page] = true
 }
 
 func (c *Client) registerSession(session *model.Session) {
-	//session.registerClient(c)
+
+	log.Printf("Registering %v client %s to session %s:%s", c.role, c.id, session.Page.Name, session.ID)
+
+	if c.role == WebClient {
+		store.AddSessionWebClient(session, c.id)
+	} else {
+		store.AddSessionHostClient(session, c.id)
+	}
 	c.sessions[session] = true
 }
 
 func (c *Client) unregister() {
 
+	// unsubscribe from pubsub
+	pubsub.Unsubscribe(c.subscription)
+
 	// unregister from all sessions
-	// for session := range client.sessions {
-	// 	session.unregisterClient(client)
-	// }
+	for session := range c.sessions {
+		log.Printf("Unregistering %v client %s from session %s:%s", c.role, c.id, session.Page.Name, session.ID)
+
+		if c.role == WebClient {
+			store.RemoveSessionWebClient(session, c.id)
+		} else {
+			store.RemoveSessionHostClient(session, c.id)
+		}
+	}
 
 	// unregister from all pages
-	// for page := range client.pages {
-	// 	page.unregisterClient(client)
-	// }
+	for page := range c.pages {
+		log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
+		store.RemovePageHostClient(page, c.id)
+	}
 }
 
-func registerSessionClient(session *model.Session, client *Client) {
-	// session.clientsMutex.Lock()
-	// defer session.clientsMutex.Unlock()
-
-	// if _, ok := session.clients[client]; !ok {
-	// 	log.Printf("Registering %v client %s to %s:%s",
-	// 		client.role, client.id, session.Page.Name, session.ID)
-
-	// 	session.clients[client] = true
-	// }
-}
-
-func unregisterSessionClient(session *model.Session, client *Client) {
-	// session.clientsMutex.Lock()
-	// defer session.clientsMutex.Unlock()
-
-	// log.Printf("Unregistering %v client %s from session %s:%s",
-	// 	client.role, client.id, session.Page.Name, session.ID)
-
-	// delete(session.clients, client)
+func clientChannelName(clientID string) string {
+	return fmt.Sprintf("client-%s", clientID)
 }

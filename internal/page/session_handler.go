@@ -17,7 +17,7 @@ import (
 
 const (
 	// ZeroSession is ID of zero session
-	ZeroSession string = ""
+	ZeroSession string = "0"
 	// ControlAutoIDPrefix is a prefix for auto-generated control IDs
 	ControlAutoIDPrefix = "_"
 	// ControlIDSeparator is a symbol between parts of control ID
@@ -587,7 +587,7 @@ func (h *sessionHandler) broadcastCommandToWebClients(msg *Message) {
 	serializedMsg, _ := json.Marshal(msg)
 
 	for _, clientID := range store.GetSessionWebClients(h.session) {
-		pubsub.Send(fmt.Sprintf("client-%s", clientID), serializedMsg)
+		pubsub.Send(clientChannelName(clientID), serializedMsg)
 	}
 }
 

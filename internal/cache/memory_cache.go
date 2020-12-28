@@ -15,6 +15,11 @@ type cacheEntry struct {
 type memoryCache struct {
 	sync.RWMutex
 	entries map[string]*cacheEntry
+	// pubsub
+	// subscriber is a channel
+	pubsubLock         sync.RWMutex
+	channelSubscribers map[string]map[chan []byte]bool
+	subscribers        map[chan []byte]string
 }
 
 func newMemoryCache() cacher {
@@ -221,4 +226,24 @@ func (c *memoryCache) getEntry(key string) *cacheEntry {
 
 func (c *memoryCache) deleteEntry(key string) {
 	delete(c.entries, key)
+}
+
+//
+// PubSub
+// =============================
+
+func (c *memoryCache) subscribe(channel string) chan []byte {
+	c.pubsubLock.Lock()
+	defer c.pubsubLock.Unlock()
+	return nil
+}
+
+func (c *memoryCache) unsubscribe(ch chan []byte) {
+	c.pubsubLock.Lock()
+	defer c.pubsubLock.Unlock()
+}
+
+func (c *memoryCache) send(channel string, message []byte) {
+	c.pubsubLock.RLock()
+	defer c.pubsubLock.RUnlock()
 }

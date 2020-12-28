@@ -92,3 +92,19 @@ func (c *redisCache) setRemove(key string, value string) {
 func (c *redisCache) remove(key string) {
 
 }
+
+//
+// PubSub
+// =============================
+
+func (c *redisCache) subscribe(channel string) chan []byte {
+	return nil
+}
+
+func (c *redisCache) unsubscribe(ch chan []byte) {
+
+}
+
+func (c *redisCache) send(channel string, message []byte) {
+
+}
