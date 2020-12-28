@@ -34,8 +34,6 @@ func NewRootCmd() *cobra.Command {
 
 			// init cache
 			cache.Init()
-
-			cache.SetString("aaa", "111", 60)
 		},
 	}
 

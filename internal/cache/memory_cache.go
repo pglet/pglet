@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -24,10 +26,28 @@ type memoryCache struct {
 
 func newMemoryCache() cacher {
 	log.Println("Using in-memory cache")
-	return &memoryCache{
+	mc := &memoryCache{
 		entries:            make(map[string]*cacheEntry),
 		channelSubscribers: make(map[string]map[chan []byte]bool),
 		subscribers:        make(map[chan []byte]string),
+	}
+	//go mc.dumpData()
+	return mc
+}
+
+func (c *memoryCache) dumpData() {
+	dataPath := filepath.Join(os.TempDir(), "pglet-memory-cache")
+	log.Println("Memory cache dump:", dataPath)
+
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		<-ticker.C
+
+		log.Println("MEMORY STATE DUMP")
+		log.Println("channel subscribers:")
+		for k, v := range c.channelSubscribers {
+			log.Println("channel:", k, "subscribers:", len(v))
+		}
 	}
 }
 

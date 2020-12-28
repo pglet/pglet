@@ -140,6 +140,8 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		Controls: make([]*model.Control, 0),
 	}
 
+	affectedParents := make(map[string]bool)
+
 	// process batch
 	for i, batchItem := range batch {
 
@@ -185,6 +187,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		}
 
 		batchItem.control = model.NewControl(controlType, parentID, id)
+		affectedParents[parentID] = true
 
 		if parentAt != -1 {
 			batchItem.control.SetAttr("at", parentAt)
@@ -198,9 +201,15 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		}
 
 		h.addControl(batchItem.control)
-
-		ids = append(ids, id)
 		payload.Controls = append(payload.Controls, batchItem.control)
+		ids = append(ids, id)
+	}
+
+	// re-read affected parents
+	for i, ctrl := range payload.Controls {
+		if affectedParents[ctrl.ID()] {
+			payload.Controls[i] = store.GetSessionControl(h.session, ctrl.ID())
+		}
 	}
 
 	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))

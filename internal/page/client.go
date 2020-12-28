@@ -365,6 +365,8 @@ func (c *Client) registerSession(session *model.Session) {
 
 func (c *Client) unregister() {
 
+	log.Printf("Unregistering client %s", c.id)
+
 	// unsubscribe from pubsub
 	pubsub.Unsubscribe(c.subscription)
 
