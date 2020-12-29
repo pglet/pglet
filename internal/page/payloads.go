@@ -37,12 +37,13 @@ type RegisterHostClientResponsePayload struct {
 }
 
 type RegisterWebClientRequestPayload struct {
-	PageName string `json:"pageName"`
+	PageName  string `json:"pageName"`
+	SessionID string `json:"sessionID"`
 }
 
 type RegisterWebClientResponsePayload struct {
-	Session SessionPayload `json:"session"`
-	Error   string         `json:"error"`
+	Session *SessionPayload `json:"session"`
+	Error   string          `json:"error"`
 }
 
 type SessionPayload struct {

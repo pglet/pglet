@@ -121,46 +121,58 @@ func (c *Client) registerWebClient(message *Message) {
 	} else {
 		var session *model.Session
 
-		if !page.IsApp {
+		if page.IsApp {
+			// app page
+
+			var sessionCreated bool
+			if payload.SessionID != "" {
+				// lookup for existing session
+				session = store.GetSession(page, payload.SessionID)
+			}
+
+			// create new session
+			if session == nil {
+				session = newSession(page, uuid.New().String())
+				store.AddSession(session)
+				sessionCreated = true
+			}
+
+			c.registerSession(session)
+
+			if sessionCreated {
+				// pick connected host client from page pool and notify about new session created
+				sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+					PageName:  page.Name,
+					SessionID: session.ID,
+				})
+
+				msg, _ := json.Marshal(&Message{
+					Action:  SessionCreatedAction,
+					Payload: sessionCreatedPayloadRaw,
+				})
+
+				// TODO
+				// pick first host client for now
+				// in the future we will implement load distribution algorithm
+				for _, clientID := range store.GetPageHostClients(page) {
+					store.AddSessionHostClient(session, clientID)
+					pubsub.Send(clientChannelName(clientID), msg)
+					break
+				}
+			}
+
+			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
+
+		} else {
 			// shared page
 			// retrieve zero session
 			session = store.GetSession(page, ZeroSession)
+			c.registerSession(session)
 
 			log.Printf("Connected to zero session of %s page\n", page.Name)
-		} else {
-			// app page
-			// create new session
-			session = newSession(page, uuid.New().String())
-			store.AddSession(session)
-
-			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
 		}
 
-		c.registerSession(session)
-
-		if page.IsApp {
-			// pick connected host client from page pool and notify about new session created
-			sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
-				PageName:  page.Name,
-				SessionID: session.ID,
-			})
-
-			msg, _ := json.Marshal(&Message{
-				Action:  SessionCreatedAction,
-				Payload: sessionCreatedPayloadRaw,
-			})
-
-			// TODO
-			// pick first host client for now
-			// in the future we will implement load distribution algorithm
-			for _, clientID := range store.GetPageHostClients(page) {
-				store.AddSessionHostClient(session, clientID)
-				pubsub.Send(clientChannelName(clientID), msg)
-				break
-			}
-		}
-
-		response.Session = SessionPayload{
+		response.Session = &SessionPayload{
 			ID:       session.ID,
 			Controls: store.GetAllSessionControls(session),
 		}
