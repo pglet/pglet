@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
 	"github.com/pglet/pglet/internal/pubsub"
@@ -58,9 +59,8 @@ func newSession(page *model.Page, id string) *model.Session {
 
 // ExecuteCommand executes command and returns the result
 func (h *sessionHandler) execute(cmd *command.Command) (result string, err error) {
-	// TODO
-	// session.Lock()
-	// defer session.Unlock()
+	sl := h.lockSession()
+	defer sl.Unlock()
 
 	log.Printf("Execute command for page %s session %s: %+v\n",
 		h.session.Page.Name, h.session.ID, cmd)
@@ -480,9 +480,8 @@ func (h *sessionHandler) remove(cmd *command.Command) (result string, err error)
 }
 
 func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
-	// TODO
-	// session.Lock()
-	// defer session.Unlock()
+	sl := h.lockSession()
+	defer sl.Unlock()
 
 	for _, p := range props {
 		id := p["i"].(string)
@@ -606,4 +605,8 @@ func (h *sessionHandler) getControl(ctrlID string) *model.Control {
 
 func (h *sessionHandler) deleteSessionControl(ctrlID string) {
 	store.DeleteSessionControl(h.session, ctrlID)
+}
+
+func (h *sessionHandler) lockSession() cache.Unlocker {
+	return cache.Lock(fmt.Sprintf("session-lock-%s", h.session.ID))
 }

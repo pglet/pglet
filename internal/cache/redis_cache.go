@@ -108,3 +108,11 @@ func (c *redisCache) unsubscribe(ch chan []byte) {
 func (c *redisCache) send(channel string, message []byte) {
 
 }
+
+//
+// Locks
+// Source: https://gist.github.com/bgentry/6105288
+// =============================
+func (c *redisCache) lock(key string) Unlocker {
+	return nil
+}

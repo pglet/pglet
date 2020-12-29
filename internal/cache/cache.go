@@ -21,6 +21,12 @@ type cacher interface {
 	subscribe(channel string) chan []byte
 	unsubscribe(ch chan []byte)
 	send(channel string, message []byte)
+	// locks
+	lock(key string) Unlocker
+}
+
+type Unlocker interface {
+	Unlock()
 }
 
 var cache cacher
@@ -98,4 +104,11 @@ func Unsubscribe(ch chan []byte) {
 
 func Send(channel string, message []byte) {
 	cache.send(channel, message)
+}
+
+//
+// Locks
+// =============================
+func Lock(key string) Unlocker {
+	return cache.lock(key)
 }

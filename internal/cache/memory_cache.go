@@ -14,6 +14,13 @@ type cacheEntry struct {
 	data    interface{}
 }
 
+type lockEntry struct {
+	m     *memoryCache // point back to M, so we can synchronize removing this mentry when cnt==0
+	el    sync.Mutex   // entry-specific lock
+	count int          // reference count
+	key   interface{}  // key in ma
+}
+
 type memoryCache struct {
 	sync.RWMutex
 	entries map[string]*cacheEntry
@@ -22,6 +29,9 @@ type memoryCache struct {
 	pubsubLock         sync.RWMutex
 	channelSubscribers map[string]map[chan []byte]bool
 	subscribers        map[chan []byte]string
+	// locks
+	ml          sync.Mutex                 // lock for entry map
+	lockEntries map[interface{}]*lockEntry // entry map
 }
 
 func newMemoryCache() cacher {
@@ -30,6 +40,7 @@ func newMemoryCache() cacher {
 		entries:            make(map[string]*cacheEntry),
 		channelSubscribers: make(map[string]map[chan []byte]bool),
 		subscribers:        make(map[chan []byte]string),
+		lockEntries:        make(map[interface{}]*lockEntry),
 	}
 	//go mc.dumpData()
 	return mc
@@ -309,4 +320,51 @@ func (c *memoryCache) send(channel string, message []byte) {
 			// No listeners
 		}
 	}
+}
+
+//
+// Locks
+// Source: https://stackoverflow.com/questions/40931373/how-to-gc-a-map-of-mutexes-in-go
+// =============================
+func (c *memoryCache) lock(key string) Unlocker {
+
+	// read or create entry for this key atomically
+	c.ml.Lock()
+	e, ok := c.lockEntries[key]
+	if !ok {
+		e = &lockEntry{m: c, key: key}
+		c.lockEntries[key] = e
+	}
+	e.count++ // ref count
+	c.ml.Unlock()
+
+	// acquire lock, will block here until e.cnt==1
+	e.el.Lock()
+
+	return e
+}
+
+// Unlock releases the lock for this entry.
+func (me *lockEntry) Unlock() {
+
+	m := me.m
+
+	//log.Println("LOCK ENTRIES:", len(me.m.lockEntries))
+
+	// decrement and if needed remove entry atomically
+	m.ml.Lock()
+	e, ok := m.lockEntries[me.key]
+	if !ok { // entry must exist
+		m.ml.Unlock()
+		log.Errorf("Unlock requested for key=%v but no entry found", me.key)
+	}
+	e.count--        // ref count
+	if e.count < 1 { // if it hits zero then we own it and remove from map
+		delete(m.lockEntries, me.key)
+	}
+	m.ml.Unlock()
+
+	// now that map stuff is handled, we unlock and let
+	// anything else waiting on this key through
+	e.el.Unlock()
 }
