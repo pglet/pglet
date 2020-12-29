@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/pglet/pglet/internal/config"
 )
 
 func TestMain(m *testing.M) {
@@ -21,7 +23,7 @@ func TestMain(m *testing.M) {
 	// }
 
 	// test in-memory
-	os.Setenv("REDIS_ADDR", "")
+	os.Setenv(config.RedisAddr, "")
 	Init()
 	retCode := m.Run()
 	if retCode != 0 {

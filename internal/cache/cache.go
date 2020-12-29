@@ -2,6 +2,8 @@ package cache
 
 import (
 	"os"
+
+	"github.com/pglet/pglet/internal/config"
 )
 
 type cacher interface {
@@ -16,7 +18,7 @@ type cacher interface {
 	setGet(key string) []string
 	setAdd(key string, value string)
 	setRemove(key string, value string)
-	remove(key string)
+	remove(keys ...string)
 	// pubsub
 	subscribe(channel string) chan []byte
 	unsubscribe(ch chan []byte)
@@ -32,8 +34,8 @@ type Unlocker interface {
 var cache cacher
 
 func Init() {
-	redisAddr := os.Getenv("REDIS_ADDR")
-	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisAddr := os.Getenv(config.RedisAddr)
+	redisPassword := os.Getenv(config.RedisPassword)
 
 	if redisAddr != "" {
 		cache = newRedisCache(redisAddr, redisPassword)
@@ -86,8 +88,8 @@ func SetRemove(key string, value string) {
 	cache.setRemove(key, value)
 }
 
-func Remove(key string) {
-	cache.remove(key)
+func Remove(keys ...string) {
+	cache.remove(keys...)
 }
 
 //

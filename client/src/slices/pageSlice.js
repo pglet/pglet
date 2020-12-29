@@ -1,5 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
+import Cookies from 'universal-cookie';
 //import { current } from '@reduxjs/toolkit'
+
+const cookies = new Cookies();
 
 const initialState = {
     "name": "test-1",
@@ -20,8 +23,9 @@ const pageSlice = createSlice({
     reducers: {
         registerWebClientSuccess(state, action) {
             state.loading = false;
-            state.sessionId = action.payload.id;
-            state.controls = action.payload.controls;
+            state.sessionId = action.payload.session.id;
+            state.controls = action.payload.session.controls;
+            //cookies.set(`sid-${action.payload.pageName}`, action.payload.session.id, { path: '/' });
         },
         registerWebClientError(state, action) {
             state.loading = false;

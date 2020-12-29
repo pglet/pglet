@@ -47,7 +47,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request)
+		websocketHandler(c.Writer, c.Request, c.ClientIP())
 	})
 
 	// Setup route group for the API
@@ -109,7 +109,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	log.Println("Server exited")
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -122,7 +122,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc)
+	page.NewClient(wsc, clientIP)
 }
 
 func userHandler(c *gin.Context) {

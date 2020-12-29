@@ -228,10 +228,13 @@ func (c *memoryCache) setRemove(key string, value string) {
 	}
 }
 
-func (c *memoryCache) remove(key string) {
+func (c *memoryCache) remove(keys ...string) {
 	c.Lock()
 	defer c.Unlock()
-	c.deleteEntry(key)
+
+	for _, key := range keys {
+		c.deleteEntry(key)
+	}
 }
 
 func (c *memoryCache) newEntry(expireSeconds int) *cacheEntry {

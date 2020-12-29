@@ -89,7 +89,7 @@ func (c *redisCache) setRemove(key string, value string) {
 
 }
 
-func (c *redisCache) remove(key string) {
+func (c *redisCache) remove(keys ...string) {
 
 }
 

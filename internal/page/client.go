@@ -25,6 +25,7 @@ type Client struct {
 	id           string
 	role         ClientRole
 	conn         connection.Conn
+	clientIP     string
 	subscription chan []byte
 	sessions     map[*model.Session]bool
 	pages        map[*model.Page]bool
@@ -34,13 +35,16 @@ func autoID() string {
 	return uuid.New().String()
 }
 
-func NewClient(conn connection.Conn) *Client {
+func NewClient(conn connection.Conn, clientIP string) *Client {
 	c := &Client{
 		id:       autoID(),
 		conn:     conn,
+		clientIP: clientIP,
 		sessions: make(map[*model.Session]bool),
 		pages:    make(map[*model.Page]bool),
 	}
+
+	log.Println("Client IP:", clientIP)
 
 	go c.subscribe()
 
@@ -124,6 +128,8 @@ func (c *Client) registerWebClient(message *Message) {
 		if page.IsApp {
 			// app page
 
+			log.Println("EXISTING SESSION", payload.SessionID)
+
 			var sessionCreated bool
 			if payload.SessionID != "" {
 				// lookup for existing session
@@ -135,6 +141,8 @@ func (c *Client) registerWebClient(message *Message) {
 				session = newSession(page, uuid.New().String())
 				store.AddSession(session)
 				sessionCreated = true
+			} else {
+				log.Printf("Existing session %s found for %s page\n", session.ID, page.Name)
 			}
 
 			c.registerSession(session)
@@ -159,9 +167,9 @@ func (c *Client) registerWebClient(message *Message) {
 					pubsub.Send(clientChannelName(clientID), msg)
 					break
 				}
-			}
 
-			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
+				log.Printf("New session %s started for %s page\n", session.ID, page.Name)
+			}
 
 		} else {
 			// shared page

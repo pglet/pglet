@@ -11,6 +11,9 @@ import {
     removeControl
 } from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import Cookies from 'universal-cookie';
+
+const cookies = new Cookies();
 
 export interface IWebSocket {
     socket: ReconnectingWebSocket;
@@ -54,7 +57,10 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 if (data.payload.error) {
                     dispatch(registerWebClientError(data.payload.error));
                 } else {
-                    dispatch(registerWebClientSuccess(data.payload.session));
+                    dispatch(registerWebClientSuccess({
+                        pageName: _registeredPageName,
+                        session: data.payload.session
+                    }));
                 }
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
@@ -83,9 +89,12 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
         var msg = {
             action: "registerWebClient",
             payload: {
-                pageName: pageName
+                pageName: pageName,
+                sessionID: cookies.get(`sid-${pageName}`)
             }
         }
+
+        console.log(msg);
 
         socket!.send(JSON.stringify(msg));
     }

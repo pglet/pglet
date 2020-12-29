@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	pageNextIDKey           = "page_next_id"
-	pageKey                 = "page:%s"
-	pageHostClientsKey      = "page_host_clients:%d"
-	pageSessionsKey         = "page_sessions:%d"
-	sessionKey              = "session:%d:%s"
-	sessionNextControlIDKey = "session_next_control_id:%d:%s"
-	sessionControlsKey      = "session_controls:%d:%s"
-	sessionHostClientsKey   = "session_host_clients:%d:%s"
-	sessionWebClientsKey    = "session_web_clients:%d:%s"
+	pageNextIDKey           = "page_next_id"                  // Inc integer with the next page ID
+	pageKey                 = "page:%s"                       // page JSON data
+	pageHostClientsKey      = "page_host_clients:%d"          // a Set with client IDs
+	pageSessionsKey         = "page_sessions:%d"              // a Set with session IDs
+	sessionKey              = "session:%d:%s"                 // session JSON data
+	sessionNextControlIDKey = "session_next_control_id:%d:%s" // Inc integer with the next control ID for a given session
+	sessionControlsKey      = "session_controls:%d:%s"        // session controls, value is JSON data
+	sessionHostClientsKey   = "session_host_clients:%d:%s"    // a Set with client IDs
+	sessionWebClientsKey    = "session_web_clients:%d:%s"     // a Set with client IDs
 )
 
 //
