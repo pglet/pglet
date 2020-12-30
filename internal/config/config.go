@@ -1,16 +1,68 @@
 package config
 
+import (
+	"os"
+	"strconv"
+)
+
 const (
 
-	// default values
-	DefaultPageLifetimeMinutes    = 1440
-	DefaultAppLifetimeMinutes     = 60
-	DefaultSessionLifetimeMinutes = 20
+	// pages/sessions
+	defaultPageLifetimeMinutes    = 1440
+	defaultAppLifetimeMinutes     = 60
+	defaultSessionLifetimeMinutes = 20
+	pageLifetimeMinutes           = "PAGE_LIFETIME_MINUTES"
+	appLifetimeMinutes            = "APP_LIFETIME_MINUTES"
+	sessionLifetimeMinutes        = "SESSION_LIFETIME_MINUTES"
 
-	// environment variables
-	RedisAddr              = "REDIS_ADDR"
-	RedisPassword          = "REDIS_PASSWORD"
-	PageLifetimeMinutes    = "PAGE_LIFETIME_MINUTES"
-	AppLifetimeMinutes     = "APP_LIFETIME_MINUTES"
-	SessionLifetimeMinutes = "SESSION_LIFETIME_MINUTES"
+	// redis
+	defaultRedisMaxIdle   = 5
+	defaultRedisMaxActive = 10
+	redisAddr             = "REDIS_ADDR"
+	redisPassword         = "REDIS_PASSWORD"
+	redisMaxIdle          = "REDIS_MAX_IDLE"
+	redisMaxActive        = "REDIS_MAX_ACTIVE"
 )
+
+func RedisAddr() string {
+	return os.Getenv(redisAddr)
+}
+
+func RedisPassword() string {
+	return os.Getenv(redisPassword)
+}
+
+func RedisMaxIdle() int {
+	if n, err := strconv.Atoi(os.Getenv(redisMaxIdle)); err == nil {
+		return n
+	}
+	return defaultRedisMaxIdle
+}
+
+func RedisMaxActive() int {
+	if n, err := strconv.Atoi(os.Getenv(redisMaxActive)); err == nil {
+		return n
+	}
+	return defaultRedisMaxActive
+}
+
+func PageLifetimeMinutes() int {
+	if n, err := strconv.Atoi(os.Getenv(pageLifetimeMinutes)); err == nil {
+		return n
+	}
+	return defaultPageLifetimeMinutes
+}
+
+func AppLifetimeMinutes() int {
+	if n, err := strconv.Atoi(os.Getenv(appLifetimeMinutes)); err == nil {
+		return n
+	}
+	return defaultAppLifetimeMinutes
+}
+
+func SessionLifetimeMinutes() int {
+	if n, err := strconv.Atoi(os.Getenv(sessionLifetimeMinutes)); err == nil {
+		return n
+	}
+	return defaultSessionLifetimeMinutes
+}

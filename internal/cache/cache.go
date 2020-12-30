@@ -1,8 +1,6 @@
 package cache
 
 import (
-	"os"
-
 	"github.com/pglet/pglet/internal/config"
 )
 
@@ -40,11 +38,8 @@ type Unlocker interface {
 var cache cacher
 
 func Init() {
-	redisAddr := os.Getenv(config.RedisAddr)
-	redisPassword := os.Getenv(config.RedisPassword)
-
-	if redisAddr != "" {
-		cache = newRedisCache(redisAddr, redisPassword)
+	if config.RedisAddr() != "" {
+		cache = newRedisCache()
 	} else {
 		cache = newMemoryCache()
 	}

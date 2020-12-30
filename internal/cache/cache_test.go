@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"log"
 	"math/rand"
 	"os"
 	"strconv"
@@ -8,24 +9,22 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/pglet/pglet/internal/config"
 )
 
 func TestMain(m *testing.M) {
 
 	// test Redis
-	// os.Setenv("REDIS_ADDR", "localhost:6379")
-	// Init()
-	// retCode := m.Run()
-	// if retCode != 0 {
-	// 	os.Exit(retCode)
-	// }
-
-	// test in-memory
-	os.Setenv(config.RedisAddr, "")
+	os.Setenv("REDIS_ADDR", "localhost:6379")
 	Init()
 	retCode := m.Run()
+	if retCode != 0 {
+		os.Exit(retCode)
+	}
+
+	// test in-memory
+	os.Setenv("REDIS_ADDR", "")
+	Init()
+	retCode = m.Run()
 	if retCode != 0 {
 		os.Exit(retCode)
 	}
@@ -42,6 +41,12 @@ func TestGetString(t *testing.T) {
 
 func TestInc(t *testing.T) {
 
+	Remove("inc1")
+
+	if Exists("inc1") {
+		t.Errorf("inc1 should not exist")
+	}
+
 	c := Inc("inc1", 1)
 	if c != 1 {
 		t.Errorf("inc returned %d, want %d", c, 1)
@@ -54,26 +59,40 @@ func TestInc(t *testing.T) {
 
 func TestHash(t *testing.T) {
 
+	log.Println("-0-")
+
+	Remove("hash1")
+
 	n0 := HashGet("non-existent hash", "something")
 	if n0 != "" {
 		t.Errorf("HashGet of non-existent key returned %s, want %s", n0, "")
 	}
+
+	log.Println("-1-")
 
 	HashSet("hash1", "aaa", "1", "bbb", "Test")
 	aaa := HashGet("hash1", "aaa")
 	if aaa != "1" {
 		t.Errorf("HashGet returned %s, want %s", aaa, "1")
 	}
+
+	log.Println("-2-")
+
 	bbb := HashGet("hash1", "bbb")
 	if bbb != "Test" {
 		t.Errorf("HashGet returned %s, want %s", bbb, "Test")
 	}
+
+	log.Println("-3-")
+
 	n1 := HashGet("hash1", "something")
 	if n1 != "" {
 		t.Errorf("HashGet non-existent field returned %s, want %s", n1, "")
 	}
 
 	HashSet("hash1", "ccc", "Another test")
+
+	log.Println("-4-")
 
 	entries := HashGetAll("hash1")
 	count := len(entries)
@@ -145,8 +164,8 @@ func TestLocks(t *testing.T) {
 
 	r := rand.New(rand.NewSource(42))
 
-	keyCount := 20
-	iCount := 1000
+	keyCount := 200
+	iCount := 100
 	out := make(chan string, iCount*2)
 
 	// run a bunch of concurrent requests for various keys,
@@ -163,7 +182,7 @@ func TestLocks(t *testing.T) {
 			defer l.Unlock()
 
 			out <- key + " A"
-			time.Sleep(time.Microsecond) // make 'em wait a mo'
+			time.Sleep(20 * time.Millisecond) // make 'em wait a mo'
 			out <- key + " B"
 		}(r.Intn(keyCount))
 	}
