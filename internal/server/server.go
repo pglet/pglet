@@ -94,6 +94,10 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 		}
 	}()
 
+	go func() {
+		page.RunBackgroundTasks(ctx)
+	}()
+
 	<-ctx.Done()
 
 	log.Println("Shutting down server...")

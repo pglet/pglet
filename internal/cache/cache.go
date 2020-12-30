@@ -11,14 +11,20 @@ type cacher interface {
 	getString(key string) string
 	setString(key string, value string, expireSeconds int)
 	inc(key string, by int) int
+	remove(keys ...string)
+	// hashes
 	hashSet(key string, fields ...string)
 	hashGet(key string, field string) string
 	hashGetAll(key string) map[string]string
 	hashRemove(key string, fields ...string)
+	// sets
 	setGet(key string) []string
 	setAdd(key string, value string)
 	setRemove(key string, value string)
-	remove(keys ...string)
+	// sorted sets
+	sortedSetAdd(key string, value string, score int64)
+	sortedSetPopRange(key string, min int64, max int64) []string
+	sortedSetRemove(key string, value string)
 	// pubsub
 	subscribe(channel string) chan []byte
 	unsubscribe(ch chan []byte)
@@ -60,6 +66,18 @@ func Inc(key string, by int) int {
 	return cache.inc(key, by)
 }
 
+//
+// Lists
+// =============================
+
+func ListReplaceFifo(key string, value string, maxSize int, expireSeconds int) []string {
+	return nil
+}
+
+//
+// Hashes
+// =============================
+
 func HashSet(key string, fields ...string) {
 	cache.hashSet(key, fields...)
 }
@@ -76,6 +94,10 @@ func HashRemove(key string, fields ...string) {
 	cache.hashRemove(key, fields...)
 }
 
+//
+// Sets
+// =============================
+
 func SetGet(key string) []string {
 	return cache.setGet(key)
 }
@@ -90,6 +112,22 @@ func SetRemove(key string, value string) {
 
 func Remove(keys ...string) {
 	cache.remove(keys...)
+}
+
+//
+// Sorted sets
+// =============================
+
+func SortedSetAdd(key string, value string, score int64) {
+	cache.sortedSetAdd(key, value, score)
+}
+
+func SortedSetPopRange(key string, min int64, max int64) []string {
+	return cache.sortedSetPopRange(key, min, max)
+}
+
+func SortedSetRemove(key string, value string) {
+	cache.sortedSetRemove(key, value)
 }
 
 //

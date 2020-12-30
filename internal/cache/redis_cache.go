@@ -93,6 +93,18 @@ func (c *redisCache) remove(keys ...string) {
 
 }
 
+func (c *redisCache) sortedSetAdd(key string, value string, score int64) {
+
+}
+
+func (c *redisCache) sortedSetPopRange(key string, min int64, max int64) []string {
+	return nil
+}
+
+func (c *redisCache) sortedSetRemove(key string, value string) {
+
+}
+
 //
 // PubSub
 // =============================

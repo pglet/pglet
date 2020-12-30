@@ -2,9 +2,10 @@ package model
 
 // Page represents a single page.
 type Page struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	IsApp bool   `json:"isApp"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	ClientIP string `json:"clientIP"`
+	IsApp    bool   `json:"isApp"`
 	//sessions     map[string]*Session
 	//clients      map[*Client]bool
 	//clientsMutex sync.RWMutex

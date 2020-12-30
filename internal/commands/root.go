@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"github.com/pglet/pglet/internal/cache"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -31,9 +30,6 @@ func NewRootCmd() *cobra.Command {
 			log.SetFormatter(&log.TextFormatter{
 				ForceColors: true,
 			})
-
-			// init cache
-			cache.Init()
 		},
 	}
 

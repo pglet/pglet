@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/proxy"
 	"github.com/pglet/pglet/internal/server"
 	"github.com/spf13/cobra"
@@ -28,6 +29,9 @@ func newServerCommand() *cobra.Command {
 		Short: "Start server service",
 		Long:  `Server is for ...`,
 		Run: func(cmd *cobra.Command, args []string) {
+
+			// init cache
+			cache.Init()
 
 			waitGroup := sync.WaitGroup{}
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/wangjia184/sortedset"
 )
 
 type cacheEntry struct {
@@ -111,6 +112,10 @@ func (c *memoryCache) inc(key string, by int) int {
 	return i
 }
 
+//
+// Hashes
+// =============================
+
 func (c *memoryCache) hashSet(key string, fields ...string) {
 	c.Lock()
 	defer c.Unlock()
@@ -177,6 +182,10 @@ func (c *memoryCache) hashRemove(key string, fields ...string) {
 	}
 }
 
+//
+// Sets
+// =============================
+
 func (c *memoryCache) setGet(key string) []string {
 	c.RLock()
 	defer c.RUnlock()
@@ -224,6 +233,61 @@ func (c *memoryCache) setRemove(key string, value string) {
 	hash := entry.data.(map[string]bool)
 	delete(hash, value)
 	if len(hash) == 0 {
+		c.deleteEntry(key)
+	}
+}
+
+//
+// Sorted Sets
+// =============================
+
+func (c *memoryCache) sortedSetAdd(key string, value string, score int64) {
+	c.Lock()
+	defer c.Unlock()
+
+	var set *sortedset.SortedSet
+	entry := c.getEntry(key)
+	if entry == nil {
+		entry = c.newEntry(0)
+		c.entries[key] = entry
+		set = sortedset.New()
+	} else {
+		set = entry.data.(*sortedset.SortedSet)
+	}
+
+	set.AddOrUpdate(value, sortedset.SCORE(score), nil)
+	entry.data = set
+}
+
+func (c *memoryCache) sortedSetPopRange(key string, min int64, max int64) []string {
+	c.Lock()
+	defer c.Unlock()
+
+	entry := c.getEntry(key)
+	if entry == nil {
+		return make([]string, 0)
+	}
+	set := entry.data.(*sortedset.SortedSet)
+	nodes := set.GetByScoreRange(sortedset.SCORE(min), sortedset.SCORE(max), &sortedset.GetByScoreRangeOptions{})
+	result := make([]string, len(nodes))
+	for i, node := range nodes {
+		result[i] = node.Key()
+		set.Remove(result[i])
+	}
+	return result
+}
+
+func (c *memoryCache) sortedSetRemove(key string, value string) {
+	c.Lock()
+	defer c.Unlock()
+
+	entry := c.getEntry(key)
+	if entry == nil {
+		return
+	}
+	set := entry.data.(*sortedset.SortedSet)
+	set.Remove(value)
+	if set.GetCount() == 0 {
 		c.deleteEntry(key)
 	}
 }
