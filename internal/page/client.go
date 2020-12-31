@@ -128,8 +128,6 @@ func (c *Client) registerWebClient(message *Message) {
 		if page.IsApp {
 			// app page
 
-			log.Println("EXISTING SESSION", payload.SessionID)
-
 			var sessionCreated bool
 			if payload.SessionID != "" {
 				// lookup for existing session
@@ -385,7 +383,7 @@ func (c *Client) registerSession(session *model.Session) {
 
 func (c *Client) unregister() {
 
-	log.Printf("Unregistering client %s", c.id)
+	log.Printf("Unregistering client %s (%d sessions)", c.id, len(c.sessions))
 
 	// unsubscribe from pubsub
 	pubsub.Unsubscribe(c.subscription)

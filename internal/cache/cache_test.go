@@ -31,6 +31,12 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetString(t *testing.T) {
+
+	a := GetString("inexistent key")
+	if a != "" {
+		t.Errorf("getString of inexistent key returned %s, want %s", a, "")
+	}
+
 	v := "111"
 	SetString("aaa", v, 0)
 	r := GetString("aaa")

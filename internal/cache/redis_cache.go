@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -35,6 +36,12 @@ end
 
 type redisCache struct {
 	pool *redis.Pool
+	// pubsub
+	// subscriber is a channel
+	psc                *redis.PubSubConn
+	pubsubLock         sync.RWMutex
+	channelSubscribers map[string]map[chan []byte]bool
+	subscribers        map[chan []byte]string
 }
 
 func newRedisCache() cacher {
@@ -72,8 +79,45 @@ func newRedisCache() cacher {
 		},
 	}
 
-	return &redisCache{
-		pool: pool,
+	rc := &redisCache{
+		pool:               pool,
+		channelSubscribers: make(map[string]map[chan []byte]bool),
+		subscribers:        make(map[chan []byte]string),
+	}
+
+	go rc.listenSubscriptions()
+
+	return rc
+}
+
+func (c *redisCache) listenSubscriptions() {
+	// start pubsub connection
+	c.psc = &redis.PubSubConn{Conn: c.pool.Get()}
+
+	for {
+		switch v := c.psc.Receive().(type) {
+		case redis.Message:
+			c.pubsubLock.RLock()
+			defer c.pubsubLock.RUnlock()
+
+			subscribers := c.channelSubscribers[v.Channel]
+			if subscribers == nil {
+				return
+			}
+
+			for ch := range subscribers {
+				select {
+				case ch <- v.Data:
+					// Message sent to subscriber
+				default:
+					// No listeners
+				}
+			}
+		case redis.Subscription:
+			log.Printf("%s: %s %d\n", v.Channel, v.Kind, v.Count)
+		case error:
+			log.Fatalln(v)
+		}
 	}
 }
 
@@ -93,7 +137,9 @@ func (c *redisCache) getString(key string) string {
 	defer conn.Close()
 
 	value, err := redis.String(conn.Do("GET", key))
-	if err != nil {
+	if err == redis.ErrNil {
+		return ""
+	} else if err != nil {
 		log.Fatal(err)
 	}
 	return value
@@ -164,7 +210,9 @@ func (c *redisCache) hashGet(key string, field string) string {
 	defer conn.Close()
 
 	value, err := conn.Do("HGET", key, field)
-	if err != nil {
+	if err == redis.ErrNil {
+		return ""
+	} else if err != nil {
 		log.Fatal(err)
 	}
 
@@ -180,7 +228,9 @@ func (c *redisCache) hashGetAll(key string) map[string]string {
 	defer conn.Close()
 
 	value, err := redis.StringMap(conn.Do("HGETALL", key))
-	if err != nil {
+	if err == redis.ErrNil {
+		return make(map[string]string)
+	} else if err != nil {
 		log.Fatal(err)
 	}
 	return value
@@ -211,7 +261,9 @@ func (c *redisCache) setGet(key string) []string {
 	defer conn.Close()
 
 	value, err := redis.Strings(conn.Do("SMEMBERS", key))
-	if err != nil {
+	if err == redis.ErrNil {
+		return make([]string, 0)
+	} else if err != nil {
 		log.Fatal(err)
 	}
 	return value
@@ -258,12 +310,13 @@ func (c *redisCache) sortedSetPopRange(key string, min int64, max int64) []strin
 	conn.Send("MULTI")
 	conn.Send("ZRANGEBYSCORE", key, min, max)
 	conn.Send("ZREMRANGEBYSCORE", key, min, max)
-	value, err := redis.Strings(conn.Do("EXEC"))
-
+	value, err := conn.Do("EXEC")
 	if err != nil {
 		log.Fatal(err)
 	}
-	return value
+
+	result, _ := redis.Strings(value.([]interface{})[0], nil)
+	return result
 }
 
 func (c *redisCache) sortedSetRemove(key string, value string) {
@@ -281,15 +334,65 @@ func (c *redisCache) sortedSetRemove(key string, value string) {
 // =============================
 
 func (c *redisCache) subscribe(channel string) chan []byte {
-	return nil
+	c.pubsubLock.Lock()
+	defer c.pubsubLock.Unlock()
+
+	subscribers := c.channelSubscribers[channel]
+	if subscribers == nil {
+
+		// subscribe in Redis
+		err := c.psc.Subscribe(channel)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		subscribers = make(map[chan []byte]bool)
+		c.channelSubscribers[channel] = subscribers
+	}
+
+	ch := make(chan []byte)
+	subscribers[ch] = true
+	c.subscribers[ch] = channel
+	return ch
 }
 
 func (c *redisCache) unsubscribe(ch chan []byte) {
+	c.pubsubLock.Lock()
+	defer c.pubsubLock.Unlock()
 
+	channel := c.subscribers[ch]
+	if channel == "" {
+		return
+	}
+
+	subscribers := c.channelSubscribers[channel]
+	if subscribers == nil {
+		return
+	}
+
+	close(ch)
+	delete(subscribers, ch)
+
+	if len(subscribers) == 0 {
+		delete(c.channelSubscribers, channel)
+
+		// unsubscribe in Redis
+		err := c.psc.Unsubscribe(channel)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 }
 
 func (c *redisCache) send(channel string, message []byte) {
 
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	_, err := conn.Do("PUBLISH", channel, message)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 //
