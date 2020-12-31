@@ -13,20 +13,24 @@ import (
 
 func TestMain(m *testing.M) {
 
-	// test Redis
-	os.Setenv("REDIS_ADDR", "localhost:6379")
+	redisAddr := os.Getenv("REDIS_ADDR")
+
+	// test in-memory
+	os.Setenv("REDIS_ADDR", "")
 	Init()
 	retCode := m.Run()
 	if retCode != 0 {
 		os.Exit(retCode)
 	}
 
-	// test in-memory
-	os.Setenv("REDIS_ADDR", "")
-	Init()
-	retCode = m.Run()
-	if retCode != 0 {
-		os.Exit(retCode)
+	// test Redis
+	if redisAddr != "" {
+		os.Setenv("REDIS_ADDR", redisAddr)
+		Init()
+		retCode = m.Run()
+		if retCode != 0 {
+			os.Exit(retCode)
+		}
 	}
 }
 
