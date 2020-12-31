@@ -191,7 +191,7 @@ func (c *redisCache) remove(keys ...string) {
 // Hashes
 // =============================
 
-func (c *redisCache) hashSet(key string, fields ...string) {
+func (c *redisCache) hashSet(key string, fields ...interface{}) {
 	conn := c.pool.Get()
 	defer conn.Close()
 
@@ -225,6 +225,23 @@ func (c *redisCache) hashGet(key string, field string) string {
 	return string(value.([]byte))
 }
 
+func (c *redisCache) hashGetObject(key string, result interface{}) {
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	values, err := redis.Values(conn.Do("HGETALL", key))
+	if err == redis.ErrNil {
+		return
+	} else if err != nil {
+		log.Fatal(err)
+	}
+
+	err = redis.ScanStruct(values, result)
+	if err != nil {
+		log.Fatalln("error scanning struct:", err)
+	}
+}
+
 func (c *redisCache) hashGetAll(key string) map[string]string {
 	conn := c.pool.Get()
 	defer conn.Close()
@@ -233,6 +250,17 @@ func (c *redisCache) hashGetAll(key string) map[string]string {
 	if err == redis.ErrNil {
 		return make(map[string]string)
 	} else if err != nil {
+		log.Fatal(err)
+	}
+	return value
+}
+
+func (c *redisCache) hashInc(key string, field string, by int) int {
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	value, err := redis.Int(conn.Do("HINCRBY", key, field, by))
+	if err != nil {
 		log.Fatal(err)
 	}
 	return value

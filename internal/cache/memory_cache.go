@@ -3,9 +3,12 @@ package cache
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/gomodule/redigo/redis"
+	"github.com/pglet/pglet/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/wangjia184/sortedset"
 )
@@ -116,7 +119,7 @@ func (c *memoryCache) inc(key string, by int) int {
 // Hashes
 // =============================
 
-func (c *memoryCache) hashSet(key string, fields ...string) {
+func (c *memoryCache) hashSet(key string, fields ...interface{}) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -126,6 +129,7 @@ func (c *memoryCache) hashSet(key string, fields ...string) {
 		entry = c.newEntry(0)
 		c.entries[key] = entry
 		hash = make(map[string]string)
+		entry.data = hash
 	} else {
 		hash = entry.data.(map[string]string)
 	}
@@ -133,13 +137,11 @@ func (c *memoryCache) hashSet(key string, fields ...string) {
 	var k string
 	for i, f := range fields {
 		if i%2 == 0 {
-			k = f
+			k = f.(string)
 		} else if i%2 == 1 {
-			hash[k] = f
+			hash[k] = toRedisString(f)
 		}
 	}
-
-	entry.data = hash
 }
 
 func (c *memoryCache) hashGet(key string, field string) string {
@@ -154,6 +156,30 @@ func (c *memoryCache) hashGet(key string, field string) string {
 	return hash[field]
 }
 
+func (c *memoryCache) hashGetObject(key string, result interface{}) {
+	c.RLock()
+	defer c.RUnlock()
+
+	entry := c.getEntry(key)
+	if entry == nil {
+		return
+	}
+	hash := entry.data.(map[string]string)
+	values := make([]interface{}, len(hash)*2)
+	i := 0
+	for k, v := range hash {
+		values[i] = []byte(k)
+		i++
+		values[i] = v
+		i++
+	}
+	err := redis.ScanStruct(values, result)
+	if err != nil {
+		log.Fatalln("error scanning struct:", err)
+	}
+	log.Println(utils.ToJSON(result))
+}
+
 func (c *memoryCache) hashGetAll(key string) map[string]string {
 	c.RLock()
 	defer c.RUnlock()
@@ -163,6 +189,30 @@ func (c *memoryCache) hashGetAll(key string) map[string]string {
 		return make(map[string]string)
 	}
 	return entry.data.(map[string]string)
+}
+
+func (c *memoryCache) hashInc(key string, field string, by int) int {
+	c.Lock()
+	defer c.Unlock()
+
+	var hash map[string]string
+	entry := c.getEntry(key)
+	if entry == nil {
+		entry = c.newEntry(0)
+		c.entries[key] = entry
+		hash = make(map[string]string)
+		entry.data = hash
+	} else {
+		hash = entry.data.(map[string]string)
+	}
+
+	i := 0
+	if v, err := strconv.Atoi(hash[field]); err == nil {
+		i = v
+	}
+	i += by
+	hash[field] = strconv.Itoa(i)
+	return i
 }
 
 func (c *memoryCache) hashRemove(key string, fields ...string) {
@@ -214,12 +264,12 @@ func (c *memoryCache) setAdd(key string, value string) {
 		entry = c.newEntry(0)
 		c.entries[key] = entry
 		hash = make(map[string]bool)
+		entry.data = hash
 	} else {
 		hash = entry.data.(map[string]bool)
 	}
 
 	hash[value] = true
-	entry.data = hash
 }
 
 func (c *memoryCache) setRemove(key string, value string) {
@@ -251,12 +301,12 @@ func (c *memoryCache) sortedSetAdd(key string, value string, score int64) {
 		entry = c.newEntry(0)
 		c.entries[key] = entry
 		set = sortedset.New()
+		entry.data = set
 	} else {
 		set = entry.data.(*sortedset.SortedSet)
 	}
 
 	set.AddOrUpdate(value, sortedset.SCORE(score), nil)
-	entry.data = set
 }
 
 func (c *memoryCache) sortedSetPopRange(key string, min int64, max int64) []string {

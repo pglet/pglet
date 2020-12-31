@@ -1,6 +1,9 @@
 package cache
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/pglet/pglet/internal/config"
 )
 
@@ -11,9 +14,11 @@ type cacher interface {
 	inc(key string, by int) int
 	remove(keys ...string)
 	// hashes
-	hashSet(key string, fields ...string)
+	hashSet(key string, fields ...interface{})
 	hashGet(key string, field string) string
+	hashGetObject(key string, result interface{})
 	hashGetAll(key string) map[string]string
+	hashInc(key string, field string, by int) int
 	hashRemove(key string, fields ...string)
 	// sets
 	setGet(key string) []string
@@ -73,7 +78,7 @@ func ListReplaceFifo(key string, value string, maxSize int, expireSeconds int) [
 // Hashes
 // =============================
 
-func HashSet(key string, fields ...string) {
+func HashSet(key string, fields ...interface{}) {
 	cache.hashSet(key, fields...)
 }
 
@@ -81,8 +86,16 @@ func HashGet(key string, field string) string {
 	return cache.hashGet(key, field)
 }
 
+func HashGetObject(key string, result interface{}) {
+	cache.hashGetObject(key, result)
+}
+
 func HashGetAll(key string) map[string]string {
 	return cache.hashGetAll(key)
+}
+
+func HashInc(key string, field string, by int) int {
+	return cache.hashInc(key, field, by)
 }
 
 func HashRemove(key string, fields ...string) {
@@ -146,4 +159,29 @@ func Send(channel string, message []byte) {
 // =============================
 func Lock(key string) Unlocker {
 	return cache.lock(key)
+}
+
+//
+// Helper methods
+// =============================
+func toRedisString(value interface{}) string {
+	switch value := value.(type) {
+	case string:
+		return value
+	case int:
+		return strconv.Itoa(value)
+	case int64:
+		return strconv.FormatInt(value, 10)
+	case float64:
+		return strconv.FormatFloat(value, 'E', -1, 32)
+	case bool:
+		if value {
+			return "1"
+		}
+		return "0"
+	case nil:
+		return ""
+	default:
+		return fmt.Sprintf("%v", value)
+	}
 }

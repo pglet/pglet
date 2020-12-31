@@ -31,13 +31,12 @@ const (
 // ==============================
 
 func GetPage(pageName string) *model.Page {
-	j := cache.GetString(fmt.Sprintf(pageKey, pageName))
-	if j == "" {
+	var p model.Page
+	cache.HashGetObject(fmt.Sprintf(pageKey, pageName), &p)
+	if p.ID == 0 {
 		return nil
 	}
-	p := new(model.Page)
-	json.Unmarshal([]byte(j), p)
-	return p
+	return &p
 }
 
 func AddPage(page *model.Page) {
@@ -46,7 +45,11 @@ func AddPage(page *model.Page) {
 
 	pageID := cache.Inc(pageNextIDKey, 1)
 	page.ID = pageID
-	cache.SetString(fmt.Sprintf(pageKey, page.Name), utils.ToJSON(page), 0)
+	cache.HashSet(fmt.Sprintf(pageKey, page.Name),
+		"id", page.ID,
+		"name", page.Name,
+		"isApp", page.IsApp,
+		"clientIP", page.ClientIP)
 	SetPageLastUpdated(page)
 }
 

@@ -9,6 +9,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
+	"github.com/pglet/pglet/internal/model"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 func TestMain(m *testing.M) {
@@ -64,6 +68,65 @@ func TestInc(t *testing.T) {
 	c = Inc("inc1", 2)
 	if c != 3 {
 		t.Errorf("inc returned %d, want %d", c, 3)
+	}
+	c = Inc("inc1", -5)
+	if c != -2 {
+		t.Errorf("inc returned %d, want %d", c, -2)
+	}
+}
+
+func TestHashInc(t *testing.T) {
+
+	Remove("hinc1")
+
+	if Exists("hinc1") {
+		t.Errorf("hinc1 should not exist")
+	}
+
+	c := HashInc("hinc1", "items", 1)
+	if c != 1 {
+		t.Errorf("hinc returned %d, want %d", c, 1)
+	}
+	c = HashInc("hinc1", "items", 2)
+	if c != 3 {
+		t.Errorf("hinc returned %d, want %d", c, 3)
+	}
+	c = HashInc("hinc1", "items", -5)
+	if c != -2 {
+		t.Errorf("hinc returned %d, want %d", c, -2)
+	}
+}
+
+func TestRedisScanStruct(t *testing.T) {
+	values := []interface{}{
+		[]byte("id"), "1",
+		[]byte("name"), "obj 1",
+	}
+	var o1 model.Page
+	err := redis.ScanStruct(values, &o1)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(utils.ToJSON(o1))
+}
+
+func TestHashGetObject(t *testing.T) {
+
+	o1 := model.Page{
+		ID:    1,
+		Name:  "obj 1",
+		IsApp: true,
+	}
+
+	key := "hobj1"
+	Remove(key)
+
+	HashSet(key, "id", o1.ID, "name", o1.Name, "isApp", o1.IsApp)
+
+	var o2 model.Page
+	HashGetObject(key, &o2)
+	if o2.ID != 1 {
+		t.Errorf("ID is %d, want %d", o2.ID, 1)
 	}
 }
 
