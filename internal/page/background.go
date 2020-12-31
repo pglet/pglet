@@ -20,8 +20,10 @@ func CleanupPagesAndSessions() {
 	for {
 		<-ticker.C
 
-		log.Println("Cleanup pages and sessions!")
+		//log.Println("Cleanup pages and sessions!")
 		oldPages := store.GetLastUpdatedPages(time.Now().Add(-1 * time.Minute).Unix())
-		log.Println("OLD PAGES:", oldPages)
+		if len(oldPages) > 0 {
+			log.Println("OLD PAGES:", oldPages)
+		}
 	}
 }

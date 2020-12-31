@@ -98,7 +98,6 @@ func (c *redisCache) listenSubscriptions() {
 		switch v := c.psc.Receive().(type) {
 		case redis.Message:
 			c.pubsubLock.RLock()
-			defer c.pubsubLock.RUnlock()
 
 			subscribers := c.channelSubscribers[v.Channel]
 			if subscribers == nil {
@@ -113,6 +112,9 @@ func (c *redisCache) listenSubscriptions() {
 					// No listeners
 				}
 			}
+
+			c.pubsubLock.RUnlock()
+
 		case redis.Subscription:
 			log.Printf("%s: %s %d\n", v.Channel, v.Kind, v.Count)
 		case error:
@@ -353,6 +355,7 @@ func (c *redisCache) subscribe(channel string) chan []byte {
 	ch := make(chan []byte)
 	subscribers[ch] = true
 	c.subscribers[ch] = channel
+
 	return ch
 }
 
