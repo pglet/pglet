@@ -1,7 +1,6 @@
 package store
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -12,18 +11,18 @@ import (
 )
 
 const (
-	sessionIDKey            = "%d:%s"
-	pageNextIDKey           = "page_next_id"                  // Inc integer with the next page ID
-	pageKey                 = "page:%s"                       // page JSON data
-	pagesLastUpdatedKey     = "pages_last_updated"            // set of page names sorted by last updated Unix timestamp
-	pageHostClientsKey      = "page_host_clients:%d"          // a Set with client IDs
-	pageSessionsKey         = "page_sessions:%d"              // a Set with session IDs
-	sessionKey              = "session:%d:%s"                 // session JSON data
-	sessionsLastUpdatedKey  = "sessions_last_updated"         // set of page:session IDs sorted by last updated Unix timestamp
-	sessionNextControlIDKey = "session_next_control_id:%d:%s" // Inc integer with the next control ID for a given session
-	sessionControlsKey      = "session_controls:%d:%s"        // session controls, value is JSON data
-	sessionHostClientsKey   = "session_host_clients:%d:%s"    // a Set with client IDs
-	sessionWebClientsKey    = "session_web_clients:%d:%s"     // a Set with client IDs
+	sessionIDKey              = "%d:%s"
+	pageNextIDKey             = "page_next_id"               // Inc integer with the next page ID
+	pageKey                   = "page:%s"                    // page JSON data
+	pagesLastUpdatedKey       = "pages_last_updated"         // set of page names sorted by last updated Unix timestamp
+	pageHostClientsKey        = "page_host_clients:%d"       // a Set with client IDs
+	pageSessionsKey           = "page_sessions:%d"           // a Set with session IDs
+	sessionKey                = "session:%d:%s"              // session JSON data
+	sessionsLastUpdatedKey    = "sessions_last_updated"      // set of page:session IDs sorted by last updated Unix timestamp
+	sessionNextControlIDField = "nextControlID"              // Inc integer with the next control ID for a given session
+	sessionControlsKey        = "session_controls:%d:%s"     // session controls, value is JSON data
+	sessionHostClientsKey     = "session_host_clients:%d:%s" // a Set with client IDs
+	sessionWebClientsKey      = "session_web_clients:%d:%s"  // a Set with client IDs
 )
 
 //
@@ -95,18 +94,18 @@ func RemovePageHostClient(page *model.Page, clientID string) {
 
 func GetSession(page *model.Page, sessionID string) *model.Session {
 
-	j := cache.GetString(fmt.Sprintf(sessionKey, page.ID, sessionID))
-	if j == "" {
+	var session model.Session
+	cache.HashGetObject(fmt.Sprintf(sessionKey, page.ID, sessionID), &session)
+	if session.ID == "" {
 		return nil
 	}
-	session := new(model.Session)
-	json.Unmarshal([]byte(j), &session)
 	session.Page = page
-	return session
+	return &session
 }
 
 func AddSession(session *model.Session) {
-	cache.SetString(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), utils.ToJSON(session), 0)
+	cache.HashSet(fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
+		"id", session.ID)
 	cache.SetAdd(fmt.Sprintf(pageSessionsKey, session.Page.ID), session.ID)
 	SetSessionLastUpdated(session)
 }
@@ -123,7 +122,6 @@ func DeleteSession(pageID int, sessionID string) {
 	cache.SetRemove(fmt.Sprintf(pageSessionsKey, pageID), sessionID)
 	cache.SortedSetRemove(sessionsLastUpdatedKey, fmt.Sprintf(sessionIDKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionKey, pageID, sessionID))
-	cache.Remove(fmt.Sprintf(sessionNextControlIDKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionControlsKey, pageID, sessionID))
 }
 
@@ -132,7 +130,7 @@ func DeleteSession(pageID int, sessionID string) {
 // ==============================
 
 func GetSessionNextControlID(session *model.Session) int {
-	return cache.Inc(fmt.Sprintf(sessionNextControlIDKey, session.Page.ID, session.ID), 1)
+	return cache.HashInc(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), sessionNextControlIDField, 1)
 }
 
 func GetSessionControl(session *model.Session, ctrlID string) *model.Control {

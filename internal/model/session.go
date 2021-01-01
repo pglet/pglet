@@ -2,5 +2,5 @@ package model
 
 type Session struct {
 	Page *Page  `json:"-"`
-	ID   string `json:"id"`
+	ID   string `json:"id" redis:"id"`
 }
