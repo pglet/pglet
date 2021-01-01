@@ -2,11 +2,13 @@ package page
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/pubsub"
@@ -215,24 +217,33 @@ func (c *Client) registerHostClient(message *Message) {
 
 		// retrieve page and then create if not exists
 		page := store.GetPageByName(responsePayload.PageName)
+
 		if page == nil {
-			page = model.NewPage(responsePayload.PageName, payload.IsApp)
+			// create new page
+			page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
 			store.AddPage(page)
 		}
 
-		if !page.IsApp {
-			// retrieve zero session
-			session := store.GetSession(page, ZeroSession)
-			if session == nil {
-				session = newSession(page, ZeroSession)
-			}
-			c.registerSession(session)
-			responsePayload.SessionID = session.ID
+		// make sure unath client has access to a given page
+		if config.CheckPageIP() && page.ClientIP != c.clientIP {
+			err = errors.New("Page name is already taken")
 		} else {
-			// register host client as an app server
-			c.registerPage(page)
+			if !page.IsApp {
+				// retrieve zero session
+				session := store.GetSession(page, ZeroSession)
+				if session == nil {
+					session = newSession(page, ZeroSession)
+				}
+				c.registerSession(session)
+				responsePayload.SessionID = session.ID
+			} else {
+				// register host client as an app server
+				c.registerPage(page)
+			}
 		}
-	} else {
+	}
+
+	if err != nil {
 		responsePayload.Error = err.Error()
 	}
 

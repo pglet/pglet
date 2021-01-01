@@ -12,10 +12,11 @@ type Page struct {
 }
 
 // NewPage creates a new instance of Page.
-func NewPage(name string, isApp bool) *Page {
+func NewPage(name string, isApp bool, clientIP string) *Page {
 	p := &Page{}
 	p.Name = name
 	p.IsApp = isApp
+	p.ClientIP = clientIP
 	// p.sessions = make(map[string]*Session)
 	// p.clients = make(map[*Client]bool)
 	return p

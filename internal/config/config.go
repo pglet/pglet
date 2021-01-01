@@ -12,6 +12,7 @@ const (
 	defaultAppLifetimeMinutes  = 60
 	pageLifetimeMinutes        = "PAGE_LIFETIME_MINUTES"
 	appLifetimeMinutes         = "APP_LIFETIME_MINUTES"
+	checkPageIP                = "CHECK_PAGE_IP" // unauthenticated clients only
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -56,4 +57,8 @@ func AppLifetimeMinutes() int {
 		return n
 	}
 	return defaultAppLifetimeMinutes
+}
+
+func CheckPageIP() bool {
+	return os.Getenv(checkPageIP) == "true"
 }
