@@ -8,12 +8,10 @@ import (
 const (
 
 	// pages/sessions
-	defaultPageLifetimeMinutes    = 1440
-	defaultAppLifetimeMinutes     = 60
-	defaultSessionLifetimeMinutes = 20
-	pageLifetimeMinutes           = "PAGE_LIFETIME_MINUTES"
-	appLifetimeMinutes            = "APP_LIFETIME_MINUTES"
-	sessionLifetimeMinutes        = "SESSION_LIFETIME_MINUTES"
+	defaultPageLifetimeMinutes = 1440
+	defaultAppLifetimeMinutes  = 60
+	pageLifetimeMinutes        = "PAGE_LIFETIME_MINUTES"
+	appLifetimeMinutes         = "APP_LIFETIME_MINUTES"
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -58,11 +56,4 @@ func AppLifetimeMinutes() int {
 		return n
 	}
 	return defaultAppLifetimeMinutes
-}
-
-func SessionLifetimeMinutes() int {
-	if n, err := strconv.Atoi(os.Getenv(sessionLifetimeMinutes)); err == nil {
-		return n
-	}
-	return defaultSessionLifetimeMinutes
 }

@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
-	"log"
+	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/model"
@@ -13,12 +15,12 @@ import (
 const (
 	sessionIDKey              = "%d:%s"
 	pageNextIDKey             = "page_next_id"               // Inc integer with the next page ID
-	pageKey                   = "page:%s"                    // page JSON data
-	pagesLastUpdatedKey       = "pages_last_updated"         // set of page names sorted by last updated Unix timestamp
+	pagesKey                  = "pages"                      // pages hash with pageName:pageID
+	pageKey                   = "page:%d"                    // page data
 	pageHostClientsKey        = "page_host_clients:%d"       // a Set with client IDs
 	pageSessionsKey           = "page_sessions:%d"           // a Set with session IDs
-	sessionKey                = "session:%d:%s"              // session JSON data
-	sessionsLastUpdatedKey    = "sessions_last_updated"      // set of page:session IDs sorted by last updated Unix timestamp
+	sessionKey                = "session:%d:%s"              // session data
+	sessionsExpiredKey        = "sessions_expired"           // set of page:session IDs sorted by Unix timestamp of their expiration date
 	sessionNextControlIDField = "nextControlID"              // Inc integer with the next control ID for a given session
 	sessionControlsKey        = "session_controls:%d:%s"     // session controls, value is JSON data
 	sessionHostClientsKey     = "session_host_clients:%d:%s" // a Set with client IDs
@@ -29,9 +31,18 @@ const (
 // Pages
 // ==============================
 
-func GetPage(pageName string) *model.Page {
+func GetPageByName(pageName string) *model.Page {
+	spid := cache.HashGet(pagesKey, pageName)
+	if spid == "" {
+		return nil
+	}
+	pageID, _ := strconv.Atoi(spid)
+	return GetPageByID(pageID)
+}
+
+func GetPageByID(pageID int) *model.Page {
 	var p model.Page
-	cache.HashGetObject(fmt.Sprintf(pageKey, pageName), &p)
+	cache.HashGetObject(fmt.Sprintf(pageKey, pageID), &p)
 	if p.ID == 0 {
 		return nil
 	}
@@ -41,39 +52,38 @@ func GetPage(pageName string) *model.Page {
 func AddPage(page *model.Page) {
 
 	// TODO - check if the page exists
-
 	pageID := cache.Inc(pageNextIDKey, 1)
 	page.ID = pageID
-	cache.HashSet(fmt.Sprintf(pageKey, page.Name),
+	cache.HashSet(fmt.Sprintf(pageKey, page.ID),
 		"id", page.ID,
 		"name", page.Name,
 		"isApp", page.IsApp,
 		"clientIP", page.ClientIP)
-	SetPageLastUpdated(page)
+	cache.HashSet(pagesKey, page.Name, page.ID)
 }
 
-func SetPageLastUpdated(page *model.Page) {
-	cache.SortedSetAdd(pagesLastUpdatedKey, page.Name, time.Now().Unix())
-}
-
-func GetLastUpdatedPages(before int64) []string {
-	return cache.SortedSetPopRange(pagesLastUpdatedKey, 0, before)
-}
-
-func DeletePage(pageName string) {
-	page := GetPage(pageName)
-	if page != nil {
-		cache.Remove(fmt.Sprintf(pageKey, pageName))
-		cache.SortedSetRemove(pagesLastUpdatedKey, pageName)
+func DeletePage(pageID int) {
+	page := GetPageByID(pageID)
+	if page == nil {
+		log.Warnln("An attempt to delete inexisting page with ID", pageID)
+		return
 	}
+
+	log.Println("Deleting page:", page.Name)
+	for _, sessionID := range GetPageSessions(page.ID) {
+		DeleteSession(page.ID, sessionID)
+	}
+	cache.Remove(fmt.Sprintf(pageHostClientsKey, page.ID))
+	cache.Remove(fmt.Sprintf(pageKey, pageID))
+	cache.Remove(pagesKey, page.Name)
 }
 
 //
 // Page Host Clients
 // ==============================
 
-func GetPageSessions(page *model.Page) []string {
-	return cache.SetGet(fmt.Sprintf(pageSessionsKey, page.ID))
+func GetPageSessions(pageID int) []string {
+	return cache.SetGet(fmt.Sprintf(pageSessionsKey, pageID))
 }
 
 func GetPageHostClients(page *model.Page) []string {
@@ -107,22 +117,23 @@ func AddSession(session *model.Session) {
 	cache.HashSet(fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
 		"id", session.ID)
 	cache.SetAdd(fmt.Sprintf(pageSessionsKey, session.Page.ID), session.ID)
-	SetSessionLastUpdated(session)
 }
 
-func SetSessionLastUpdated(session *model.Session) {
-	cache.SortedSetAdd(sessionsLastUpdatedKey, fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID), time.Now().Unix())
+func SetSessionExpiration(session *model.Session, expires time.Time) {
+	cache.SortedSetAdd(sessionsExpiredKey, fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID), expires.Unix())
 }
 
-func GetLastUpdatedSessions(before int64) []string {
-	return cache.SortedSetPopRange(sessionsLastUpdatedKey, 0, before)
+func GetExpiredSessions() []string {
+	return cache.SortedSetPopRange(sessionsExpiredKey, 0, time.Now().Unix())
 }
 
 func DeleteSession(pageID int, sessionID string) {
 	cache.SetRemove(fmt.Sprintf(pageSessionsKey, pageID), sessionID)
-	cache.SortedSetRemove(sessionsLastUpdatedKey, fmt.Sprintf(sessionIDKey, pageID, sessionID))
+	cache.SortedSetRemove(sessionsExpiredKey, fmt.Sprintf(sessionIDKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionControlsKey, pageID, sessionID))
+	cache.Remove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID))
+	cache.Remove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID))
 }
 
 //

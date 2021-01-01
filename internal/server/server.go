@@ -153,7 +153,7 @@ func pageHandler(c *gin.Context) {
 	log.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-	page := store.GetPage(fullPageName)
+	page := store.GetPageByName(fullPageName)
 	if page == nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
 		return

@@ -2,9 +2,11 @@ package page
 
 import (
 	"context"
-	"log"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/store"
 )
 
@@ -21,9 +23,18 @@ func CleanupPagesAndSessions() {
 		<-ticker.C
 
 		//log.Println("Cleanup pages and sessions!")
-		oldPages := store.GetLastUpdatedPages(time.Now().Add(-1 * time.Minute).Unix())
-		if len(oldPages) > 0 {
-			log.Println("OLD PAGES:", oldPages)
+		sessions := store.GetExpiredSessions()
+		if len(sessions) > 0 {
+			log.Println("Deleting old sessions:", len(sessions))
+			for _, fullSessionID := range sessions {
+				pageID, sessionID := model.ParseSessionID(fullSessionID)
+				store.DeleteSession(pageID, sessionID)
+
+				// delete page if no more sessions
+				if len(store.GetPageSessions(pageID)) == 0 {
+					store.DeletePage(pageID)
+				}
+			}
 		}
 	}
 }

@@ -114,7 +114,7 @@ func (c *Client) registerWebClient(message *Message) {
 	c.role = WebClient
 
 	// subscribe as web client
-	page := store.GetPage(payload.PageName)
+	page := store.GetPageByName(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
 		Error: "",
@@ -137,7 +137,6 @@ func (c *Client) registerWebClient(message *Message) {
 			// create new session
 			if session == nil {
 				session = newSession(page, uuid.New().String())
-				store.AddSession(session)
 				sessionCreated = true
 			} else {
 				log.Printf("Existing session %s found for %s page\n", session.ID, page.Name)
@@ -215,7 +214,7 @@ func (c *Client) registerHostClient(message *Message) {
 		responsePayload.PageName = pageName.String()
 
 		// retrieve page and then create if not exists
-		page := store.GetPage(responsePayload.PageName)
+		page := store.GetPageByName(responsePayload.PageName)
 		if page == nil {
 			page = model.NewPage(responsePayload.PageName, payload.IsApp)
 			store.AddPage(page)
@@ -226,7 +225,6 @@ func (c *Client) registerHostClient(message *Message) {
 			session := store.GetSession(page, ZeroSession)
 			if session == nil {
 				session = newSession(page, ZeroSession)
-				store.AddSession(session)
 			}
 			c.registerSession(session)
 			responsePayload.SessionID = session.ID
@@ -260,7 +258,7 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 
 	// retrieve page and session
-	page := store.GetPage(payload.PageName)
+	page := store.GetPageByName(payload.PageName)
 	if page != nil {
 		session := store.GetSession(page, payload.SessionID)
 		if session != nil {
@@ -269,6 +267,7 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 			result, err := handler.execute(&payload.Command)
 			responsePayload.Result = result
 			if err != nil {
+				handler.extendExpiration()
 				responsePayload.Error = fmt.Sprint(err)
 			}
 		} else {
@@ -348,6 +347,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) {
 	// update control tree
 	handler := newSessionHandler(session)
 	handler.updateControlProps(payload.Props)
+	handler.extendExpiration()
 
 	// re-send the message to all connected web clients
 	go func() {
@@ -379,6 +379,9 @@ func (c *Client) registerSession(session *model.Session) {
 		store.AddSessionHostClient(session, c.id)
 	}
 	c.sessions[session] = true
+
+	h := newSessionHandler(session)
+	h.extendExpiration()
 }
 
 func (c *Client) unregister() {

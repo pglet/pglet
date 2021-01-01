@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pglet/pglet/internal/cache"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
 	"github.com/pglet/pglet/internal/pubsub"
@@ -51,10 +53,22 @@ func newSession(page *model.Page, id string) *model.Session {
 	s.Page = page
 	s.ID = id
 
+	store.AddSession(s)
+
 	h := newSessionHandler(s)
 	h.addControl(model.NewControl("page", "", ReservedPageID))
 
 	return s
+}
+
+func (h *sessionHandler) extendExpiration() {
+	var expiresInMinutes int
+	if h.session.ID == ZeroSession {
+		expiresInMinutes = config.PageLifetimeMinutes()
+	} else {
+		expiresInMinutes = config.AppLifetimeMinutes()
+	}
+	store.SetSessionExpiration(h.session, time.Now().Add(time.Duration(expiresInMinutes)*time.Minute))
 }
 
 // ExecuteCommand executes command and returns the result
