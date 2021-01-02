@@ -138,7 +138,7 @@ func (c *Client) registerWebClient(message *Message) {
 
 			// create new session
 			if session == nil {
-				session = newSession(page, uuid.New().String())
+				session = newSession(page, uuid.New().String(), c.clientIP)
 				sessionCreated = true
 			} else {
 				log.Printf("Existing session %s found for %s page\n", session.ID, page.Name)
@@ -232,7 +232,7 @@ func (c *Client) registerHostClient(message *Message) {
 				// retrieve zero session
 				session := store.GetSession(page, ZeroSession)
 				if session == nil {
-					session = newSession(page, ZeroSession)
+					session = newSession(page, ZeroSession, c.clientIP)
 				}
 				c.registerSession(session)
 				responsePayload.SessionID = session.ID

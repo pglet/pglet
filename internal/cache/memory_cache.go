@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/pglet/pglet/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/wangjia184/sortedset"
 )
@@ -27,7 +26,8 @@ type lockEntry struct {
 
 type memoryCache struct {
 	sync.RWMutex
-	entries map[string]*cacheEntry
+	entries       map[string]*cacheEntry
+	expireEntries *sortedset.SortedSet
 	// pubsub
 	// subscriber is a channel
 	pubsubLock         sync.RWMutex
@@ -42,11 +42,12 @@ func newMemoryCache() cacher {
 	log.Println("Using in-memory cache")
 	mc := &memoryCache{
 		entries:            make(map[string]*cacheEntry),
+		expireEntries:      sortedset.New(),
 		channelSubscribers: make(map[string]map[chan []byte]bool),
 		subscribers:        make(map[chan []byte]string),
 		lockEntries:        make(map[interface{}]*lockEntry),
 	}
-	//go mc.dumpData()
+	go mc.cleanExpiredEntries()
 	return mc
 }
 
@@ -63,6 +64,22 @@ func (c *memoryCache) dumpData() {
 		for k, v := range c.channelSubscribers {
 			log.Println("channel:", k, "subscribers:", len(v))
 		}
+	}
+}
+
+func (c *memoryCache) cleanExpiredEntries() {
+	ticker := time.NewTicker(10 * time.Second)
+	for {
+		<-ticker.C
+
+		c.Lock()
+		entries := c.expireEntries.GetByScoreRange(0, sortedset.SCORE(time.Now().Unix()), &sortedset.GetByScoreRangeOptions{})
+		//log.Println("Expired entries:", len(entries))
+		for _, entry := range entries {
+			c.deleteEntry(entry.Key())
+			c.expireEntries.Remove(entry.Key())
+		}
+		c.Unlock()
 	}
 }
 
@@ -88,27 +105,30 @@ func (c *memoryCache) getString(key string) string {
 	return entry.data.(string)
 }
 
-func (c *memoryCache) setString(key string, value string, expireSeconds int) {
+func (c *memoryCache) setString(key string, value string, expires time.Duration) {
 	c.Lock()
 	defer c.Unlock()
 
-	entry := c.newEntry(expireSeconds)
+	entry := c.newEntry()
 	entry.data = value
+	c.setExpiration(key, entry, expires)
 	c.entries[key] = entry
 }
 
-func (c *memoryCache) inc(key string, by int) int {
+func (c *memoryCache) inc(key string, by int, expires time.Duration) int {
 	c.Lock()
 	defer c.Unlock()
 
 	i := 0
 	entry := c.getEntry(key)
 	if entry == nil {
-		entry = c.newEntry(0)
+		entry = c.newEntry()
 		c.entries[key] = entry
 	} else {
 		i = entry.data.(int)
 	}
+
+	c.setExpiration(key, entry, expires)
 
 	i += by
 	entry.data = i
@@ -126,7 +146,7 @@ func (c *memoryCache) hashSet(key string, fields ...interface{}) {
 	var hash map[string]string
 	entry := c.getEntry(key)
 	if entry == nil {
-		entry = c.newEntry(0)
+		entry = c.newEntry()
 		c.entries[key] = entry
 		hash = make(map[string]string)
 		entry.data = hash
@@ -177,7 +197,6 @@ func (c *memoryCache) hashGetObject(key string, result interface{}) {
 	if err != nil {
 		log.Fatalln("error scanning struct:", err)
 	}
-	log.Println(utils.ToJSON(result))
 }
 
 func (c *memoryCache) hashGetAll(key string) map[string]string {
@@ -198,7 +217,7 @@ func (c *memoryCache) hashInc(key string, field string, by int) int {
 	var hash map[string]string
 	entry := c.getEntry(key)
 	if entry == nil {
-		entry = c.newEntry(0)
+		entry = c.newEntry()
 		c.entries[key] = entry
 		hash = make(map[string]string)
 		entry.data = hash
@@ -261,7 +280,7 @@ func (c *memoryCache) setAdd(key string, value string) {
 	var hash map[string]bool
 	entry := c.getEntry(key)
 	if entry == nil {
-		entry = c.newEntry(0)
+		entry = c.newEntry()
 		c.entries[key] = entry
 		hash = make(map[string]bool)
 		entry.data = hash
@@ -298,7 +317,7 @@ func (c *memoryCache) sortedSetAdd(key string, value string, score int64) {
 	var set *sortedset.SortedSet
 	entry := c.getEntry(key)
 	if entry == nil {
-		entry = c.newEntry(0)
+		entry = c.newEntry()
 		c.entries[key] = entry
 		set = sortedset.New()
 		entry.data = set
@@ -351,13 +370,8 @@ func (c *memoryCache) remove(keys ...string) {
 	}
 }
 
-func (c *memoryCache) newEntry(expireSeconds int) *cacheEntry {
+func (c *memoryCache) newEntry() *cacheEntry {
 	entry := &cacheEntry{}
-
-	if expireSeconds > 0 {
-		entry.expires = time.Now().Add(time.Duration(expireSeconds) * time.Second)
-	}
-
 	return entry
 }
 
@@ -372,6 +386,14 @@ func (c *memoryCache) getEntry(key string) *cacheEntry {
 		return nil
 	}
 	return entry
+}
+
+func (c *memoryCache) setExpiration(key string, entry *cacheEntry, expires time.Duration) {
+	if expires == 0 {
+		return
+	}
+	entry.expires = time.Now().Add(expires)
+	c.expireEntries.AddOrUpdate(key, sortedset.SCORE(entry.expires.Unix()), entry)
 }
 
 func (c *memoryCache) deleteEntry(key string) {

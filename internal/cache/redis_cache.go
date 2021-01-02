@@ -147,13 +147,13 @@ func (c *redisCache) getString(key string) string {
 	return value
 }
 
-func (c *redisCache) setString(key string, value string, expireSeconds int) {
+func (c *redisCache) setString(key string, value string, expires time.Duration) {
 	conn := c.pool.Get()
 	defer conn.Close()
 
 	args := []interface{}{key, value}
-	if expireSeconds > 0 {
-		args = append(args, "EX", expireSeconds)
+	if expires > 0 {
+		args = append(args, "EX", expires.Seconds())
 	}
 	_, err := conn.Do("SET", args...)
 	if err != nil {
@@ -161,15 +161,20 @@ func (c *redisCache) setString(key string, value string, expireSeconds int) {
 	}
 }
 
-func (c *redisCache) inc(key string, by int) int {
+func (c *redisCache) inc(key string, by int, expires time.Duration) int {
 	conn := c.pool.Get()
 	defer conn.Close()
 
-	value, err := redis.Int(conn.Do("INCRBY", key, by))
+	conn.Send("MULTI")
+	conn.Send("INCRBY", key, by)
+	if expires > 0 {
+		conn.Send("EXPIRE", key, expires.Seconds())
+	}
+	value, err := redis.MultiBulk(conn.Do("EXEC"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return value
+	return int(value[0].(int64))
 }
 
 func (c *redisCache) remove(keys ...string) {

@@ -48,10 +48,11 @@ type addCommandBatchItem struct {
 }
 
 // NewSession creates a new instance of Session.
-func newSession(page *model.Page, id string) *model.Session {
+func newSession(page *model.Page, id string, clientIP string) *model.Session {
 	s := &model.Session{}
 	s.Page = page
 	s.ID = id
+	s.ClientIP = clientIP
 
 	store.AddSession(s)
 

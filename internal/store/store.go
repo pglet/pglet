@@ -52,7 +52,7 @@ func GetPageByID(pageID int) *model.Page {
 func AddPage(page *model.Page) {
 
 	// TODO - check if the page exists
-	pageID := cache.Inc(pageNextIDKey, 1)
+	pageID := cache.Inc(pageNextIDKey, 1, 0)
 	page.ID = pageID
 	cache.HashSet(fmt.Sprintf(pageKey, page.ID),
 		"id", page.ID,

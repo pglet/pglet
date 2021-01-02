@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/pglet/pglet/internal/config"
 )
@@ -10,8 +11,8 @@ import (
 type cacher interface {
 	exists(key string) bool
 	getString(key string) string
-	setString(key string, value string, expireSeconds int)
-	inc(key string, by int) int
+	setString(key string, value string, expires time.Duration)
+	inc(key string, by int, expires time.Duration) int
 	remove(keys ...string)
 	// hashes
 	hashSet(key string, fields ...interface{})
@@ -58,20 +59,12 @@ func GetString(key string) string {
 	return cache.getString(key)
 }
 
-func SetString(key string, value string, expireSeconds int) {
-	cache.setString(key, value, expireSeconds)
+func SetString(key string, value string, expires time.Duration) {
+	cache.setString(key, value, expires)
 }
 
-func Inc(key string, by int) int {
-	return cache.inc(key, by)
-}
-
-//
-// Lists
-// =============================
-
-func ListReplaceFifo(key string, value string, maxSize int, expireSeconds int) []string {
-	return nil
+func Inc(key string, by int, expires time.Duration) int {
+	return cache.inc(key, by, expires)
 }
 
 //

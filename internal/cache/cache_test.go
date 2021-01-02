@@ -61,15 +61,15 @@ func TestInc(t *testing.T) {
 		t.Errorf("inc1 should not exist")
 	}
 
-	c := Inc("inc1", 1)
+	c := Inc("inc1", 1, 30*time.Second)
 	if c != 1 {
 		t.Errorf("inc returned %d, want %d", c, 1)
 	}
-	c = Inc("inc1", 2)
+	c = Inc("inc1", 2, 0)
 	if c != 3 {
 		t.Errorf("inc returned %d, want %d", c, 3)
 	}
-	c = Inc("inc1", -5)
+	c = Inc("inc1", -5, 0)
 	if c != -2 {
 		t.Errorf("inc returned %d, want %d", c, -2)
 	}
