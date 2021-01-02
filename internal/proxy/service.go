@@ -320,5 +320,5 @@ func getPageURL(serverURL string, pageName string) string {
 	if serverURL == "" {
 		serverURL = fmt.Sprintf("http://localhost:%d", server.Port)
 	}
-	return fmt.Sprintf("%s/p/%s", serverURL, pageName)
+	return fmt.Sprintf("%s/%s", serverURL, pageName)
 }
