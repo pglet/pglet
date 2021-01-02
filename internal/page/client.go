@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
+	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/connection"
@@ -138,6 +140,11 @@ func (c *Client) registerWebClient(message *Message) {
 
 			// create new session
 			if session == nil {
+				if sessionsRateLimitReached(c.clientIP) {
+					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
+					goto response
+				}
+
 				session = newSession(page, uuid.New().String(), c.clientIP)
 				sessionCreated = true
 			} else {
@@ -185,6 +192,8 @@ func (c *Client) registerWebClient(message *Message) {
 		}
 	}
 
+response:
+
 	responsePayload, _ := json.Marshal(response)
 
 	responseMsg, _ := json.Marshal(&Message{
@@ -210,38 +219,49 @@ func (c *Client) registerHostClient(message *Message) {
 	// assign client role
 	c.role = HostClient
 
+	var page *model.Page
+
 	pageName, err := model.ParsePageName(payload.PageName)
-	if err == nil {
-
-		responsePayload.PageName = pageName.String()
-
-		// retrieve page and then create if not exists
-		page := store.GetPageByName(responsePayload.PageName)
-
-		if page == nil {
-			// create new page
-			page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
-			store.AddPage(page)
-		}
-
-		// make sure unath client has access to a given page
-		if config.CheckPageIP() && page.ClientIP != c.clientIP {
-			err = errors.New("Page name is already taken")
-		} else {
-			if !page.IsApp {
-				// retrieve zero session
-				session := store.GetSession(page, ZeroSession)
-				if session == nil {
-					session = newSession(page, ZeroSession, c.clientIP)
-				}
-				c.registerSession(session)
-				responsePayload.SessionID = session.ID
-			} else {
-				// register host client as an app server
-				c.registerPage(page)
-			}
-		}
+	if err != nil {
+		goto response
 	}
+
+	responsePayload.PageName = pageName.String()
+
+	// retrieve page and then create if not exists
+	page = store.GetPageByName(responsePayload.PageName)
+
+	if page == nil {
+		if pagesRateLimitReached(c.clientIP) {
+			err = fmt.Errorf("A limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
+			goto response
+		}
+
+		// create new page
+		page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
+		store.AddPage(page)
+	}
+
+	// make sure unath client has access to a given page
+	if config.CheckPageIP() && page.ClientIP != c.clientIP {
+		err = errors.New("Page name is already taken")
+		goto response
+	}
+
+	if !page.IsApp {
+		// retrieve zero session
+		session := store.GetSession(page, ZeroSession)
+		if session == nil {
+			session = newSession(page, ZeroSession, c.clientIP)
+		}
+		c.registerSession(session)
+		responsePayload.SessionID = session.ID
+	} else {
+		// register host client as an app server
+		c.registerPage(page)
+	}
+
+response:
 
 	if err != nil {
 		responsePayload.Error = err.Error()
@@ -418,6 +438,28 @@ func (c *Client) unregister() {
 		log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
 		store.RemovePageHostClient(page, c.id)
 	}
+}
+
+func pagesRateLimitReached(clientIP string) bool {
+	limit := config.LimitPagesPerHour()
+	if clientIP == "" || limit == 0 {
+		return false
+	}
+	if cache.Inc(fmt.Sprintf("pages_limit:%s:%d", clientIP, time.Now().Hour()), 1, 1*time.Hour) > limit {
+		return true
+	}
+	return false
+}
+
+func sessionsRateLimitReached(clientIP string) bool {
+	limit := config.LimitSessionsPerHour()
+	if clientIP == "" || limit == 0 {
+		return false
+	}
+	if cache.Inc(fmt.Sprintf("sessions_limit:%s:%d", clientIP, time.Now().Hour()), 1, 1*time.Hour) > limit {
+		return true
+	}
+	return false
 }
 
 func clientChannelName(clientID string) string {
