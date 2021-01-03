@@ -142,7 +142,10 @@ func (c *memoryCache) inc(key string, by int, expires time.Duration) int {
 func (c *memoryCache) hashSet(key string, fields ...interface{}) {
 	c.Lock()
 	defer c.Unlock()
+	c.hashSetInternal(key, fields...)
+}
 
+func (c *memoryCache) hashSetInternal(key string, fields ...interface{}) {
 	var hash map[string]string
 	entry := c.getEntry(key)
 	if entry == nil {
@@ -167,7 +170,10 @@ func (c *memoryCache) hashSet(key string, fields ...interface{}) {
 func (c *memoryCache) hashGet(key string, field string) string {
 	c.RLock()
 	defer c.RUnlock()
+	return c.hashGetInternal(key, field)
+}
 
+func (c *memoryCache) hashGetInternal(key string, field string) string {
 	entry := c.getEntry(key)
 	if entry == nil {
 		return ""
@@ -213,7 +219,10 @@ func (c *memoryCache) hashGetAll(key string) map[string]string {
 func (c *memoryCache) hashInc(key string, field string, by int) int {
 	c.Lock()
 	defer c.Unlock()
+	return c.hashIncInternal(key, field, by)
+}
 
+func (c *memoryCache) hashIncInternal(key string, field string, by int) int {
 	var hash map[string]string
 	entry := c.getEntry(key)
 	if entry == nil {
@@ -237,7 +246,10 @@ func (c *memoryCache) hashInc(key string, field string, by int) int {
 func (c *memoryCache) hashRemove(key string, fields ...string) {
 	c.Lock()
 	defer c.Unlock()
+	c.hashRemoveInternal(key, fields...)
+}
 
+func (c *memoryCache) hashRemoveInternal(key string, fields ...string) {
 	entry := c.getEntry(key)
 	if entry == nil {
 		return
@@ -513,8 +525,33 @@ func (me *lockEntry) Unlock() {
 // =============================
 
 func (c *memoryCache) setSessionControl(sessionKey string, sessionControlsKey string, controlID string, controlJSON string, maxSize int) bool {
-	return false
+	c.Lock()
+	defer c.Unlock()
+
+	strSize := c.hashGetInternal(sessionKey, "size")
+	if strSize == "" {
+		strSize = "0"
+	}
+	size, _ := strconv.Atoi(strSize)
+	currJSON := c.hashGetInternal(sessionControlsKey, controlID)
+	size -= len(currJSON)
+	size += len(controlJSON)
+
+	if maxSize > 0 && size > maxSize {
+		return false
+	}
+
+	c.hashSetInternal(sessionControlsKey, controlID, controlJSON)
+	c.hashSetInternal(sessionKey, "size", size)
+
+	return true
 }
 
 func (c *memoryCache) removeSessionControl(sessionKey string, sessionControlsKey string, controlID string) {
+	c.Lock()
+	defer c.Unlock()
+
+	currJSON := c.hashGetInternal(sessionControlsKey, controlID)
+	c.hashRemoveInternal(sessionControlsKey, controlID)
+	c.hashIncInternal(sessionKey, "size", -len(currJSON))
 }

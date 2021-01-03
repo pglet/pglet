@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pglet/pglet/internal/cache"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/utils"
 )
@@ -166,11 +167,15 @@ func GetAllSessionControls(session *model.Session) map[string]*model.Control {
 	return controls
 }
 
-func SetSessionControl(session *model.Session, ctrl *model.Control) {
+func SetSessionControl(session *model.Session, ctrl *model.Control) error {
 	cj := utils.ToJSON(ctrl)
-	cache.SetSessionControl(
+	success := cache.SetSessionControl(
 		fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
-		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj, 0)
+		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj, config.LimitSessionSizeBytes())
+	if !success {
+		return fmt.Errorf("Session %d:%s size exceeds the maximum of %d bytes", session.Page.ID, session.ID, config.LimitSessionSizeBytes())
+	}
+	return nil
 }
 
 func DeleteSessionControl(session *model.Session, ctrlID string) {

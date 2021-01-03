@@ -358,7 +358,7 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 	}
 }
 
-func (c *Client) updateControlPropsFromWebClient(message *Message) {
+func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 
 	// web client can have only one session assigned
 	var session *model.Session
@@ -377,7 +377,11 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) {
 
 	// update control tree
 	handler := newSessionHandler(session)
-	handler.updateControlProps(payload.Props)
+	err := handler.updateControlProps(payload.Props)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
 	handler.extendExpiration()
 
 	// re-send the message to all connected web clients
@@ -390,6 +394,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) {
 			}
 		}
 	}()
+	return nil
 }
 
 func (c *Client) registerPage(page *model.Page) {

@@ -215,7 +215,10 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 			}
 		}
 
-		h.addControl(batchItem.control)
+		err = h.addControl(batchItem.control)
+		if err != nil {
+			return "", err
+		}
 		payload.Controls = append(payload.Controls, batchItem.control)
 		ids = append(ids, id)
 	}
@@ -322,7 +325,10 @@ func (h *sessionHandler) set(cmd *command.Command) (result string, err error) {
 				props[n] = v
 			}
 		}
-		store.SetSessionControl(h.session, ctrl)
+		err = store.SetSessionControl(h.session, ctrl)
+		if err != nil {
+			return "", err
+		}
 
 		payload.Props = append(payload.Props, props)
 	}
@@ -385,7 +391,10 @@ func (h *sessionHandler) appendHandler(cmd *command.Command) (result string, err
 				props[n] = v
 			}
 		}
-		store.SetSessionControl(h.session, ctrl)
+		err = store.SetSessionControl(h.session, ctrl)
+		if err != nil {
+			return "", err
+		}
 
 		payload.Props = append(payload.Props, props)
 	}
@@ -494,7 +503,7 @@ func (h *sessionHandler) remove(cmd *command.Command) (result string, err error)
 	return "", nil
 }
 
-func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
+func (h *sessionHandler) updateControlProps(props []map[string]interface{}) error {
 	sl := h.lockSession()
 	defer sl.Unlock()
 
@@ -509,9 +518,13 @@ func (h *sessionHandler) updateControlProps(props []map[string]interface{}) {
 				}
 			}
 
-			store.SetSessionControl(h.session, ctrl)
+			err := store.SetSessionControl(h.session, ctrl)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // nextControlID returns the next auto-generated control ID
@@ -524,7 +537,10 @@ func (h *sessionHandler) addControl(ctrl *model.Control) error {
 	if h.getControl(ctrl.ID()) != nil {
 		return nil
 	}
-	store.SetSessionControl(h.session, ctrl)
+	err := store.SetSessionControl(h.session, ctrl)
+	if err != nil {
+		return err
+	}
 
 	// find parent
 	parentID := ctrl.ParentID()
@@ -541,7 +557,10 @@ func (h *sessionHandler) addControl(ctrl *model.Control) error {
 		} else {
 			parentctrl.AddChildID(ctrl.ID())
 		}
-		store.SetSessionControl(h.session, parentctrl)
+		err = store.SetSessionControl(h.session, parentctrl)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

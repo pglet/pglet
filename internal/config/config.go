@@ -15,6 +15,7 @@ const (
 	checkPageIP                = "CHECK_PAGE_IP" // unauthenticated clients only
 	limitPagesPerHour          = "LIMIT_PAGES_PER_HOUR"
 	limitSessionsPerHour       = "LIMIT_SESSIONS_PER_HOUR"
+	limitSessionSizeBytes      = "LIMIT_SESSION_SIZE_BYTES"
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -74,6 +75,13 @@ func LimitPagesPerHour() int {
 
 func LimitSessionsPerHour() int {
 	if n, err := strconv.Atoi(os.Getenv(limitSessionsPerHour)); err == nil {
+		return n
+	}
+	return 0
+}
+
+func LimitSessionSizeBytes() int {
+	if n, err := strconv.Atoi(os.Getenv(limitSessionSizeBytes)); err == nil {
 		return n
 	}
 	return 0
