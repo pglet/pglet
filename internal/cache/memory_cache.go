@@ -507,3 +507,14 @@ func (me *lockEntry) Unlock() {
 	// anything else waiting on this key through
 	e.el.Unlock()
 }
+
+//
+// App specific methods
+// =============================
+
+func (c *memoryCache) setSessionControl(sessionKey string, sessionControlsKey string, controlID string, controlJSON string, maxSize int) bool {
+	return false
+}
+
+func (c *memoryCache) removeSessionControl(sessionKey string, sessionControlsKey string, controlID string) {
+}

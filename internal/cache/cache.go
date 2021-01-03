@@ -35,6 +35,9 @@ type cacher interface {
 	send(channel string, message []byte)
 	// locks
 	lock(key string) Unlocker
+	// app specific
+	setSessionControl(sessionKey string, sessionControlsKey string, controlID string, controlJSON string, maxSize int) bool
+	removeSessionControl(sessionKey string, sessionControlsKey string, controlID string)
 }
 
 type Unlocker interface {
@@ -152,6 +155,17 @@ func Send(channel string, message []byte) {
 // =============================
 func Lock(key string) Unlocker {
 	return cache.lock(key)
+}
+
+//
+// App specific methods
+// =============================
+func SetSessionControl(sessionKey string, sessionControlsKey string, controlID string, controlJSON string, maxSize int) bool {
+	return cache.setSessionControl(sessionKey, sessionControlsKey, controlID, controlJSON, maxSize)
+}
+
+func RemoveSessionControl(sessionKey string, sessionControlsKey string, controlID string) {
+	cache.removeSessionControl(sessionKey, sessionControlsKey, controlID)
 }
 
 //

@@ -168,11 +168,15 @@ func GetAllSessionControls(session *model.Session) map[string]*model.Control {
 
 func SetSessionControl(session *model.Session, ctrl *model.Control) {
 	cj := utils.ToJSON(ctrl)
-	cache.HashSet(fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj)
+	cache.SetSessionControl(
+		fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
+		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj, 0)
 }
 
 func DeleteSessionControl(session *model.Session, ctrlID string) {
-	cache.HashRemove(fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrlID)
+	cache.RemoveSessionControl(
+		fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
+		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrlID)
 }
 
 //

@@ -34,6 +34,39 @@ else
 end
 `
 
+const setControlScript = `
+-- current size
+local size = redis.call("HGET", KEYS[1], "size")
+if not size then
+    size = 0
+end
+
+-- curent element
+local curr_json=redis.call("HGET", KEYS[2], ARGV[2])
+if curr_json then
+    size = size - string.len(curr_json)
+end
+
+-- new size
+size = size + string.len(ARGV[3])
+local maxSize = tonumber(ARGV[1])
+if maxSize > 0 and size > maxSize then
+    return 0
+end
+
+redis.call("HSET", KEYS[2], ARGV[2], ARGV[3])
+redis.call("HSET", KEYS[1], "size", size)
+return 1
+`
+
+const removeControlScript = `
+local curr_json=redis.call("HGET", KEYS[2], ARGV[1])
+if curr_json then
+	redis.call("HDEL", KEYS[2], ARGV[1])
+	redis.call("HINCRBY", KEYS[1], "size", -string.len(curr_json))
+end
+`
+
 type redisCache struct {
 	pool *redis.Pool
 	// pubsub
@@ -485,5 +518,32 @@ func (rl *redisLock) Unlock() {
 	}
 	if resp == 0 {
 		log.Fatal(errLockMismatch)
+	}
+}
+
+//
+// App specific methods
+// =============================
+
+func (c *redisCache) setSessionControl(sessionKey string, sessionControlsKey string, controlID string, controlJSON string, maxSize int) bool {
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	script := redis.NewScript(2, setControlScript)
+	result, err := redis.Bool(script.Do(conn, sessionKey, sessionControlsKey, maxSize, controlID, controlJSON))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return result
+}
+
+func (c *redisCache) removeSessionControl(sessionKey string, sessionControlsKey string, controlID string) {
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	script := redis.NewScript(2, removeControlScript)
+	_, err := script.Do(conn, sessionKey, sessionControlsKey, controlID)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
