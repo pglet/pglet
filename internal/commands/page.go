@@ -44,7 +44,7 @@ func newPageCommand() *cobra.Command {
 				log.Fatalln("Connect page error:", err)
 			}
 
-			if !noWindow && !web {
+			if !noWindow {
 				utils.OpenBrowser(results.PageURL, window)
 			}
 
