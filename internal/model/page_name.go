@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	publicNamespace = "public"
+	publicAccount = "public"
 )
 
 type PageName struct {
-	Namespace string
-	Name      string
+	Account string
+	Name    string
 }
 
 func ParsePageName(pageName string) (*PageName, error) {
@@ -29,10 +29,10 @@ func ParsePageName(pageName string) (*PageName, error) {
 	if strings.Count(p.Name, "/") == 1 {
 		// namespace specified
 		parts := strings.Split(p.Name, "/")
-		p.Namespace = parts[0]
+		p.Account = parts[0]
 		p.Name = parts[1]
 	} else {
-		p.Namespace = publicNamespace
+		p.Account = publicAccount
 	}
 
 	rndText, err := utils.GenerateRandomString(12)
@@ -46,5 +46,5 @@ func ParsePageName(pageName string) (*PageName, error) {
 }
 
 func (pn *PageName) String() string {
-	return fmt.Sprintf("%s/%s", pn.Namespace, pn.Name)
+	return fmt.Sprintf("%s/%s", pn.Account, pn.Name)
 }
