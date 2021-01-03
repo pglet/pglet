@@ -12,8 +12,10 @@ import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/store"
@@ -41,6 +43,21 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
+
+	if config.ForceSSL() {
+		router.Use(secure.Secure(secure.Options{
+			AllowedHosts:          []string{},
+			SSLRedirect:           true,
+			SSLHost:               "", // use the same host
+			SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+			STSSeconds:            315360000,
+			STSIncludeSubdomains:  true,
+			FrameDeny:             true,
+			ContentTypeNosniff:    true,
+			BrowserXssFilter:      true,
+			ContentSecurityPolicy: "default-src 'self'",
+		}))
+	}
 
 	// Serve frontend static files
 	router.Use(static.Serve("/", BinaryFileSystem(contentRootFolder, "")))

@@ -7,6 +7,9 @@ import (
 
 const (
 
+	// general settings
+	forceSSL = "FORCE_SSL"
+
 	// pages/sessions
 	defaultPageLifetimeMinutes = 1440
 	defaultAppLifetimeMinutes  = 60
@@ -25,6 +28,13 @@ const (
 	redisMaxIdle          = "REDIS_MAX_IDLE"
 	redisMaxActive        = "REDIS_MAX_ACTIVE"
 )
+
+func ForceSSL() bool {
+	if n, err := strconv.ParseBool(os.Getenv(forceSSL)); err == nil {
+		return n
+	}
+	return false
+}
 
 func RedisAddr() string {
 	return os.Getenv(redisAddr)
