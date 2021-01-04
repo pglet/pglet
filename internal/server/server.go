@@ -55,7 +55,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 			FrameDeny:             true,
 			ContentTypeNosniff:    true,
 			BrowserXssFilter:      true,
-			ContentSecurityPolicy: "default-src 'self'",
+			ContentSecurityPolicy: "",
 		}))
 	}
 
