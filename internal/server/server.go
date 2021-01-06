@@ -12,10 +12,13 @@ import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
+	"github.com/pglet/pglet/internal/store"
 )
 
 const (
@@ -41,12 +44,27 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 
+	if config.ForceSSL() {
+		router.Use(secure.Secure(secure.Options{
+			AllowedHosts:          []string{},
+			SSLRedirect:           true,
+			SSLHost:               "", // use the same host
+			SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+			STSSeconds:            315360000,
+			STSIncludeSubdomains:  true,
+			FrameDeny:             true,
+			ContentTypeNosniff:    true,
+			BrowserXssFilter:      true,
+			ContentSecurityPolicy: "",
+		}))
+	}
+
 	// Serve frontend static files
 	router.Use(static.Serve("/", BinaryFileSystem(contentRootFolder, "")))
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request)
+		websocketHandler(c.Writer, c.Request, c.ClientIP())
 	})
 
 	// Setup route group for the API
@@ -93,6 +111,10 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 		}
 	}()
 
+	go func() {
+		page.RunBackgroundTasks(ctx)
+	}()
+
 	<-ctx.Done()
 
 	log.Println("Shutting down server...")
@@ -108,7 +130,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	log.Println("Server exited")
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -121,7 +143,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc)
+	page.NewClient(wsc, clientIP)
 }
 
 func userHandler(c *gin.Context) {
@@ -148,12 +170,12 @@ func pageHandler(c *gin.Context) {
 	log.Println("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-	page := page.Pages().Get(fullPageName)
+	page := store.GetPageByName(fullPageName)
 	if page == nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
 		return
 	}
-	session := page.GetSession(sessionID)
+	session := store.GetSession(page, sessionID)
 	if session == nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found"})
 		return

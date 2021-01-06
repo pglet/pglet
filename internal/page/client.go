@@ -2,43 +2,19 @@ package page
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	"github.com/pglet/pglet/internal/page/command"
+	"github.com/pglet/pglet/internal/cache"
+	"github.com/pglet/pglet/internal/config"
+	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/connection"
-)
-
-const (
-	// RegisterWebClientAction registers WS client as web (browser) client
-	RegisterWebClientAction = "registerWebClient"
-
-	// RegisterHostClientAction registers WS client as host (script) client
-	RegisterHostClientAction = "registerHostClient"
-
-	// SessionCreatedAction notifies host clients about new sessions
-	SessionCreatedAction = "sessionCreated"
-
-	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
-	PageCommandFromHostAction = "pageCommandFromHost"
-
-	// PageEventFromWebAction receives click, change, expand/collapse and other events from browser
-	PageEventFromWebAction = "pageEventFromWeb"
-
-	// PageEventToHostAction redirects events from web to host clients
-	PageEventToHostAction = "pageEventToHost"
-
-	AddPageControlsAction = "addPageControls"
-
-	UpdateControlPropsAction = "updateControlProps"
-
-	AppendControlPropsAction = "appendControlProps"
-
-	RemoveControlAction = "removeControl"
-
-	CleanControlAction = "cleanControl"
+	"github.com/pglet/pglet/internal/pubsub"
+	"github.com/pglet/pglet/internal/store"
 )
 
 type ClientRole string
@@ -50,89 +26,31 @@ const (
 )
 
 type Client struct {
-	id       string
-	role     ClientRole
-	conn     connection.Conn
-	sessions map[*Session]bool
-	pages    map[*Page]bool
-}
-
-type RegisterHostClientRequestPayload struct {
-	PageName string `json:"pageName"`
-	IsApp    bool   `json:"isApp"`
-}
-
-type RegisterHostClientResponsePayload struct {
-	SessionID string `json:"sessionID"`
-	PageName  string `json:"pageName"`
-	Error     string `json:"error"`
-}
-
-type RegisterWebClientRequestPayload struct {
-	PageName string `json:"pageName"`
-	IsApp    bool   `json:"isApp"`
-}
-
-type RegisterWebClientResponsePayload struct {
-	Session *Session `json:"session"`
-	Error   string   `json:"error"`
-}
-
-type SessionCreatedPayload struct {
-	PageName  string `json:"pageName"`
-	SessionID string `json:"sessionID"`
-}
-
-type PageCommandRequestPayload struct {
-	PageName  string          `json:"pageName"`
-	SessionID string          `json:"sessionID"`
-	Command   command.Command `json:"command"`
-}
-
-type PageCommandResponsePayload struct {
-	Result string `json:"result"`
-	Error  string `json:"error"`
-}
-
-type PageEventPayload struct {
-	PageName    string `json:"pageName"`
-	SessionID   string `json:"sessionID"`
-	EventTarget string `json:"eventTarget"`
-	EventName   string `json:"eventName"`
-	EventData   string `json:"eventData"`
-}
-
-type AddPageControlsPayload struct {
-	Controls []*Control `json:"controls"`
-}
-
-type UpdateControlPropsPayload struct {
-	Props []map[string]interface{} `json:"props"`
-}
-
-type AppendControlPropsPayload struct {
-	Props []map[string]string `json:"props"`
-}
-
-type RemoveControlPayload struct {
-	IDs []string `json:"ids"`
-}
-
-type CleanControlPayload struct {
-	IDs []string `json:"ids"`
+	id           string
+	role         ClientRole
+	conn         connection.Conn
+	clientIP     string
+	subscription chan []byte
+	sessions     map[*model.Session]bool
+	pages        map[*model.Page]bool
 }
 
 func autoID() string {
 	return uuid.New().String()
 }
 
-func NewClient(conn connection.Conn) *Client {
+func NewClient(conn connection.Conn, clientIP string) *Client {
 	c := &Client{
 		id:       autoID(),
 		conn:     conn,
-		sessions: make(map[*Session]bool),
-		pages:    make(map[*Page]bool),
+		clientIP: clientIP,
+		sessions: make(map[*model.Session]bool),
+		pages:    make(map[*model.Page]bool),
 	}
+
+	log.Println("Client IP:", clientIP)
+
+	go c.subscribe()
 
 	go func() {
 		conn.Start(c.readHandler)
@@ -142,6 +60,19 @@ func NewClient(conn connection.Conn) *Client {
 	log.Printf("New Client %s is connected, total: %d\n", c.id, 0)
 
 	return c
+}
+
+func (c *Client) subscribe() {
+	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
+	for {
+		select {
+		case msg, more := <-c.subscription:
+			if !more {
+				return
+			}
+			c.send(msg)
+		}
+	}
 }
 
 func (c *Client) readHandler(message []byte) error {
@@ -187,7 +118,7 @@ func (c *Client) registerWebClient(message *Message) {
 	c.role = WebClient
 
 	// subscribe as web client
-	page := Pages().Get(payload.PageName)
+	page := store.GetPageByName(payload.PageName)
 
 	response := &RegisterWebClientResponsePayload{
 		Error: "",
@@ -196,49 +127,72 @@ func (c *Client) registerWebClient(message *Message) {
 	if page == nil {
 		response.Error = "Page not found or access denied"
 	} else {
-		var session *Session
-
-		if !page.IsApp {
-			// shared page
-			// retrieve zero session
-			session = page.sessions[ZeroSession]
-
-			log.Printf("Connected to zero session of %s page\n", page.Name)
-		} else {
-			// app page
-			// create new session
-			session = NewSession(page, uuid.New().String())
-			page.AddSession(session)
-
-			log.Printf("New session %s started for %s page\n", session.ID, page.Name)
-		}
-
-		c.registerSession(session)
+		var session *model.Session
 
 		if page.IsApp {
-			// pick connected host client from page pool and notify about new session created
-			sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
-				PageName:  page.Name,
-				SessionID: session.ID,
-			})
+			// app page
 
-			msg, _ := json.Marshal(&Message{
-				Action:  SessionCreatedAction,
-				Payload: sessionCreatedPayloadRaw,
-			})
-
-			// TODO
-			// pick first host client for now
-			for c := range page.clients {
-				if c.role == HostClient {
-					c.registerSession(session)
-					c.send(msg)
-				}
+			var sessionCreated bool
+			if payload.SessionID != "" {
+				// lookup for existing session
+				session = store.GetSession(page, payload.SessionID)
 			}
+
+			// create new session
+			if session == nil {
+				if sessionsRateLimitReached(c.clientIP) {
+					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
+					goto response
+				}
+
+				session = newSession(page, uuid.New().String(), c.clientIP)
+				sessionCreated = true
+			} else {
+				log.Printf("Existing session %s found for %s page\n", session.ID, page.Name)
+			}
+
+			c.registerSession(session)
+
+			if sessionCreated {
+				// pick connected host client from page pool and notify about new session created
+				sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+					PageName:  page.Name,
+					SessionID: session.ID,
+				})
+
+				msg, _ := json.Marshal(&Message{
+					Action:  SessionCreatedAction,
+					Payload: sessionCreatedPayloadRaw,
+				})
+
+				// TODO
+				// pick first host client for now
+				// in the future we will implement load distribution algorithm
+				for _, clientID := range store.GetPageHostClients(page) {
+					store.AddSessionHostClient(session, clientID)
+					pubsub.Send(clientChannelName(clientID), msg)
+					break
+				}
+
+				log.Printf("New session %s started for %s page\n", session.ID, page.Name)
+			}
+
+		} else {
+			// shared page
+			// retrieve zero session
+			session = store.GetSession(page, ZeroSession)
+			c.registerSession(session)
+
+			log.Printf("Connected to zero session of %s page\n", page.Name)
 		}
 
-		response.Session = session
+		response.Session = &SessionPayload{
+			ID:       session.ID,
+			Controls: store.GetAllSessionControls(session),
+		}
 	}
+
+response:
 
 	responsePayload, _ := json.Marshal(response)
 
@@ -265,32 +219,51 @@ func (c *Client) registerHostClient(message *Message) {
 	// assign client role
 	c.role = HostClient
 
-	pageName, err := parsePageName(payload.PageName)
-	if err == nil {
+	var page *model.Page
 
-		responsePayload.PageName = pageName.String()
+	pageName, err := model.ParsePageName(payload.PageName)
+	if err != nil {
+		goto response
+	}
 
-		// retrieve page and then create if not exists
-		page := Pages().Get(responsePayload.PageName)
-		if page == nil {
-			page = NewPage(responsePayload.PageName, payload.IsApp)
-			Pages().Add(page)
+	responsePayload.PageName = pageName.String()
+
+	// retrieve page and then create if not exists
+	page = store.GetPageByName(responsePayload.PageName)
+
+	if page == nil {
+		if pagesRateLimitReached(c.clientIP) {
+			err = fmt.Errorf("A limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
+			goto response
 		}
 
-		if !page.IsApp {
-			// retrieve zero session
-			session := page.GetSession(ZeroSession)
-			if session == nil {
-				session = NewSession(page, ZeroSession)
-				page.AddSession(session)
-			}
-			c.registerSession(session)
-			responsePayload.SessionID = session.ID
-		} else {
-			// register host client as an app server
-			c.registerPage(page)
+		// create new page
+		page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
+		store.AddPage(page)
+	}
+
+	// make sure unath client has access to a given page
+	if config.CheckPageIP() && page.ClientIP != c.clientIP {
+		err = errors.New("Page name is already taken")
+		goto response
+	}
+
+	if !page.IsApp {
+		// retrieve zero session
+		session := store.GetSession(page, ZeroSession)
+		if session == nil {
+			session = newSession(page, ZeroSession, c.clientIP)
 		}
+		c.registerSession(session)
+		responsePayload.SessionID = session.ID
 	} else {
+		// register host client as an app server
+		c.registerPage(page)
+	}
+
+response:
+
+	if err != nil {
 		responsePayload.Error = err.Error()
 	}
 
@@ -316,14 +289,16 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 
 	// retrieve page and session
-	page := Pages().Get(payload.PageName)
+	page := store.GetPageByName(payload.PageName)
 	if page != nil {
-		session := page.GetSession(payload.SessionID)
+		session := store.GetSession(page, payload.SessionID)
 		if session != nil {
 			// process command
-			result, err := session.ExecuteCommand(&payload.Command)
+			handler := newSessionHandler(session)
+			result, err := handler.execute(&payload.Command)
 			responsePayload.Result = result
 			if err != nil {
+				handler.extendExpiration()
 				responsePayload.Error = fmt.Sprint(err)
 			}
 		} else {
@@ -346,13 +321,17 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 }
 
-func (client *Client) processPageEventFromWebClient(message *Message) {
+func (c *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
-	var session *Session
-	for s := range client.sessions {
+	var session *model.Session
+	for s := range c.sessions {
 		session = s
 		break
+	}
+
+	if session == nil {
+		return
 	}
 
 	log.Println("Page event from browser:", string(message.Payload),
@@ -374,18 +353,16 @@ func (client *Client) processPageEventFromWebClient(message *Message) {
 	})
 
 	// re-send events to all connected host clients
-	for c := range session.clients {
-		if c.role == HostClient {
-			c.send(msg)
-		}
+	for _, clientID := range store.GetSessionHostClients(session) {
+		pubsub.Send(clientChannelName(clientID), msg)
 	}
 }
 
-func (client *Client) updateControlPropsFromWebClient(message *Message) {
+func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 
 	// web client can have only one session assigned
-	var session *Session
-	for s := range client.sessions {
+	var session *model.Session
+	for s := range c.sessions {
 		session = s
 		break
 	}
@@ -399,39 +376,97 @@ func (client *Client) updateControlPropsFromWebClient(message *Message) {
 	log.Printf("%+v", payload.Props)
 
 	// update control tree
-	session.UpdateControlProps(payload.Props)
+	handler := newSessionHandler(session)
+	err := handler.updateControlProps(payload.Props)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
+	handler.extendExpiration()
 
 	// re-send the message to all connected web clients
 	go func() {
 		msg, _ := json.Marshal(message)
 
-		for c := range session.clients {
-			if c.role == WebClient && c.id != client.id {
-				c.send(msg)
+		for _, clientID := range store.GetSessionWebClients(session) {
+			if clientID != c.id {
+				pubsub.Send(clientChannelName(clientID), msg)
 			}
 		}
 	}()
+	return nil
 }
 
-func (c *Client) registerPage(page *Page) {
-	page.registerClient(c)
+func (c *Client) registerPage(page *model.Page) {
+
+	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
+
+	store.AddPageHostClient(page, c.id)
 	c.pages[page] = true
 }
 
-func (c *Client) registerSession(session *Session) {
-	session.registerClient(c)
+func (c *Client) registerSession(session *model.Session) {
+
+	log.Printf("Registering %v client %s to session %s:%s", c.role, c.id, session.Page.Name, session.ID)
+
+	if c.role == WebClient {
+		store.AddSessionWebClient(session, c.id)
+	} else {
+		store.AddSessionHostClient(session, c.id)
+	}
 	c.sessions[session] = true
+
+	h := newSessionHandler(session)
+	h.extendExpiration()
 }
 
-func (client *Client) unregister() {
+func (c *Client) unregister() {
+
+	log.Printf("Unregistering client %s (%d sessions)", c.id, len(c.sessions))
+
+	// unsubscribe from pubsub
+	pubsub.Unsubscribe(c.subscription)
 
 	// unregister from all sessions
-	for session := range client.sessions {
-		session.unregisterClient(client)
+	for session := range c.sessions {
+		log.Printf("Unregistering %v client %s from session %s:%s", c.role, c.id, session.Page.Name, session.ID)
+
+		if c.role == WebClient {
+			store.RemoveSessionWebClient(session, c.id)
+		} else {
+			store.RemoveSessionHostClient(session, c.id)
+		}
 	}
 
 	// unregister from all pages
-	for page := range client.pages {
-		page.unregisterClient(client)
+	for page := range c.pages {
+		log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
+		store.RemovePageHostClient(page, c.id)
 	}
+}
+
+func pagesRateLimitReached(clientIP string) bool {
+	limit := config.LimitPagesPerHour()
+	if clientIP == "" || limit == 0 {
+		return false
+	}
+	if cache.Inc(fmt.Sprintf("pages_limit:%s:%d", clientIP, time.Now().Hour()), 1, 1*time.Hour) > limit {
+		return true
+	}
+	return false
+}
+
+func sessionsRateLimitReached(clientIP string) bool {
+	limit := config.LimitSessionsPerHour()
+	if clientIP == "" || limit == 0 {
+		return false
+	}
+	if cache.Inc(fmt.Sprintf("sessions_limit:%s:%d", clientIP, time.Now().Hour()), 1, 1*time.Hour) > limit {
+		return true
+	}
+	return false
+}
+
+func clientChannelName(clientID string) string {
+	return fmt.Sprintf("client-%s", clientID)
 }

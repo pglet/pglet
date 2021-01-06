@@ -97,7 +97,7 @@ function pglet_send {
 
 try {
 
-    $res = (pglet page index)
+    $res = (pglet page index --no-window)
 
     Write-Host "Page URL: $res"
 
@@ -124,7 +124,6 @@ try {
     }
     
     pglet_send "clean page"
-    Start-Sleep -s 2
 
     pglet_send "set page title='Hello, world!' gap=10 horizontalAlign=start"
     pglet_send "add text value='Your name' size=large"
@@ -148,6 +147,8 @@ try {
     pglet_send "add stack at=0 id=buttons horizontal=true visible=false
             button primary id=submit text=Submit data=btn_event
             button id=cancel data=btn_event2"
+
+    #return
     
     Start-Sleep -s 2
 

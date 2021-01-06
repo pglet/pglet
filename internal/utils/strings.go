@@ -34,18 +34,18 @@ func ContainsString(arr []string, str string) bool {
 }
 
 // https://stackoverflow.com/questions/46128016/insert-a-value-in-a-slice-at-a-given-index
-func InsertString(arr []string, value string, index int) []string {
+func SliceInsert(arr []interface{}, elem interface{}, index int) []interface{} {
 	if index >= len(arr) { // nil or empty slice or after last element
-		return append(arr, value)
+		return append(arr, elem)
 	}
 	arr = append(arr[:index+1], arr[index:]...) // index < len(a)
-	arr[index] = value
+	arr[index] = elem
 	return arr
 }
 
-func RemoveString(arr []string, str string) []string {
+func SliceRemove(arr []interface{}, elem interface{}) []interface{} {
 	for i, v := range arr {
-		if v == str {
+		if v == elem {
 			return append(arr[:i], arr[i+1:]...)
 		}
 	}
@@ -93,6 +93,11 @@ func CountRune(s string, r rune) int {
 }
 
 func ToJSON(v interface{}) string {
+	json, _ := json.Marshal(v)
+	return string(json)
+}
+
+func ToJSONIndent(v interface{}) string {
 	json, _ := json.MarshalIndent(v, "", "  ")
 	return string(json)
 }

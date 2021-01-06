@@ -11,6 +11,9 @@ import {
     removeControl
 } from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import Cookies from 'universal-cookie';
+
+const cookies = new Cookies();
 
 export interface IWebSocket {
     socket: ReconnectingWebSocket;
@@ -25,6 +28,8 @@ export { WebSocketContext }
 
 export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
     let socket : ReconnectingWebSocket | null = null;
+    let _registeredPageName : string = "";
+    let _subscribed: boolean = false;
 
     const dispatch = useDispatch();
 
@@ -32,13 +37,15 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
         const wsProtocol = document.location.protocol === "https:" ? "wss:" : "ws:";
         socket = new ReconnectingWebSocket(`${wsProtocol}//${document.location.host}/ws`);
 
-        socket.onopen = function (evt) {
+        socket.onopen = function () {
             console.log("WebSocket connection opened");
-            console.log(evt);
+            if (!_subscribed && _registeredPageName !== "") {
+                registerWebClient(_registeredPageName);
+            }
         };
-        socket.onclose = function (evt) {
+        socket.onclose = function () {
             console.log("WebSocket connection closed");
-            console.log(evt);
+            _subscribed = false;
         };
 
         socket.onmessage = function (evt) {
@@ -50,7 +57,10 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 if (data.payload.error) {
                     dispatch(registerWebClientError(data.payload.error));
                 } else {
-                    dispatch(registerWebClientSuccess(data.payload.session));
+                    dispatch(registerWebClientSuccess({
+                        pageName: _registeredPageName,
+                        session: data.payload.session
+                    }));
                 }
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
@@ -72,20 +82,26 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const registerWebClient = (pageName: string) => {
 
-        console.log("Call registerWebClient()")
+        console.log("ws.registerWebClient()")
+        _registeredPageName = pageName;
+        _subscribed = true;
+
         var msg = {
             action: "registerWebClient",
             payload: {
-                pageName: pageName
+                pageName: pageName,
+                sessionID: cookies.get(`sid-${pageName}`)
             }
         }
+
+        console.log(msg);
 
         socket!.send(JSON.stringify(msg));
     }
 
     const pageEventFromWeb = (eventTarget: string, eventName: string, eventData: string) => {
 
-        console.log("Call pageEventFromWeb()")
+        console.log("ws.pageEventFromWeb()")
         var msg = {
             action: "pageEventFromWeb",
             payload: {
@@ -100,6 +116,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const updateControlProps = (props: any) => {
 
+        console.log("ws.updateControlProps()")
         var msg = {
             action: "updateControlProps",
             payload: {

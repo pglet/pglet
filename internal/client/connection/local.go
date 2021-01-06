@@ -15,7 +15,7 @@ type Local struct {
 func NewLocal() *Local {
 	cws := &Local{
 		readCh:  make(chan []byte),
-		writeCh: make(chan []byte),
+		writeCh: make(chan []byte, 10),
 		done:    make(chan bool),
 	}
 	return cws
@@ -27,7 +27,7 @@ func (c *Local) Start(handler ReadMessageHandler) (err error) {
 
 	// create page client
 	cl := page_connection.NewLocal(c.writeCh, c.readCh)
-	page.NewClient(cl)
+	page.NewClient(cl, "")
 
 	// start read loop
 	go c.readLoop(handler)
