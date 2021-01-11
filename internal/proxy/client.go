@@ -79,6 +79,11 @@ func startProxyService() {
 	execPath, _ := os.Executable()
 
 	cmd := exec.Command(execPath, "server")
+
+	//if runtime.GOOS == "windows" {
+	//cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}
+	//}
+
 	err := cmd.Start()
 
 	if err != nil {
