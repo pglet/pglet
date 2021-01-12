@@ -11,6 +11,7 @@ require (
 	github.com/gomodule/redigo v1.8.3
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2
+	github.com/gosimple/slug v1.9.0
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/kbinani/screenshot v0.0.0-20191211154542-3a185f1ce18f
 	github.com/keegancsmith/rpc v1.3.0
