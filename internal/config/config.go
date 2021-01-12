@@ -74,11 +74,17 @@ func AppLifetimeMinutes() int {
 }
 
 func CheckPageIP() bool {
-	return os.Getenv(checkPageIP) == "true"
+	if n, err := strconv.ParseBool(os.Getenv(checkPageIP)); err == nil {
+		return n
+	}
+	return false
 }
 
 func CheckReservedPages() bool {
-	return os.Getenv(checkReservedPages) == "true"
+	if n, err := strconv.ParseBool(os.Getenv(checkReservedPages)); err == nil {
+		return n
+	}
+	return false
 }
 
 func LimitPagesPerHour() int {
