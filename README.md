@@ -6,13 +6,13 @@ Build web apps like a frontend pro in the language you already know. No knowledg
 
 ## What is Pglet
 
-Pglet (*"pagelet"*) is a rich user interface (UI) framework for scripts and programs written in any language. [Python](/docs/tutorials/python), [Bash](/docs/tutorials/bash), [PowerShell](/docs/tutorials/powershell) and [JavaScript](/docs/tutorials/javascript) are already supported and other languages can be easily added via [Pglet protocol](/docs/reference/protocol).
+Pglet (*"pagelet"*) is a rich user interface (UI) framework for scripts and programs written in any language. [Python](https://pglet.io/docs/tutorials/python), [Bash](https://pglet.io/docs/tutorials/bash), [PowerShell](https://pglet.io/docs/tutorials/powershell) and [JavaScript](https://pglet.io/docs/tutorials/javascript) are already supported and other languages can be easily added via [Pglet protocol](https://pglet.io/docs/reference/protocol).
 
-Pglet renders web UI, so you can easily [build web apps](/docs/quickstart) with your favorite language. Knowledge of HTML/CSS/JavaScript is not required as you build UI with [controls](/docs/reference/controls). Pglet controls are built with [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
+Pglet renders web UI, so you can easily [build web apps](https://pglet.io/docs/quickstart) with your favorite language. Knowledge of HTML/CSS/JavaScript is not required as you build UI with [controls](https://pglet.io/docs/reference/controls). Pglet controls are built with [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
 
-## Hello world app in Bash!
+## Hello world in Bash
 
-### Install Pglet
+Install Pglet helper functions:
 
 ```bash
 curl -O https://pglet.io/pglet.sh
@@ -29,7 +29,7 @@ pglet_add "text value='Hello, world!"
 
 Run `sh hello.sh` and in a new browser window you'll get:
 
-<img src="/img/docs/quickstart-hello-world.png">
+<img src="https://pglet.io/img/docs/quickstart-hello-world.png">
 
 ## Tutorials
 
@@ -40,9 +40,9 @@ Run `sh hello.sh` and in a new browser window you'll get:
 
 ## How it works
 
-Pglet UI does not become embedded into your program, but is being served by an out-of-process Pglet server. Application state and control flow logic lives in your persistent-process program while UI changes and events are communicated to Pglet server via IPC-based [protocol](/docs/reference/protocol). It allows writing web app as a standalone monolith without any knowledge of request/response model, routing, templating or state management. Pglet server can be run locally, self-hosted in your local network or used as a [hosted service](/docs/pglet-service).
+Pglet UI does not become embedded into your program, but is being served by an out-of-process Pglet server. Application state and control flow logic lives in your persistent-process program while UI changes and events are communicated to Pglet server via IPC-based [protocol](https://pglet.io/docs/reference/protocol). It allows writing web app as a standalone monolith without any knowledge of request/response model, routing, templating or state management. Pglet server can be run locally, self-hosted in your local network or used as a [hosted service](https://pglet.io/docs/pglet-service).
 
-In a classic client-server architecture front-end communicates to a one or more back-end services. Pglet implements an opposite approach where multiple back-end services scattered across internal network behind a firewall and communicate to a centralized Pglet web server, i.e. front-end service, installed in DMZ or [hosted as a service](/docs/pglet-service). This design gives a number of advantages:
+In a classic client-server architecture front-end communicates to a one or more back-end services. Pglet implements an opposite approach where multiple back-end services scattered across internal network behind a firewall and communicate to a centralized Pglet web server, i.e. front-end service, installed in DMZ or [hosted as a service](https://pglet.io/docs/pglet-service). This design gives a number of advantages:
 
 * Secure by design - your internal services and critical data stay behind the firewall and not accessible from the outside world.
 * Apps running next to services and data they process - faster/cheaper access and maximum security.
