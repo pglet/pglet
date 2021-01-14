@@ -19,6 +19,7 @@ const (
 	limitPagesPerHour          = "LIMIT_PAGES_PER_HOUR"
 	limitSessionsPerHour       = "LIMIT_SESSIONS_PER_HOUR"
 	limitSessionSizeBytes      = "LIMIT_SESSION_SIZE_BYTES"
+	checkReservedPages         = "CHECK_RESERVED_PAGES"
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -73,7 +74,17 @@ func AppLifetimeMinutes() int {
 }
 
 func CheckPageIP() bool {
-	return os.Getenv(checkPageIP) == "true"
+	if n, err := strconv.ParseBool(os.Getenv(checkPageIP)); err == nil {
+		return n
+	}
+	return false
+}
+
+func CheckReservedPages() bool {
+	if n, err := strconv.ParseBool(os.Getenv(checkReservedPages)); err == nil {
+		return n
+	}
+	return false
 }
 
 func LimitPagesPerHour() int {

@@ -5,11 +5,26 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gosimple/slug"
 	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
 	publicAccount = "public"
+	maxSlugSize   = 60
+)
+
+var (
+	reservedAccountNames = []string{
+		"pglet",
+		"admin",
+		"administrator",
+		"cp",
+	}
+
+	reservedPageNames = []string{
+		"public/index",
+	}
 )
 
 type PageName struct {
@@ -42,7 +57,26 @@ func ParsePageName(pageName string) (*PageName, error) {
 
 	p.Name = strings.ReplaceAll(p.Name, "*", rndText)
 
+	p.Account = slug.Make(p.Account)
+	if len(p.Account) > maxSlugSize {
+		return nil, fmt.Errorf("Account name exceeds the maximum allowed size of %d symbols", maxSlugSize)
+	}
+	p.Name = slug.Make(p.Name)
+	if len(p.Name) > maxSlugSize {
+		return nil, fmt.Errorf("Page name exceeds the maximum allowed size of %d symbols", maxSlugSize)
+	}
+
 	return p, nil
+}
+
+func (pn *PageName) IsReserved() bool {
+	if utils.ContainsString(reservedAccountNames, pn.Account) {
+		return true
+	}
+	if utils.ContainsString(reservedPageNames, pn.String()) {
+		return true
+	}
+	return false
 }
 
 func (pn *PageName) String() string {

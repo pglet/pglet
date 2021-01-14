@@ -237,6 +237,12 @@ func (c *Client) registerHostClient(message *Message) {
 			goto response
 		}
 
+		// filter page name
+		if config.CheckReservedPages() && pageName.IsReserved() {
+			err = fmt.Errorf("Account or page name is reserved")
+			goto response
+		}
+
 		// create new page
 		page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
 		store.AddPage(page)
