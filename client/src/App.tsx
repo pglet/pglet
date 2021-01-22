@@ -9,8 +9,8 @@ export const App: React.FunctionComponent = () => {
     <Router>
       <Switch>
         <Route path="/:accountName/:pageName" children={<PageLanding />} />
-        <Route path="/:accountName" children={<AccountLanding />} />
         <Route path="/sample" children={<FluentSample />} />
+        <Route path="/:accountName" children={<AccountLanding />} />
         <Route path="/" children={<PageLanding />} />
       </Switch>
     </Router>

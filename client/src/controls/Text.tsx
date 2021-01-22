@@ -8,6 +8,8 @@ export const MyText = React.memo<IControlProps>(({control}) => {
 
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
+  const preFont = 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+
   const textProps: ITextProps = {
     variant: control.size ? control.size : null,
     nowrap: control.nowrap !== undefined ? control.nowrap : undefined,
@@ -20,10 +22,12 @@ export const MyText = React.memo<IControlProps>(({control}) => {
         width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
+        margin: control.margin !== undefined ? control.margin : undefined,
+        whiteSpace: control.pre === 'true' ? 'pre' : undefined,
+        fontFamily: control.pre === 'true' ? preFont : undefined,
       }
     }
-  }; 
+  };
 
   return <Text {...textProps}>{control.value}</Text>;
 })

@@ -33,7 +33,48 @@ export const FluentSample: React.FunctionComponent = () => {
       }
     >
       <PrimaryButton text="Button 1" />
-      <Text variant="xxLarge">Hello, you!</Text>
+      <Stack horizontal>
+        <Text variant="large" styles={{
+          root: {
+            whiteSpace: 'pre'
+          }
+          }}>1{"\n"}2{"\n"}3{"\n"}</Text>
+        <Text variant="xSmall" styles={{
+          root: {
+            width: '40px',
+            height: '40px',
+            backgroundColor: 'blue',
+            verticalAlign: 'middle',
+            textAlign: 'center',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            borderColor: 'black',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderRadius: '20px'
+          }
+          }}>2</Text>  
+        <Text variant="xSmall" styles={{
+          root: {
+            width: '40px',
+            height: '40px',
+            backgroundColor: 'blue',
+            verticalAlign: 'middle',
+            textAlign: 'center',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            borderColor: 'black',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderRadius: '20px'
+          }
+          }}>3</Text>                      
+      </Stack>
+
       <Stack horizontal styles={{ root: { width: '50%' } }}>
         <Stack {...columnProps}>
           <Link href="https://developer.microsoft.com/en-us/fabric">Docs</Link>
