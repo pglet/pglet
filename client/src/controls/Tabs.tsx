@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Pivot, PivotItem, IPivotProps } from '@fluentui/react';
+import { Pivot, PivotItem, IPivotProps, PivotLinkFormat } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 import { ControlsList } from './ControlsList'
 
@@ -34,16 +34,25 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const pivotProps: IPivotProps = {
+    linkFormat: control.solid === 'true' ? PivotLinkFormat.tabs : undefined,
+    styles: {
+      root: {
+        marginBottom: control.margin ? control.margin : undefined,
+      }
+    }
   };
 
   const tabControls = useSelector<any, any[]>((state: any) => {
     return control.c.map((childId: any) =>
-          state.page.controls[childId]).filter((oc: any) => oc.t === 'tab')
+          state.page.controls[childId])
+          .filter((tc: any) => tc.t === 'tab' && tc.visible !== "false")
           .map((tab:any) => ({
             i: tab.i,
             props: {
-              itemKey: tab.key,
-              headerText: tab.text ? tab.text : tab.key
+              itemKey: tab.key ? tab.key : tab.text,
+              headerText: tab.text ? tab.text : tab.key,
+              itemIcon: tab.icon ? tab.icon : undefined,
+              itemCount: tab.count !== undefined ? tab.count : undefined
             },
             controls: tab.c.map((childId: any) => state.page.controls[childId])
           }));
