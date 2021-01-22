@@ -62,8 +62,8 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
       for(let i = 0; i < itemControls.length; i++) {
         let item:any = {
-          key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
-          text: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
+          key: itemControls[i].key ? itemControls[i].key : itemControls[i].i,
+          text: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
           secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
           href: itemControls[i].url ? itemControls[i].url : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,

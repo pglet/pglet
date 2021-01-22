@@ -49,8 +49,8 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
           .map((tab:any) => ({
             i: tab.i,
             props: {
-              itemKey: tab.key ? tab.key : tab.text,
-              headerText: tab.text ? tab.text : tab.key,
+              itemKey: tab.key ? tab.key : tab.i,
+              headerText: tab.text ? tab.text : (tab.key ? tab.key : tab.i),
               itemIcon: tab.icon ? tab.icon : undefined,
               itemCount: tab.count !== undefined ? tab.count : undefined
             },
