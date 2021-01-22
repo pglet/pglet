@@ -170,7 +170,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		// other values go to boolean properties
 		if len(batchItem.command.Values) > 1 {
 			for _, v := range batchItem.command.Values[1:] {
-				batchItem.command.Attrs[v] = "true"
+				batchItem.command.Attrs[strings.ToLower(v)] = "true"
 			}
 		}
 
