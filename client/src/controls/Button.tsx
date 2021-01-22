@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
+import { shallowEqual, useSelector } from 'react-redux'
 import {
   PrimaryButton,
   DefaultButton,
@@ -8,7 +9,7 @@ import {
   IconButton,
   ActionButton,
   IButtonProps,
-  IStyle } from '@fluentui/react';
+  IContextualMenuProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -37,6 +38,44 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     height = 40;
   }
 
+  const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) => {
+
+    function getProps(parent:any) {
+      const itemControls = parent.c.map((childId: any) =>
+          state.page.controls[childId])
+          .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
+      
+      if (itemControls.length === 0) {
+        return null
+      }
+
+      let props:any = {
+        items: Array<any>()
+      };
+
+      for(let i = 0; i < itemControls.length; i++) {
+        let item:any = {
+          key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
+          text: itemControls[i].text ? itemControls[i].text : itemControls[i].key
+        };
+        if (itemControls[i].icon) {
+          item.iconProps = {
+            iconName: itemControls[i].icon
+          }
+        }
+        const subMenuProps = getProps(itemControls[i]);
+        if (subMenuProps !== null) {
+          item.subMenuProps = subMenuProps
+        }
+        props.items.push(item)
+      }
+
+      return props;
+    }
+
+    return getProps(control);
+  }, shallowEqual)
+
   let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,
     href: control.url ? control.url : undefined,
@@ -44,6 +83,8 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     secondaryText: control.secondarytext ? control.secondarytext : undefined,
     disabled: disabled,
     primary: control.compound === 'true' && control.primary === 'true' ? true : undefined,
+    split: control.split === 'true' ? true : undefined,
+    menuProps: menuProps,
     styles: {
       root: {
         width: control.width !== undefined ? control.width : undefined,
@@ -64,5 +105,9 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'click', control.data)
   }
 
-  return <ButtonType onClick={handleClick} {...buttonProps} />;
+  const handleMenuClick = () => {
+    ws.pageEventFromWeb(control.i, 'menuClick', control.data)
+  }  
+
+  return <ButtonType onClick={handleClick} onMenuClick={handleMenuClick} {...buttonProps} />;
 })
