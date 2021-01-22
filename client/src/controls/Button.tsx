@@ -9,7 +9,9 @@ import {
   IconButton,
   ActionButton,
   IButtonProps,
-  IContextualMenuProps } from '@fluentui/react';
+  IContextualMenuProps,
+  IContextualMenuItem,
+  ContextualMenuItemType } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -38,6 +40,10 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     height = 40;
   }
 
+  const handleMenuItemClick = (ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>, item?: IContextualMenuItem) => {
+    ws.pageEventFromWeb(control.i, 'menuClick', item!.key)
+  }
+
   const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) => {
 
     function getProps(parent:any) {
@@ -50,18 +56,28 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
       }
 
       let props:any = {
-        items: Array<any>()
+        items: Array<any>(),
+        onItemClick: handleMenuItemClick
       };
 
       for(let i = 0; i < itemControls.length; i++) {
         let item:any = {
           key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
-          text: itemControls[i].text ? itemControls[i].text : itemControls[i].key
+          text: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
+          secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
+          href: itemControls[i].url ? itemControls[i].url : undefined,
+          target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
+          disabled: itemControls[i].disabled === 'true' ? true : undefined,
+          split: itemControls[i].split === 'true' ? true : undefined
         };
         if (itemControls[i].icon) {
           item.iconProps = {
             iconName: itemControls[i].icon
           }
+        }
+        if (itemControls[i].divider === 'true') {
+          item.itemType = ContextualMenuItemType.Divider;
+          item.key = "divider_" + itemControls[i].i;
         }
         const subMenuProps = getProps(itemControls[i]);
         if (subMenuProps !== null) {
@@ -105,9 +121,5 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'click', control.data)
   }
 
-  const handleMenuClick = () => {
-    ws.pageEventFromWeb(control.i, 'menuClick', control.data)
-  }  
-
-  return <ButtonType onClick={handleClick} onMenuClick={handleMenuClick} {...buttonProps} />;
+  return <ButtonType onClick={handleClick} {...buttonProps} />;
 })
