@@ -9,6 +9,7 @@ import { MySpinner } from './Spinner'
 import { Button } from './Button'
 import { MyText } from './Text'
 import { Tabs } from './Tabs'
+import { Toolbar } from './Toolbar'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -24,6 +25,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'button': Button,
         'stack': MyStack,
         'tabs': Tabs,
+        'toolbar': Toolbar,
     }
 
     const renderChild = (control: any) => {

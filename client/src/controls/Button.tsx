@@ -10,9 +10,9 @@ import {
   ActionButton,
   IButtonProps,
   IContextualMenuProps,
-  IContextualMenuItem,
-  ContextualMenuItemType } from '@fluentui/react';
+  IContextualMenuItem } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
+import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -44,53 +44,8 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'menuClick', item!.key)
   }
 
-  const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) => {
-
-    function getProps(parent:any) {
-      const itemControls = parent.c.map((childId: any) =>
-          state.page.controls[childId])
-          .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
-      
-      if (itemControls.length === 0) {
-        return null
-      }
-
-      let props:any = {
-        items: Array<any>(),
-        onItemClick: handleMenuItemClick
-      };
-
-      for(let i = 0; i < itemControls.length; i++) {
-        let item:any = {
-          key: itemControls[i].key ? itemControls[i].key : itemControls[i].i,
-          text: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
-          secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
-          href: itemControls[i].url ? itemControls[i].url : undefined,
-          target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
-          disabled: itemControls[i].disabled === 'true' ? true : undefined,
-          split: itemControls[i].split === 'true' ? true : undefined
-        };
-        if (itemControls[i].icon) {
-          item.iconProps = {
-            iconName: itemControls[i].icon
-          }
-        }
-        if (itemControls[i].divider === 'true') {
-          item.itemType = ContextualMenuItemType.Divider;
-          item.key = "divider_" + itemControls[i].i;
-        }
-        const subMenuProps = getProps(itemControls[i]);
-        if (subMenuProps !== null) {
-          item.subMenuProps = subMenuProps
-        }
-        props.items.push(item)
-      }
-
-      return props;
-    }
-
-    return getProps(control);
-  }, shallowEqual)
+  const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
+    getMenuProps(state, control, handleMenuItemClick, null), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,

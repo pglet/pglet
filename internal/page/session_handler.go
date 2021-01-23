@@ -165,7 +165,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 			return "", errors.New("Control type is not specified")
 		}
 
-		controlType := batchItem.command.Values[0]
+		controlType := strings.ToLower(batchItem.command.Values[0])
 
 		// other values go to boolean properties
 		if len(batchItem.command.Values) > 1 {
