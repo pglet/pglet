@@ -38,12 +38,13 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   }, shallowEqual)  
 
   let toolbarProps: ICommandBarProps = {
-    items: barItems.items,
-    overflowItems: overflowItems.items,
-    farItems: farItems.items,
+    items: barItems != null ? barItems.items : [],
+    overflowItems: overflowItems != null ? overflowItems.items : [],
+    farItems: farItems != null ? farItems.items : [],
     styles: {
       root: {
         paddingLeft: 0,
+        paddingRight: 0,
         width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,

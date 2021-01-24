@@ -40,8 +40,8 @@ export const Page = React.memo<IPageProps>(({control, pageName}) => {
   // stack props
   const stackProps: IStackProps = {
     verticalFill: control.verticalfill ? control.verticalfill : false,
-    horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
-    verticalAlign: control.verticalalign ? control.verticalalign : "start",
+    horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
+    verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
       root: {
         width: control.width ? control.width : "100%",

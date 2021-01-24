@@ -14,17 +14,25 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
     const stackProps: IStackProps = {
         horizontal: control.horizontal ? control.horizontal : false,
         verticalFill: control.verticalfill ? control.verticalfill : false,
-        horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
-        verticalAlign: control.verticalalign ? control.verticalalign : "start",
+        // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
+        // verticalAlign: control.verticalalign ? control.verticalalign : "start",
         styles: {
             root: {
-                width: control.width ? control.width : "100%",
+                width: control.width ? control.width : undefined,
                 height: control.height !== undefined ? control.height : undefined,
                 padding: control.padding !== undefined ? control.padding : undefined,
                 margin: control.margin !== undefined ? control.margin : undefined
             }
         },
     };
+
+    if (control.horizontalalign) {
+        stackProps.horizontalAlign = control.horizontalalign;
+    }
+
+    if (control.verticalalign) {
+        stackProps.verticalAlign = control.verticalalign;
+    }    
 
     const stackTokens: IStackTokens = {
         childrenGap: control.gap ? control.gap : 10
