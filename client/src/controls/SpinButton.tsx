@@ -1,7 +1,9 @@
-import React, { useContext } from 'react';
-import { WebSocketContext } from '../WebSocket';
-import { useDispatch } from 'react-redux'
-import { changeProps } from '../slices/pageSlice'
+import React from 'react';
+
+//import React, { useContext } from 'react';
+// import { WebSocketContext } from '../WebSocket';
+// import { useDispatch } from 'react-redux'
+// import { changeProps } from '../slices/pageSlice'
 import { SpinButton, ISpinButtonProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
@@ -9,27 +11,27 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
+  // const ws = useContext(WebSocketContext);
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
-  const handleIncrementDecrement = (value: string, event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
-    handleChange(value);
-  }
+  // const handleIncrementDecrement = (value: string, event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
+  //   handleChange(value);
+  // }
 
-  const handleChange = (value: string) => {
-    console.log(value);
-    // const payload = [
-    //   {
-    //     i: control.i,
-    //     "value": value
-    //   }
-    // ];
+  // const handleChange = (value: string) => {
+  //   console.log(value);
+  //   // const payload = [
+  //   //   {
+  //   //     i: control.i,
+  //   //     "value": value
+  //   //   }
+  //   // ];
 
-    // dispatch(changeProps(payload));
-    // ws.updateControlProps(payload);
-    // ws.pageEventFromWeb(control.i, 'change', String(value))
-  }
+  //   // dispatch(changeProps(payload));
+  //   // ws.updateControlProps(payload);
+  //   // ws.pageEventFromWeb(control.i, 'change', String(value))
+  // }
 
   //console.log(`render Text: ${control.i}`);
 
