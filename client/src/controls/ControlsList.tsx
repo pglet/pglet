@@ -7,6 +7,7 @@ import { MyChoiceGroup } from './ChoiceGroup'
 import { MyCheckbox } from './Checkbox'
 import { Progress } from './Progress'
 import { MySpinner } from './Spinner'
+import { MySlider } from './Slider'
 import { Button } from './Button'
 import { MyText } from './Text'
 import { MyLink } from './Link'
@@ -25,6 +26,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'choicegroup': MyChoiceGroup,
         'progress': Progress,
         'spinner': MySpinner,
+        'slider': MySlider,
         'text': MyText,
         'link': MyLink,
         'button': Button,
