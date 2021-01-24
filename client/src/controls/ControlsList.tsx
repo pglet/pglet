@@ -9,6 +9,7 @@ import { Progress } from './Progress'
 import { MySpinner } from './Spinner'
 import { Button } from './Button'
 import { MyText } from './Text'
+import { MyLink } from './Link'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
@@ -25,6 +26,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'progress': Progress,
         'spinner': MySpinner,
         'text': MyText,
+        'link': MyLink,
         'button': Button,
         'stack': MyStack,
         'tabs': Tabs,
