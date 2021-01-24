@@ -2,6 +2,7 @@ import React from 'react'
 import { IControlsListProps } from './IControlsListProps'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
+import { MySpinButton } from './SpinButton'
 import { MyDropdown } from './Dropdown'
 import { MyChoiceGroup } from './ChoiceGroup'
 import { MyCheckbox } from './Checkbox'
@@ -28,6 +29,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'spinner': MySpinner,
         'slider': MySlider,
         'text': MyText,
+        'spinbutton': MySpinButton,
         'link': MyLink,
         'button': Button,
         'stack': MyStack,
