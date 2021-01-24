@@ -34,12 +34,14 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
         let disabled = (itemControls[i].disabled === 'true') || parentDisabled;
 
         let item: any = {
+          id: itemControls[i].i,
           key: itemControls[i].key ? itemControls[i].key : undefined,
           name: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
           url: itemControls[i].url ? itemControls[i].url : undefined,
           icon: itemControls[i].icon ? itemControls[i].icon : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
+          isExpanded: itemControls[i].expanded ? itemControls[i].expanded : false,
         };
 
         item.links = getNavLinks(itemControls[i]);
@@ -72,11 +74,29 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     }
   };
 
+  const handleExpandLink = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
+    //console.log("EXPAND:", item!.isExpanded)
+
+    const payload = [
+      {
+        i: item!.id,
+        "expanded": !item!.isExpanded
+      }
+    ];
+
+    dispatch(changeProps(payload));
+    ws.updateControlProps(payload);
+    //ws.pageEventFromWeb(control.i, 'click', selectedKey)
+  }
+
   const handleLinkClick = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
 
-    //console.log("DROPDOWN:", option);
+    //console.log("ITEM:", item!.links!.length);
 
     let selectedKey = item!.key as string
+    if (selectedKey === undefined) {
+      return
+    }
 
     const payload = [
       {
@@ -94,5 +114,5 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     navProps.selectedKey = control.value;
   }  
 
-  return <Nav {...navProps}  />;
+  return <Nav {...navProps} onLinkClick={handleLinkClick} onLinkExpandClick={handleExpandLink} />;
 })
