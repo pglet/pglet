@@ -18,7 +18,7 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   const barItems = useSelector<any, any>((state: any) =>
     getMenuProps(state, control, disabled, ws), shallowEqual)
 
-  let buttonProps: ICommandBarProps = {
+  let toolbarProps: ICommandBarProps = {
     items: barItems.items,
     styles: {
       root: {
@@ -31,5 +31,5 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
     }
   };
 
-  return <CommandBar {...buttonProps} />;
+  return <CommandBar {...toolbarProps} />;
 })

@@ -1,0 +1,98 @@
+import React, { useContext } from 'react';
+import { WebSocketContext } from '../WebSocket';
+import { changeProps } from '../slices/pageSlice'
+import { useDispatch, shallowEqual, useSelector } from 'react-redux'
+import {
+  Nav,
+  INavProps,
+  INavLink
+} from '@fluentui/react';
+import { IControlProps } from './IControlProps'
+
+export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
+
+  //console.log(`render Button: ${control.i}`);
+
+  const dispatch = useDispatch();
+
+  const ws = useContext(WebSocketContext);
+
+  const navItems = useSelector<any, any>((state: any) => {
+
+    function getNavLinks(parent: any): any {
+      const itemControls = parent.c.map((childId: any) =>
+        state.page.controls[childId])
+        .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
+
+      if (itemControls.length === 0) {
+        return []
+      }
+
+      let items = [];
+
+      for (let i = 0; i < itemControls.length; i++) {
+        let disabled = (itemControls[i].disabled === 'true') || parentDisabled;
+
+        let item: any = {
+          key: itemControls[i].key ? itemControls[i].key : undefined,
+          name: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
+          url: itemControls[i].url ? itemControls[i].url : undefined,
+          icon: itemControls[i].icon ? itemControls[i].icon : undefined,
+          target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
+          disabled: disabled,
+        };
+
+        item.links = getNavLinks(itemControls[i]);
+
+        // if (item.links.length > 0) {
+        //   item.onClick = () => {
+        //     //ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
+        //     console.log(item.isExpanded);
+        //   }
+        //   item.forceAnchor = true;
+        // }
+
+        items.push(item)
+      }
+
+      return items;
+    }
+    return getNavLinks(control)
+  }, shallowEqual)
+
+  let navProps: INavProps = {
+    groups: navItems,
+    styles: {
+      root: {
+        width: control.width !== undefined ? control.width : undefined,
+        height: control.height !== undefined ? control.height : undefined,
+        padding: control.padding !== undefined ? control.padding : undefined,
+        margin: control.margin !== undefined ? control.margin : undefined
+      }
+    }
+  };
+
+  const handleLinkClick = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
+
+    //console.log("DROPDOWN:", option);
+
+    let selectedKey = item!.key as string
+
+    const payload = [
+      {
+        i: control.i,
+        "value": selectedKey
+      }
+    ];
+
+    dispatch(changeProps(payload));
+    ws.updateControlProps(payload);
+    ws.pageEventFromWeb(control.i, 'click', selectedKey)
+  }
+
+  if (control.value) {
+    navProps.selectedKey = control.value;
+  }  
+
+  return <Nav {...navProps}  />;
+})

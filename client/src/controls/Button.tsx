@@ -24,7 +24,7 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   let ButtonType = DefaultButton;
   if (control.compound === 'true') {
     ButtonType = CompoundButton
-  } else if (control.commandbar === 'true') {
+  } else if (control.toolbar === 'true') {
     ButtonType = CommandBarButton
   } else if (control.primary === 'true') {
     ButtonType = PrimaryButton
@@ -35,7 +35,7 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   let height = control.height !== undefined ? control.height : undefined;
-  if (control.commandbar === 'true' && control.height === undefined) {
+  if (control.toolbar === 'true' && control.height === undefined) {
     height = 40;
   }
 

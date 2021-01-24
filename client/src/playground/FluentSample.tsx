@@ -1,11 +1,19 @@
 import React from 'react';
-import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField } from '@fluentui/react';
-import { Stack, IStackProps, ProgressIndicator, Icon } from '@fluentui/react';
+import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField, FontIcon } from '@fluentui/react';
+import { Stack, IStackProps, ProgressIndicator, mergeStyles } from '@fluentui/react';
 //import { SharedColors, FontSizes } from '@uifabric/fluent-theme';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
-const MyIcon = () => <Icon iconName="CompassNW" styles={{ root: { fontSize: '36px'}}} />;
+const iconClass = mergeStyles({
+  fontSize: 100,
+  height: 100,
+  width: 100,
+  margin: 0,
+  color: 'salmon'
+});
+
+const MyIcon = () => <FontIcon iconName="Upload" className={iconClass} />;
 
 // const stackTokens = { childrenGap: 50 };
 // const stackStyles: Partial<IStackStyles> = { root: { width: 800 } };

@@ -39,7 +39,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             item.key = "divider_" + itemControls[i].i;
         }
 
-        item.onClick = (ev, item) => {
+        item.onClick = () => {
             ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
         }
 

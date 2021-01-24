@@ -10,6 +10,7 @@ import { Button } from './Button'
 import { MyText } from './Text'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
+import { MyNav } from './Nav'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -26,6 +27,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'stack': MyStack,
         'tabs': Tabs,
         'toolbar': Toolbar,
+        'nav': MyNav,
     }
 
     const renderChild = (control: any) => {
