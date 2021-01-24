@@ -3,9 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
 import {
   CommandBar,
-  ICommandBarProps,
-  IContextualMenuProps,
-  IContextualMenuItem } from '@fluentui/react';
+  ICommandBarProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 import { getMenuProps } from './MenuItem'
 
@@ -17,12 +15,8 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
 
   const ws = useContext(WebSocketContext);
 
-  const handleMenuItemClick = (ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>, item?: IContextualMenuItem) => {
-    ws.pageEventFromWeb(control.i, 'click', item!.key)
-  }
-
   const barItems = useSelector<any, any>((state: any) =>
-    getMenuProps(state, control, null, handleMenuItemClick), shallowEqual)
+    getMenuProps(state, control, disabled, ws), shallowEqual)
 
   let buttonProps: ICommandBarProps = {
     items: barItems.items,

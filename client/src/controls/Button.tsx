@@ -9,8 +9,7 @@ import {
   IconButton,
   ActionButton,
   IButtonProps,
-  IContextualMenuProps,
-  IContextualMenuItem } from '@fluentui/react';
+  IContextualMenuProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 import { getMenuProps } from './MenuItem'
 
@@ -40,16 +39,13 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     height = 40;
   }
 
-  const handleMenuItemClick = (ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>, item?: IContextualMenuItem) => {
-    ws.pageEventFromWeb(control.i, 'menuClick', item!.key)
-  }
-
   const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
-    getMenuProps(state, control, handleMenuItemClick, null), shallowEqual)
+    getMenuProps(state, control, disabled, ws), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,
     href: control.url ? control.url : undefined,
+    title: control.title ? control.title : undefined,
     target: control.newwindow === 'true' ? '_blank' : undefined,
     secondaryText: control.secondarytext ? control.secondarytext : undefined,
     disabled: disabled,
