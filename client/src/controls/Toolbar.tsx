@@ -18,8 +18,29 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   const barItems = useSelector<any, any>((state: any) =>
     getMenuProps(state, control, disabled, ws), shallowEqual)
 
+  const overflowItems = useSelector<any, any>((state: any) => {
+    const overflowControls = control.c.map((childId: any) =>
+        state.page.controls[childId]).filter((ic: any) => ic.t === 'overflow' && ic.visible !== "false");
+    if (overflowControls.length === 0) {
+        return null
+    }
+
+    return getMenuProps(state, overflowControls[0], disabled, ws)
+  }, shallowEqual)
+
+  const farItems = useSelector<any, any>((state: any) => {
+    const farControls = control.c.map((childId: any) =>
+        state.page.controls[childId]).filter((ic: any) => ic.t === 'far' && ic.visible !== "false");
+    if (farControls.length === 0) {
+        return null
+    }
+    return getMenuProps(state, farControls[0], disabled, ws)
+  }, shallowEqual)  
+
   let toolbarProps: ICommandBarProps = {
     items: barItems.items,
+    overflowItems: overflowItems.items,
+    farItems: farItems.items,
     styles: {
       root: {
         paddingLeft: 0,

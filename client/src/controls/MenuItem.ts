@@ -33,6 +33,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             item.iconProps = {
                 iconName: itemControls[i].icon
             }
+            item.iconOnly = itemControls[i].icononly === 'true' ? true : false;
         }
         if (itemControls[i].divider === 'true') {
             item.itemType = ContextualMenuItemType.Divider;
