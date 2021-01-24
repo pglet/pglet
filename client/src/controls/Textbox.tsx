@@ -25,6 +25,10 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
+
+    if (control.onchange === 'true') {
+      ws.pageEventFromWeb(control.i, 'change', newValue!)
+    }
   }
 
   const textFieldProps: ITextFieldProps = {
