@@ -2,10 +2,10 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Dropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
+import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyChoiceGroup = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Dropdown: ${control.i}`);
   let disabled = (control.disabled === 'true') || parentDisabled;
@@ -14,7 +14,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
 
   const dispatch = useDispatch();
   
-  const handleChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {
+  const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 
     //console.log("DROPDOWN:", option);
 
@@ -32,10 +32,8 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
     ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
-  const dropdownProps: IDropdownProps = {
+  const choiceProps: IChoiceGroupProps = {
     label: control.label ? control.label : null,
-    placeholder: control.placeholder ? control.placeholder : null,
-    errorMessage: control.errormessage ? control.errormessage : null,
     options: [],
     disabled: disabled,
     styles: {
@@ -48,17 +46,25 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
     }
   };
 
-  dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) => control.c.map((childId: any) =>
+  choiceProps.options = useSelector<any, IChoiceGroupOption[]>((state: any) => control.c.map((childId: any) =>
     state.page.controls[childId])
       .filter((oc: any) => oc.t === 'option')
-      .map((oc: any) => ({
-        key: oc.key,
-        text: oc.text ? oc.text : oc.key
-      })), shallowEqual);  
+      .map((oc: any) => {
+        let option: any = {
+          key: oc.key,
+          text: oc.text ? oc.text : oc.key,
+        }
+        if (oc.icon) {
+          option.iconProps = {
+            iconName: oc.icon
+        }
+        }
+        return option;
+      }), shallowEqual);  
 
   if (control.value) {
-    dropdownProps.defaultSelectedKey = control.value;
+    choiceProps.defaultSelectedKey = control.value;
   }
 
-  return <Dropdown {...dropdownProps} onChange={handleChange} />;
+  return <ChoiceGroup {...choiceProps} onChange={handleChange} />;
 })

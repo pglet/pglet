@@ -34,6 +34,7 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
   const checkboxProps: ICheckboxProps = {
     checked: control.value === "true",
     label: control.label ? control.label : null,
+    boxSide: control.boxside ? control.boxside : 'start',
     disabled: disabled,
     styles: {
       root: {
