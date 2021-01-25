@@ -1,13 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './App';
-import { mergeStyles, loadTheme } from '@fluentui/react';
+import { mergeStyles, loadTheme, initializeIcons } from '@fluentui/react';
 import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import rootReducer from './rootReducer'
 import { configureStore } from '@reduxjs/toolkit'
 import { WebSocketProvider } from './WebSocket';
-import { initializeIcons } from '@uifabric/icons';
 
 initializeIcons();
 

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Text, Link, FontWeights, TextField, FontIcon } from '@fluentui/react';
+import { Text, Link, FontWeights, TextField, FontIcon, ContextualMenu } from '@fluentui/react';
 import { Button, MenuButton } from '@fluentui/react-button';
 import { Stack, IStackProps, ProgressIndicator, mergeStyles } from '@fluentui/react';
-//import { SharedColors, FontSizes } from '@uifabric/fluent-theme';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
@@ -39,7 +38,7 @@ export const FluentSample: React.FunctionComponent = () => {
         <Stack horizontal horizontalAlign='space-between'>
           <Text>Left</Text>
           <Stack horizontal>
-            <Text><MenuButton primary menu={menu}>A</MenuButton></Text>
+            <Text><MenuButton primary menu={<ContextualMenu {...menu} />}>A</MenuButton></Text>
             <Text><Button content="B"/></Text>
           </Stack>
         </Stack>
