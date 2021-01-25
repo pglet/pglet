@@ -1217,6 +1217,24 @@
     "@fluentui/set-version" "^8.0.0-beta.0"
     tslib "^1.10.0"
 
+"@fluentui/react-button@1.0.0-beta.23":
+  version "1.0.0-beta.23"
+  resolved "https://registry.yarnpkg.com/@fluentui/react-button/-/react-button-1.0.0-beta.23.tgz#882a8eacc42cbea95d24976d251987703074ffbf"
+  integrity sha512-+Nd/WS63wfsz4WDJvb8Gjh4438yLiFHzxeN8jKTolv7PfqMIpe8s5B4kfV3/LtbeNDtBmNAqME5iu73h1QZvPA==
+  dependencies:
+    "@fluentui/keyboard-key" "^0.2.12"
+    "@fluentui/react-compose" "^1.0.0-beta.10"
+    "@fluentui/react-hooks" "^8.0.0-beta.9"
+    "@fluentui/react-icons-mdl2" "^1.0.0-beta.11"
+    "@fluentui/react-shared-contexts" "^1.0.0-beta.4"
+    "@fluentui/react-theme-provider" "^1.0.0-beta.16"
+    "@fluentui/set-version" "^8.0.0-beta.0"
+    "@fluentui/style-utilities" "^8.0.0-beta.12"
+    "@fluentui/theme" "^2.0.0-beta.12"
+    "@fluentui/utilities" "^8.0.0-beta.9"
+    "@microsoft/load-themed-styles" "^1.10.26"
+    tslib "^1.10.0"
+
 "@fluentui/react-checkbox@^1.0.0-beta.35":
   version "1.0.0-beta.35"
   resolved "https://registry.yarnpkg.com/@fluentui/react-checkbox/-/react-checkbox-1.0.0-beta.35.tgz#eb9fb9caee38f5175d50e3d4b746154cdcf90b8e"
