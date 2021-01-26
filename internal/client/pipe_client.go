@@ -74,7 +74,7 @@ func (pc *PipeClient) commandLoop() {
 			continue
 		}
 
-		log.Debugln("Send command: %+v", cmd)
+		log.Debugf("Send command: %+v", cmd)
 
 		if cmd.Name == command.Quit {
 			pc.close()

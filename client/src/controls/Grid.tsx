@@ -41,6 +41,11 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     //console.log(column)
     //console.log("DROPDOWN:", option);
 
+    if ((column as any).onClick) {
+      ws.pageEventFromWeb(control.i, 'click', control.data)
+      return
+    }
+
     if ((column as any).isSortable === undefined || (column as any).isSortable === 'false') {
       return;
     }
@@ -64,7 +69,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
-    //ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
   const _onItemInvoked = (item: any) => {
@@ -85,7 +89,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
           return {
             key: cc.i,
             name: cc.name,
-            iconName: cc.iconname,
+            iconName: cc.icon,
             isIconOnly: cc.icononly === 'true',
             fieldName: cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
             isResizable: cc.resizable === 'true',
@@ -94,6 +98,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             isSortedDescending: cc.sorted === 'desc',
             minWidth: cc.minwidth ? parseInt(cc.minwidth) : undefined,
             maxWidth: cc.maxwidth ? parseInt(cc.maxwidth) : undefined,
+            onClick: cc.onclick === 'true',
             onColumnClick: _onColumnClick
           }
         });
