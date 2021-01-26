@@ -16,6 +16,7 @@ import { MyLink } from './Link'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
+import { Grid } from './Grid'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -38,6 +39,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'tabs': Tabs,
         'toolbar': Toolbar,
         'nav': MyNav,
+        'grid': Grid,
     }
 
     const renderChild = (control: any) => {

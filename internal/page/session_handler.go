@@ -77,7 +77,7 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 	sl := h.lockSession()
 	defer sl.Unlock()
 
-	log.Printf("Execute command for page %s session %s: %+v\n",
+	log.Debugln("Execute command for page %s session %s: %+v\n",
 		h.session.Page.Name, h.session.ID, cmd)
 
 	handlers := map[string]commandHandlerFn{

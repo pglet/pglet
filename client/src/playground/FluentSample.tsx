@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, Link, FontWeights, TextField, FontIcon, ContextualMenu } from '@fluentui/react';
 import { Button, MenuButton } from '@fluentui/react-button';
 import { Stack, IStackProps, ProgressIndicator, mergeStyles } from '@fluentui/react';
+import { DatePicker } from '@fluentui/react-date-time';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
@@ -32,7 +33,7 @@ export const FluentSample: React.FunctionComponent = () => {
   return (
     <div>
       <Stack horizontalAlign="start">
-        <Button primary content="Add" icon={ <FontIcon iconName="Add" /> } />
+        <DatePicker label="Select date" isRequired={true} placeholder="Select a date..." />
       </Stack>
       <Stack horizontalAlign="stretch">
         <Stack horizontal horizontalAlign='space-between'>

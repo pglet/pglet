@@ -1244,7 +1244,7 @@
     classnames "^2.2.6"
     tslib "^1.10.0"
 
-"@fluentui/react-date-time@^8.0.0-beta.34":
+"@fluentui/react-date-time@8.0.0-beta.34", "@fluentui/react-date-time@^8.0.0-beta.34":
   version "8.0.0-beta.34"
   resolved "https://registry.yarnpkg.com/@fluentui/react-date-time/-/react-date-time-8.0.0-beta.34.tgz#df37ac69e0b7c942b869b5e8533fc974b431a813"
   integrity sha512-X3PrXtz0rg70Z7csc5AhJ3PjWScRE+t3bf+tH+Jkx+ikr69U1dhlEQtXVYyzZcmVdP2V12W0f5CrWJKpeQwI1A==

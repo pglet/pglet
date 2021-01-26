@@ -76,7 +76,7 @@ func (c *Client) subscribe() {
 }
 
 func (c *Client) readHandler(message []byte) error {
-	log.Printf("Message from %s: %v\n", c.id, string(message))
+	log.Debugln("Message from %s: %v\n", c.id, string(message))
 
 	// decode message
 	msg := &Message{}
