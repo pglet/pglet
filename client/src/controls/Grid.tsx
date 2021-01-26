@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { DetailsList, IDetailsListProps, IColumn, SelectionMode, Selection } from '@fluentui/react';
+import { DetailsList, IDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -14,25 +14,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const dispatch = useDispatch();
   
-  // const handleChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {
-
-  //   //console.log("DROPDOWN:", option);
-
-  //   let selectedKey = option!.key as string
-
-  //   const payload = [
-  //     {
-  //       i: control.i,
-  //       "value": selectedKey
-  //     }
-  //   ];
-
-  //   dispatch(changeProps(payload));
-  //   ws.updateControlProps(payload);
-  //   ws.pageEventFromWeb(control.i, 'change', selectedKey)
-  // }
-
-  console.log("GRID - START REDNER");
+  //console.log("GRID - START REDNER");
 
   let columns: IColumn[] = [];
   let items = null;
@@ -72,12 +54,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const _onItemInvoked = (item: any) => {
-    alert(`Item invoked: ${item.name}`);
+    ws.pageEventFromWeb(control.i, 'itemInvoke', item.i)
   }
 
   const _selection = new Selection({
     onSelectionChanged: () => {
-      console.log(_selection.getSelection());
+       const ids = _selection.getSelection().map((elem: any) => (elem.i)).join(' ');
+       ws.pageEventFromWeb(control.i, 'select', ids)
     },
   });
 
@@ -86,6 +69,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
       .filter((c: any) => c.t === 'columns').map((columns: any) =>
         columns.c.map((childId: any) => state.page.controls[childId]))
         .reduce((acc: any, columns: any) => ([...acc, ...columns])).map((cc: any) => {
+
           return {
             key: cc.i,
             name: cc.name,
@@ -99,7 +83,9 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             minWidth: cc.minwidth ? parseInt(cc.minwidth) : undefined,
             maxWidth: cc.maxwidth ? parseInt(cc.maxwidth) : undefined,
             onClick: cc.onclick === 'true',
-            onColumnClick: _onColumnClick
+            onColumnClick: _onColumnClick,
+            columnActionsMode: cc.onclick === 'true' ||
+              (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled
           }
         });
   }, shallowEqual);
@@ -128,8 +114,8 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const gridProps: IDetailsListProps = {
     columns: columns,
     items: items,
-    compact: false,
-    isHeaderVisible: true,
+    compact: control.compact === 'true',
+    isHeaderVisible: control.headervisible === 'false' ? false : true,
     onItemInvoked: _onItemInvoked,
     styles: {
       root: {
