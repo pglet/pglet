@@ -195,11 +195,10 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		id := batchItem.command.Attrs["id"]
 		if id == "" {
 			id = h.nextControlID()
-		} else {
-			// generate unique ID
-			parentIDs := h.getControlParentIDs(parentID)
-			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 		}
+		// generate unique ID
+		parentIDs := h.getControlParentIDs(parentID)
+		id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 
 		batchItem.control = model.NewControl(controlType, parentID, id)
 		affectedParents[parentID] = true
