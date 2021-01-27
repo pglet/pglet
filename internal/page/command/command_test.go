@@ -87,6 +87,26 @@ func TestParseClean(t *testing.T) {
 	}
 }
 
+func TestParseSlashesAndNewLine(t *testing.T) {
+	cmd, err := Parse(`  Add value="C:\\Program Files\\Node\\node.exe" aaa='bbb' cmd2=1`, true)
+
+	if err != nil {
+		t.Fatal("Error parsing command", err)
+	}
+
+	// visualize command
+	log.Printf("%s", cmd)
+
+	if cmd.Name != "Add" {
+		t.Errorf("command name is %s, want %s", cmd.Name, "Add")
+	}
+
+	expAttr := "C:\\Program Files\\Node\\node.exe"
+	if cmd.Attrs["value"] != expAttr {
+		t.Errorf("command value attribute is %s, want %s", cmd.Attrs["value"], expAttr)
+	}
+}
+
 func TestParseMultilineCommand(t *testing.T) {
 	cmd, err := Parse(`
 

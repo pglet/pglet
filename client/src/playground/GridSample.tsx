@@ -83,7 +83,6 @@ export const GridSample: React.FunctionComponent = () => {
       maxWidth: 30,
       onColumnClick: _onColumnClick,
       data: 'string',
-      isPadded: true,
       onRender: (item: IDocument) => {
         return <Link href={'https://' + item.name}>{item.name}</Link>;
       },
