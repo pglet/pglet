@@ -1,5 +1,5 @@
 import React from 'react';
-import { DetailsList, IColumn, DetailsListLayoutMode, Selection, Link } from '@fluentui/react';
+import { Sticky, StickyPositionType, ScrollablePane, mergeStyles, TextField, Stack, Text, DetailsList, IColumn, DetailsListLayoutMode, Selection, Link } from '@fluentui/react';
 
 export interface IDocument {
   key: string;
@@ -7,11 +7,11 @@ export interface IDocument {
   iconName: string;
 }
 
-let items: IDocument[] = [
-  { key: 'item1', name: 'Item 1', iconName: 'Icon 1' },
-  { key: 'item2', name: 'Item 2', iconName: 'Icon 2' },
-  { key: 'item3', name: 'Item 3', iconName: 'Icon 3' }
-];
+let items: IDocument[] = [];
+
+for(let i = 0; i < 1000; i++) {
+  items.push({ key: `item${i}`, name: `Item ${i}`, iconName: `Icon ${i}` });
+}
 
 export const GridSample: React.FunctionComponent = () => {
 
@@ -30,7 +30,7 @@ export const GridSample: React.FunctionComponent = () => {
     console.log(column)
   }
 
-  let _lastResizedColumnTimeout: any = null;  
+  let _lastResizedColumnTimeout: any = null;
 
   const _onColumnResize = (column?: IColumn, newWidth?: number, columnIndex?: number) => {
     if (_lastResizedColumnTimeout != null) {
@@ -90,22 +90,69 @@ export const GridSample: React.FunctionComponent = () => {
     }
   ];
 
+  // const className1 = mergeStyles({
+  //   width: '30%'
+  // });
+
+  const className2 = mergeStyles({
+    //width: '50%'
+  });  
+
+  // const className = mergeStyles(blueBackgroundClassName, {
+  //   width: 'auto',
+  //   selectors: {
+  //     '& .ms-ViewPort': {
+  //       backgroundColor: 'red',
+  //       //width: '100%'
+  //     }
+  //   }
+  // });
+
+  // const classNames = mergeStyleSets({
+  //   table1: {
+  //     'test': {
+  //       width: '100'
+  //     },
+  //     margin: 'auto',
+  //   }
+  // });
+
   return (
     <div>
-      <DetailsList
-        items={items}
-        compact={true}
-        columns={columns}
-        onColumnResize={_onColumnResize}
-        selection={_selection}
-        selectionPreservedOnEmptyClick={true}
-        //selectionMode={SelectionMode.none}
-        //getKey={this._getKey}
-        setKey="key"
-        layoutMode={DetailsListLayoutMode.justified}
-        isHeaderVisible={true}
-        onItemInvoked={_onItemInvoked}
-      />
+      <ScrollablePane>
+      <Stack horizontal horizontalAlign="stretch">
+        <Stack.Item grow={1}>
+          <Text>Left menu</Text>
+        </Stack.Item>
+        <Stack.Item grow={2}>
+          <TextField styles={{ root: { width: '100%' } }} />
+        </Stack.Item>
+      </Stack>        
+        <Stack horizontal horizontalAlign="stretch">
+          <Stack.Item grow>
+            <Sticky stickyPosition={StickyPositionType.Header}>
+              <Text>Nav menu</Text>
+            </Sticky>
+          </Stack.Item>
+          <Stack.Item grow className={className2}>
+            <DetailsList
+              items={items}
+              compact={true}
+              columns={columns}
+              onColumnResize={_onColumnResize}
+              selection={_selection}
+              selectionPreservedOnEmptyClick={true}
+              //selectionMode={SelectionMode.none}
+              //getKey={this._getKey}
+              setKey="key"
+              layoutMode={DetailsListLayoutMode.justified}
+              isHeaderVisible={true}
+              onItemInvoked={_onItemInvoked}
+            />
+            {/* <Text>Center</Text> */}
+          </Stack.Item>
+        </Stack>
+      </ScrollablePane>
     </div>
   );
 };

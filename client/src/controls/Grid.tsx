@@ -80,6 +80,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             isSortable: cc.sortable,
             isSorted: cc.sorted === 'true' || cc.sorted === 'asc' || cc.sorted === 'desc',
             isSortedDescending: cc.sorted === 'desc',
+            isPadded: true,
             minWidth: cc.minwidth ? parseInt(cc.minwidth) : undefined,
             maxWidth: cc.maxwidth ? parseInt(cc.maxwidth) : undefined,
             onClick: cc.onclick === 'true',
@@ -119,7 +120,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     onItemInvoked: _onItemInvoked,
     styles: {
       root: {
-        width: control.width !== undefined ? control.width : undefined,
+        //width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
         margin: control.margin !== undefined ? control.margin : undefined   
@@ -137,9 +138,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log("RENDER:", items);
 
-  // if (control.value) {
-  //   dropdownProps.defaultSelectedKey = control.value;
-  // }
-
+  // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
   return <DetailsList {...gridProps} />;
 })
