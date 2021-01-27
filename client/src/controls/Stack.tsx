@@ -19,7 +19,11 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         styles: {
             root: {
                 width: control.width ? control.width : undefined,
+                minWidth: control.minwidth ? control.minwidth : undefined,
+                maxWidth: control.maxwidth ? control.maxwidth : undefined,
                 height: control.height !== undefined ? control.height : undefined,
+                minHeight: control.minheight !== undefined ? control.minheight : undefined,
+                maxHeight: control.maxheight !== undefined ? control.maxheight : undefined,
                 padding: control.padding !== undefined ? control.padding : undefined,
                 margin: control.margin !== undefined ? control.margin : undefined
             }
