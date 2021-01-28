@@ -17,7 +17,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   //console.log("GRID - START REDNER");
 
   let columns: IColumn[] = [];
-  let items = null;
+  let items: any = null;
 
   const _onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn): void => {
     //console.log(column)
@@ -56,13 +56,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const _onItemInvoked = (item: any) => {
     ws.pageEventFromWeb(control.i, 'itemInvoke', item.i)
   }
-
-  const _selection = new Selection({
-    onSelectionChanged: () => {
-       const ids = _selection.getSelection().map((elem: any) => (elem.i)).join(' ');
-       ws.pageEventFromWeb(control.i, 'select', ids)
-    },
-  });
 
   columns = useSelector<any, IColumn[]>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
@@ -115,6 +108,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const gridProps: IDetailsListProps = {
     columns: columns,
     items: items,
+    setKey: "set",
     compact: control.compact === 'true',
     isHeaderVisible: control.headervisible === 'false' ? false : true,
     onItemInvoked: _onItemInvoked,
@@ -128,6 +122,15 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     }
   };
 
+  const _selection = new Selection({
+    onSelectionChanged: () => {
+      const ids = _selection.getSelection().map((elem: any) => (elem.i)).join(' ');
+      console.log("onSelectionChanged:", ids);
+      ws.pageEventFromWeb(control.i, 'select', ids)
+    },
+    getKey: (item: any) => item.i.toString()
+  });
+
   // selection mode
   gridProps.selectionMode = SelectionMode.none;
   if (control.selection === 'single' || control.selection === 'multiple') {
@@ -136,7 +139,8 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     gridProps.selectionPreservedOnEmptyClick = control.preserveselection === 'true';
   }
 
-  //console.log("RENDER:", items);
+  console.log("END RENDER GRID");
+  // _selection.setChangeEvents(true, false);
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
   return <DetailsList {...gridProps} />;

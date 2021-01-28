@@ -9,7 +9,7 @@ export interface IDocument {
 
 let items: IDocument[] = [];
 
-for(let i = 0; i < 1000; i++) {
+for(let i = 0; i < 10; i++) {
   items.push({ key: `item${i}`, name: `Item ${i}`, iconName: `Icon ${i}` });
 }
 
@@ -43,8 +43,9 @@ export const GridSample: React.FunctionComponent = () => {
 
   const _selection = new Selection({
     onSelectionChanged: () => {
-      console.log(_selection.getSelection());
+      console.log("selection changed:", _selection.getSelection());
     },
+    getKey: (item: any) => item.key.toString()
   });
 
   const columns: IColumn[] = [
@@ -89,6 +90,21 @@ export const GridSample: React.FunctionComponent = () => {
     }
   ];
 
+  if (items.length > 1) {
+    
+    _selection.setItems(items);
+    _selection.setKeySelected(items[items.length - 1].key.toString(), true, false);
+  }
+
+  // setTimeout(() => {
+  //   items.splice(0,items.length)
+  //   for(let i = 0; i < 5; i++) {
+  //     items.push({ key: `item${i}`, name: `Item ${i}`, iconName: `Icon ${i}` });
+  //   }
+  //   _selection.setItems(items);
+  //   _selection.setKeySelected(items[items.length - 1].key.toString(), true, false);    
+  // }, 5000);
+
   // const className1 = mergeStyles({
   //   width: '30%'
   // });
@@ -115,6 +131,8 @@ export const GridSample: React.FunctionComponent = () => {
   //     margin: 'auto',
   //   }
   // });
+
+  console.log("render");
 
   return (
     <div>
