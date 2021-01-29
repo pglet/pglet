@@ -129,6 +129,7 @@ for:
   - ls -al $GOPATH
   - 'echo GOROOT: $GOROOT'
   - ls -al $GOROOT
+  - which go
 
   build_script:
   - nvm use 12
