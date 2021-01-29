@@ -131,6 +131,8 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     getKey: (item: any) => item.i.toString()
   });
 
+  // _selection.setItems(items);
+
   // selection mode
   gridProps.selectionMode = SelectionMode.none;
   if (control.selection === 'single' || control.selection === 'multiple') {
