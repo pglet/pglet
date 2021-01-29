@@ -136,8 +136,8 @@ for:
   - go get -u github.com/jteeuwen/go-bindata/...
   - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - mkdir internal/server/content
-  - cp client/build/* internal/server/content
-  - ls internal/server/content
+  - cp -r client/build/* internal/server/content
+  - ls -alR internal/server/content
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
