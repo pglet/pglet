@@ -43,6 +43,7 @@ for:
   - set PATH=%GOPATH%\bin;%PATH%
   - echo %GOPATH%
   - echo %GOROOT%
+  - go version
 
   build_script:
   - ps: Install-Product node 12 x64
@@ -50,8 +51,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - xcopy client\build internal\server\content\ /E
   - .\build.cmd
   - dir %USERPROFILE%\Go\bin
 
@@ -78,8 +78,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
 
@@ -107,8 +106,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
 
@@ -140,7 +138,6 @@ for:
   - ls -alR build
   - cd ..
   - cp -r client/build/* internal/server/content
-  - ls -alR internal/server/content
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
