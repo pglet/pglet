@@ -135,7 +135,7 @@ for:
   - cd ..
 #  - go get -u github.com/jteeuwen/go-bindata/...
 #  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
-  - mkdir internal/server/content
+#  - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - ls -alR internal/server/content
   - sh: |
