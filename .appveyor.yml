@@ -127,6 +127,8 @@ for:
       goreleaser --version
 
   build_script:
+  - echo GOPATH: $GOPATH
+  - echo GOROOT: $GOROOT
   - nvm use 12
   - cd client
   - yarn
