@@ -8,6 +8,7 @@
 # export PATH=/usr/local/go/bin:$PATH
 # export GOROOT=/usr/local/go
 # export GOPATH=$HOME/go
+source  ~/.gvm/scripts/gvm
 gvm install go${GO_VERSION} -B
 gvm use go${GO_VERSION}
 go version
