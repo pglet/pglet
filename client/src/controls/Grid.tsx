@@ -141,7 +141,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     gridProps.selectionPreservedOnEmptyClick = control.preserveselection === 'true';
   }
 
-  console.log("END RENDER GRID");
+  //console.log("END RENDER GRID");
   // _selection.setChangeEvents(true, false);
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
