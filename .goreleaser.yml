@@ -2,6 +2,8 @@ project_name: pglet
 
 builds:
   - main: cmd/pglet/main.go
+    env:
+      - CGO_ENABLED=0  
     flags:
       - -tags=release  
     ldflags: >
@@ -13,8 +15,15 @@ builds:
       - windows
     goarch:
       - amd64
-    env:
-      - CGO_ENABLED=0
+      - arm
+      - arm64
+    goarm:
+      - 7
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
 
 archives:
   - id: binary
