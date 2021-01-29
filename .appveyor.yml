@@ -121,7 +121,10 @@ for:
     - job_name: Release
 
   install:
-  - ./install_go.sh
+  #- ./install_go.sh
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version  
   - sh: |
       sudo snap install --classic goreleaser
       goreleaser --version
