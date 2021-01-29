@@ -7,20 +7,20 @@ environment:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
 
   matrix:
-    # - job_name: Windows
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    - job_name: Windows
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    # - job_name: Linux
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - job_name: Linux
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
-    # - job_name: macOS
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: macOS
+    - job_name: macOS
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: macOS
 
     - job_name: Release
-      #job_depends_on: tests
+      job_depends_on: tests
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
 matrix:
