@@ -51,7 +51,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - xcopy client\build internal\server\content\ /E
+  - xcopy client\build internal\server\content\ /E /Y
   - .\build.cmd
   - dir %USERPROFILE%\Go\bin
 
