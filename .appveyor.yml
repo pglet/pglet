@@ -68,7 +68,9 @@ for:
     - job_name: Linux
 
   install:
-  - ./install_go.sh
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version
 
   build_script:
   - nvm use 12
@@ -94,7 +96,9 @@ for:
     - job_name: macOS
 
   install:
-  - ./install_go.sh
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version
   - HOMEBREW_NO_AUTO_UPDATE=1 brew install yarn
 
   build_script:
@@ -121,18 +125,12 @@ for:
     - job_name: Release
 
   install:
-  #- ./install_go.sh
   - gvm install go${GO_VERSION} -B
   - gvm use go${GO_VERSION}
   - go version  
   - sh: |
       sudo snap install --classic goreleaser
       goreleaser --version
-  - 'echo GOPATH: $GOPATH'
-  - ls -al $GOPATH
-  - 'echo GOROOT: $GOROOT'
-  - ls -al $GOROOT
-  - which go
 
   build_script:
   - nvm use 12
@@ -141,9 +139,6 @@ for:
   - GENERATE_SOURCEMAP=false yarn build
   - ls -alR build
   - cd ..
-#  - go get -u github.com/jteeuwen/go-bindata/...
-#  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
-#  - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - ls -alR internal/server/content
   - sh: |
