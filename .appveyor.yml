@@ -126,7 +126,7 @@ for:
   - gvm install go${GO_VERSION} -B
   - gvm use go${GO_VERSION}
   - go version
-  - ./install_goreleaser.sh
+  - bash ./install_goreleaser.sh
   - goreleaser --version
   #- sh: |
   #    sudo snap install --classic goreleaser
