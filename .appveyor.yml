@@ -1,7 +1,7 @@
 skip_branch_with_pr: true
 
 environment:
-  GO_VERSION: 1.15.3
+  GO_VERSION: 1.16rc1
   GO_TAGS: --tags release
   GITHUB_TOKEN:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
@@ -133,8 +133,8 @@ for:
   - GENERATE_SOURCEMAP=false yarn build
   - ls -alR build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+#  - go get -u github.com/jteeuwen/go-bindata/...
+#  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
   - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - ls -alR internal/server/content
