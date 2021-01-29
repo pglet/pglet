@@ -19,11 +19,11 @@ builds:
       - arm64
     goarm:
       - 7
-    ignore:
-      - goos: windows
-        goarch: arm
-      - goos: darwin
-        goarch: arm
+    # ignore:
+    #   - goos: windows
+    #     goarch: arm
+    #   - goos: darwin
+    #     goarch: arm
 
 archives:
   - id: binary
