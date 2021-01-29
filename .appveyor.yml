@@ -125,10 +125,10 @@ for:
   - sh: |
       sudo snap install --classic goreleaser
       goreleaser --version
+  - 'echo GOPATH: $GOPATH'
+  - 'echo GOROOT: $GOROOT'
 
   build_script:
-  - echo GOPATH: $GOPATH
-  - echo GOROOT: $GOROOT
   - nvm use 12
   - cd client
   - yarn
