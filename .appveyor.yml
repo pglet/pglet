@@ -126,7 +126,9 @@ for:
       sudo snap install --classic goreleaser
       goreleaser --version
   - 'echo GOPATH: $GOPATH'
+  - ls -al $GOPATH
   - 'echo GOROOT: $GOROOT'
+  - ls -al $GOROOT
 
   build_script:
   - nvm use 12
