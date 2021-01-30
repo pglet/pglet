@@ -149,7 +149,9 @@ for:
 
   test_script:
   - docker images
-  - docker run pglet/server
+  - docker run --name pglet-test -d pglet/server
+  - sleep 20
+  - docker logs pglet-test
 
   artifacts:
   - path: dist/pglet-*
