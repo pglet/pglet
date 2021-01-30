@@ -1,7 +1,7 @@
 project_name: pglet
 
 builds:
-  - id: "pglet-build"
+  - id: pglet
     main: cmd/pglet/main.go
     env:
       - CGO_ENABLED=0  
@@ -27,8 +27,8 @@ dockers:
     goarch: amd64
     goarm: ''
 
-    ids:
-    - pglet-build
+    builds:
+    - pglet
 
     image_templates:
     - "pglet/server:latest"
