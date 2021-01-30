@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { DetailsList, IDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
+import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -105,9 +105,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     })
   }
 
-  const gridProps: IDetailsListProps = {
+  const shimmerLines = control.shimmerlines ? parseInt(control.shimmerlines) : 0;
+
+  const gridProps: IShimmeredDetailsListProps = {
     columns: columns,
     items: items,
+    enableShimmer: items.length === 0 && shimmerLines > 0,
+    shimmerLines: shimmerLines,
     setKey: "set",
     compact: control.compact === 'true',
     isHeaderVisible: control.headervisible === 'false' ? false : true,
@@ -145,5 +149,5 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   // _selection.setChangeEvents(true, false);
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
-  return <DetailsList {...gridProps} />;
+  return <ShimmeredDetailsList {...gridProps} />;
 })
