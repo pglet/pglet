@@ -47,7 +47,7 @@ dockers:
     - "--label=org.opencontainers.image.revision={{.FullCommit}}"
     - "--label=org.opencontainers.image.version={{.Version}}"
     #- "--build-arg=FOO={{.Env.Bar}}"
-    - "--platform=linux/arm64"
+    - "--platform=linux/amd64"
 
 archives:
   - id: binary
