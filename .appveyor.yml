@@ -146,6 +146,8 @@ for:
       else
         goreleaser --snapshot --skip-publish
       fi
+
+  test_script:
   - docker images
 
   artifacts:
