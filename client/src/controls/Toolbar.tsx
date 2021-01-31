@@ -1,9 +1,7 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
-import {
-  CommandBar,
-  ICommandBarProps } from '@fluentui/react';
+import { CommandBar, ICommandBarProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 import { getMenuProps } from './MenuItem'
 
