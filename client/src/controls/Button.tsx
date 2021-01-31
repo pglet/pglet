@@ -52,19 +52,37 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     primary: control.compound === 'true' && control.primary === 'true' ? true : undefined,
     split: control.split === 'true' ? true : undefined,
     menuProps: menuProps,
-    styles: {
+    styles: {    
       root: {
         width: control.width !== undefined ? control.width : undefined,
         height: height,
         padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
-      }
+        margin: control.margin !== undefined ? control.margin : undefined
+      },    
     }
   };
+
+  // https://stackoverflow.com/questions/62532550/how-can-i-change-the-hover-style-of-a-primarybutton-in-fluent-ui
 
   if (control.icon) {
     buttonProps.iconProps = {
       iconName: control.icon
+    }
+
+    if (control.iconcolor !== undefined) {
+      buttonProps.styles!.icon = {
+        color: control.iconcolor
+      }
+      buttonProps.styles!.rootHovered = {
+        '.ms-Button-icon': {
+          color: control.iconcolor
+        }
+      };
+      buttonProps.styles!.rootPressed = {
+        '.ms-Button-icon': {
+          color: control.iconcolor
+        }
+      }
     }
   }
 

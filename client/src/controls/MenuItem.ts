@@ -34,6 +34,26 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
                 iconName: itemControls[i].icon
             }
             item.iconOnly = itemControls[i].icononly === 'true' ? true : false;
+
+            if (itemControls[i].iconcolor !== undefined) {
+                item.iconProps!.styles = {
+                    root: {
+                        color: itemControls[i].iconcolor
+                    }
+                }
+                item.buttonStyles = {
+                    rootHovered: {
+                        '.ms-Button-icon': {
+                            color: itemControls[i].iconcolor
+                        }
+                    },
+                    rootPressed: {
+                        '.ms-Button-icon': {
+                            color: itemControls[i].iconcolor
+                        }
+                    }
+                }
+            }
         }
         if (itemControls[i].divider === 'true') {
             item.itemType = ContextualMenuItemType.Divider;

@@ -5,7 +5,7 @@ import { changeProps } from '../slices/pageSlice'
 import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
-export const MyChoiceGroup = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   //console.log(`render Dropdown: ${control.i}`);
   let disabled = (control.disabled === 'true') || parentDisabled;
@@ -13,7 +13,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({control, parentDisabled
   const ws = useContext(WebSocketContext);
 
   const dispatch = useDispatch();
-  
+
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 
     //console.log("DROPDOWN:", option);
@@ -41,26 +41,26 @@ export const MyChoiceGroup = React.memo<IControlProps>(({control, parentDisabled
         width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
+        margin: control.margin !== undefined ? control.margin : undefined
       }
     }
   };
 
   choiceProps.options = useSelector<any, IChoiceGroupOption[]>((state: any) => control.c.map((childId: any) =>
     state.page.controls[childId])
-      .filter((oc: any) => oc.t === 'option')
-      .map((oc: any) => {
-        let option: any = {
-          key: oc.key,
-          text: oc.text ? oc.text : oc.key,
+    .filter((oc: any) => oc.t === 'option')
+    .map((oc: any) => {
+      let option: any = {
+        key: oc.key,
+        text: oc.text ? oc.text : oc.key,
+      }
+      if (oc.icon) {
+        option.iconProps = {
+          iconName: oc.icon
         }
-        if (oc.icon) {
-          option.iconProps = {
-            iconName: oc.icon
-        }
-        }
-        return option;
-      }), shallowEqual);  
+      }
+      return option;
+    }), shallowEqual);
 
   if (control.value) {
     choiceProps.defaultSelectedKey = control.value;
