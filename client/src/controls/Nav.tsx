@@ -2,11 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
-import {
-  Nav,
-  INavProps,
-  INavLink
-} from '@fluentui/react';
+import { Nav, INavProps, INavLink, mergeStyles } from '@fluentui/react';
 import { IControlProps } from './IControlProps'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
@@ -38,13 +34,25 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           key: itemControls[i].key ? itemControls[i].key : undefined,
           name: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
           url: itemControls[i].url ? itemControls[i].url : undefined,
-          icon: itemControls[i].icon ? itemControls[i].icon : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
           isExpanded: itemControls[i].expanded ? itemControls[i].expanded : false,
+          collapseByDefault: itemControls[i].collapsed === 'true', // groups only
         };
 
         item.links = getNavLinks(itemControls[i]);
+
+        if (itemControls[i].icon !== undefined) {
+          item.iconProps = {
+            iconName: itemControls[i].icon
+          }
+
+          if (itemControls[i].iconcolor !== undefined && !disabled) {
+            item.iconProps.className = mergeStyles({
+              color: itemControls[i].iconcolor + '!important'
+            });
+          }
+        }
 
         // if (item.links.length > 0) {
         //   item.onClick = () => {
@@ -112,7 +120,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
   if (control.value) {
     navProps.selectedKey = control.value;
-  }  
+  }
 
   return <Nav {...navProps} onLinkClick={handleLinkClick} onLinkExpandClick={handleExpandLink} />;
 })
