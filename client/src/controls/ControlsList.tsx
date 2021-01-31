@@ -2,6 +2,7 @@ import React from 'react'
 import { IControlsListProps } from './IControlsListProps'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
+import { Searchbox } from './Searchbox'
 import { MySpinButton } from './SpinButton'
 import { MyDropdown } from './Dropdown'
 import { MyChoiceGroup } from './ChoiceGroup'
@@ -25,6 +26,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
 
     const controlTypes: any = {
         'textbox': Textbox,
+        'searchbox': Searchbox,
         'icon': Icon,
         'checkbox': MyCheckbox,
         'toggle': MyToggle,
