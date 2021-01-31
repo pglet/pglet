@@ -17,6 +17,7 @@ import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
 import { Grid } from './Grid'
+import { Icon } from './Icon'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -24,6 +25,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
 
     const controlTypes: any = {
         'textbox': Textbox,
+        'icon': Icon,
         'checkbox': MyCheckbox,
         'toggle': MyToggle,
         'dropdown': MyDropdown,
