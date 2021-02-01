@@ -58,6 +58,14 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   columns = useSelector<any, IColumn[]>((state: any) => {
+
+    function getTemplateControls(state: any, parent: any): any {
+      return parent.c.map((childId: any) =>
+          state.page.controls[childId]).map((c:any) => {
+            return { ...c, children: getTemplateControls(state, c)};
+          });
+    }    
+
     return control.c.map((childId: any) => state.page.controls[childId])
       .filter((c: any) => c.t === 'columns').map((columns: any) =>
         columns.c.map((childId: any) => state.page.controls[childId]))
@@ -80,10 +88,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             onClick: cc.onclick === 'true',
             onColumnClick: _onColumnClick,
             columnActionsMode: cc.onclick === 'true' ||
-              (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled
+              (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled,
+            template: getTemplateControls(state, cc)
           }
         });
   }, shallowEqual);
+
+  console.log("columns:", columns);
 
   items = useSelector<any, any>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
