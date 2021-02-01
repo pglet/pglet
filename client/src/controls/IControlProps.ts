@@ -8,7 +8,7 @@ export function defaultPixels(size:any) {
         return size
     }
 
-    const m = size.match(/^\d*(\.\d+)?$/)
+    const m = size.toString().match(/^\d*(\.\d+)?$/)
     if (m) {
         // just number
         return `${size}px`;

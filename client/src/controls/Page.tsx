@@ -28,7 +28,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // theme
   const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
-  const themeTextColor = control.themetextcolor ? control.themetextcolor : '#323130'
+  const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
   const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'  
 
   //console.log("themeBackgroundColor:", themeBackgroundColor);  

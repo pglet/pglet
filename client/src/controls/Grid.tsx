@@ -69,6 +69,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             iconName: cc.icon,
             isIconOnly: cc.icononly === 'true',
             fieldName: cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
+            sortField: cc.sortfield ? cc.sortfield.toLowerCase() : cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
             isResizable: cc.resizable === 'true',
             isSortable: cc.sortable,
             isSorted: cc.sorted === 'true' || cc.sorted === 'asc' || cc.sorted === 'desc',
@@ -95,7 +96,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const sortColumns = columns.filter(c => c.isSorted);
   if (sortColumns.length > 0) {
     const sortColumn = sortColumns[0];
-    const key = sortColumn.fieldName!;
+    const key = (sortColumn as any).sortField;
     items = items.slice(0).sort((a: any, b: any) => {
       if ((sortColumn as any).isSortable === 'number') {
         return (sortColumn.isSortedDescending ? parseFloat(a[key]) < parseFloat(b[key]) : parseFloat(a[key]) > parseFloat(b[key])) ? 1 : -1;
