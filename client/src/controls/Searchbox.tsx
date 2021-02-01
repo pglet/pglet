@@ -2,10 +2,10 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { TextField, ITextFieldProps } from '@fluentui/react';
+import { SearchBox, ISearchBoxProps } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
-export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   //console.log(`render Textbox: ${control.i}`);
   let disabled = (control.disabled === 'true') || parentDisabled;
@@ -13,8 +13,8 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
   const ws = useContext(WebSocketContext);
 
   const dispatch = useDispatch();
-  
-  const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+
+  const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
 
     const payload = [
       {
@@ -31,29 +31,47 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     }
   }
 
-  const textFieldProps: ITextFieldProps = {
+  const handleClear = (ev?: any) => {
+    ws.pageEventFromWeb(control.i, 'clear', "")
+  }
+
+  const handleEscape = (ev?: any) => {
+    ws.pageEventFromWeb(control.i, 'escape', "")
+  }
+
+  const handleSearch = (newValue: any) => {
+    ws.pageEventFromWeb(control.i, 'search', newValue)
+  }  
+
+  // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color
+
+  const props: ISearchBoxProps = {
     value: control.value ? control.value : "",
-    label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
-    errorMessage: control.errormessage ? control.errormessage : null,
-    description: control.description ? control.description : null,
-    multiline: control.multiline ? true : false,
-    type: control.password ? "password" : undefined,
-    canRevealPassword: control.password ? true : undefined,
-    required: control.required ? true : undefined,
+    underlined: control.underlined === 'true',
     disabled: disabled,
     styles: {
+      icon: {
+        color: control.iconcolor !== undefined ? control.iconcolor : undefined,
+      },
       root: {
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
-        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined  
-      },
-      field: {
-        textAlign: control.align !== undefined ? control.align : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       },
     }
   };
 
-  return <TextField {...textFieldProps} onChange={handleChange} />;
+  if (control.icon) {
+    props.iconProps = {
+      iconName: control.icon
+    }
+  }
+
+  return <SearchBox {...props}
+    onChange={handleChange}
+    onClear={handleClear}
+    onEscape={handleEscape}
+    onSearch={handleSearch} />;
 })

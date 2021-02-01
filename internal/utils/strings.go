@@ -67,7 +67,7 @@ func TrimQuotes(s string) string {
 func ReplaceEscapeSymbols(s string) string {
 	r, err := strconv.Unquote(fmt.Sprintf("\"%s\"", s))
 	if err != nil {
-		return s
+		return strings.ReplaceAll(s, "\\'", "'")
 	}
 	return r
 }

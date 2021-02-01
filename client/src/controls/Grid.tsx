@@ -2,8 +2,8 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { DetailsList, IDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
+import { IControlProps, defaultPixels } from './IControlProps'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -58,6 +58,14 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   columns = useSelector<any, IColumn[]>((state: any) => {
+
+    function getTemplateControls(state: any, parent: any): any {
+      return parent.c.map((childId: any) =>
+          state.page.controls[childId]).map((c:any) => {
+            return { ...c, children: getTemplateControls(state, c)};
+          });
+    }    
+
     return control.c.map((childId: any) => state.page.controls[childId])
       .filter((c: any) => c.t === 'columns').map((columns: any) =>
         columns.c.map((childId: any) => state.page.controls[childId]))
@@ -69,6 +77,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             iconName: cc.icon,
             isIconOnly: cc.icononly === 'true',
             fieldName: cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
+            sortField: cc.sortfield ? cc.sortfield.toLowerCase() : cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
             isResizable: cc.resizable === 'true',
             isSortable: cc.sortable,
             isSorted: cc.sorted === 'true' || cc.sorted === 'asc' || cc.sorted === 'desc',
@@ -79,10 +88,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             onClick: cc.onclick === 'true',
             onColumnClick: _onColumnClick,
             columnActionsMode: cc.onclick === 'true' ||
-              (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled
+              (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled,
+            template: getTemplateControls(state, cc)
           }
         });
   }, shallowEqual);
+
+  console.log("columns:", columns);
 
   items = useSelector<any, any>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
@@ -95,7 +107,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const sortColumns = columns.filter(c => c.isSorted);
   if (sortColumns.length > 0) {
     const sortColumn = sortColumns[0];
-    const key = sortColumn.fieldName!;
+    const key = (sortColumn as any).sortField;
     items = items.slice(0).sort((a: any, b: any) => {
       if ((sortColumn as any).isSortable === 'number') {
         return (sortColumn.isSortedDescending ? parseFloat(a[key]) < parseFloat(b[key]) : parseFloat(a[key]) > parseFloat(b[key])) ? 1 : -1;
@@ -105,9 +117,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     })
   }
 
-  const gridProps: IDetailsListProps = {
+  const shimmerLines = control.shimmerlines ? parseInt(control.shimmerlines) : 0;
+
+  const gridProps: IShimmeredDetailsListProps = {
     columns: columns,
     items: items,
+    enableShimmer: items.length === 0 && shimmerLines > 0,
+    shimmerLines: shimmerLines,
     setKey: "set",
     compact: control.compact === 'true',
     isHeaderVisible: control.headervisible === 'false' ? false : true,
@@ -115,9 +131,9 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     styles: {
       root: {
         //width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined   
       }
     }
   };
@@ -145,5 +161,5 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   // _selection.setChangeEvents(true, false);
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
-  return <DetailsList {...gridProps} />;
+  return <ShimmeredDetailsList {...gridProps} />;
 })

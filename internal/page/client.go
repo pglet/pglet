@@ -206,22 +206,29 @@ response:
 }
 
 func (c *Client) registerHostClient(message *Message) {
-	log.Println("Registering as host client")
-	payload := new(RegisterHostClientRequestPayload)
-	json.Unmarshal(message.Payload, payload)
-
 	responsePayload := &RegisterHostClientResponsePayload{
 		SessionID: "",
 		PageName:  "",
 		Error:     "",
 	}
 
+	var err error
+	var page *model.Page
+	var pageName *model.PageName
+
+	log.Println("Registering as host client")
+	payload := new(RegisterHostClientRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	if !config.AllowRemoteHostClients() && c.clientIP != "" {
+		err = fmt.Errorf("Remote host clients are not allowed")
+		goto response
+	}
+
 	// assign client role
 	c.role = HostClient
 
-	var page *model.Page
-
-	pageName, err := model.ParsePageName(payload.PageName)
+	pageName, err = model.ParsePageName(payload.PageName)
 	if err != nil {
 		goto response
 	}

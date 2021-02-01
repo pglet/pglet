@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,7 +25,7 @@ import (
 
 const (
 	apiRoutePrefix      string = "/api"
-	contentRootFolder   string = "client/build"
+	contentRootFolder   string = "content/"
 	siteDefaultDocument string = "index.html"
 )
 
@@ -34,6 +36,37 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+//go:embed content/*
+var f embed.FS
+
+type pgletFS struct {
+	prefix string
+	httpFS http.FileSystem
+}
+
+func newPgletFS(prefix string, efs embed.FS) pgletFS {
+	return pgletFS{
+		prefix: prefix,
+		httpFS: http.FS(efs),
+	}
+}
+
+func (pfs pgletFS) Exists(prefix string, path string) bool {
+	f, err := pfs.httpFS.Open(pfs.fileName(path))
+	if f != nil {
+		f.Close()
+	}
+	return err == nil
+}
+
+func (pfs pgletFS) Open(name string) (http.File, error) {
+	return pfs.httpFS.Open(pfs.fileName(name))
+}
+
+func (pfs pgletFS) fileName(name string) string {
+	return pfs.prefix + strings.TrimLeft(name, "/")
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
@@ -60,7 +93,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	}
 
 	// Serve frontend static files
-	router.Use(static.Serve("/", BinaryFileSystem(contentRootFolder, "")))
+	router.Use(static.Serve("/", newPgletFS(contentRootFolder, f)))
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
@@ -85,7 +118,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	router.NoRoute(func(c *gin.Context) {
 		if !strings.HasPrefix(c.Request.RequestURI, apiRoutePrefix+"/") {
 			// SPA index.html
-			indexData, _ := Asset(contentRootFolder + "/" + siteDefaultDocument)
+			index, _ := f.Open(contentRootFolder + siteDefaultDocument)
+			indexData, _ := ioutil.ReadAll(index)
 			c.Data(http.StatusOK, "text/html", indexData)
 		} else {
 			// API not found

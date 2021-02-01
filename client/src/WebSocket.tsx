@@ -109,7 +109,6 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const pageEventFromWeb = (eventTarget: string, eventName: string, eventData: string) => {
 
-        console.log("ws.pageEventFromWeb()")
         var msg = {
             action: "pageEventFromWeb",
             payload: {
@@ -118,6 +117,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 eventData: eventData
             }
         }
+        console.log("ws.pageEventFromWeb()", msg.payload)
 
         socket!.send(JSON.stringify(msg));
     }
