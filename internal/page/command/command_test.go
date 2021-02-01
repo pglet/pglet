@@ -5,6 +5,30 @@ import (
 	"testing"
 )
 
+func TestParseQuotes(t *testing.T) {
+	cmd, err := Parse(`  Add v1='aaa\'bbb' v2="ccc\"ddd"`, true)
+
+	if err != nil {
+		t.Fatal("Error parsing command", err)
+	}
+
+	// visualize command
+	log.Printf("%s", cmd)
+
+	if cmd.Name != "Add" {
+		t.Errorf("command name is %s, want %s", cmd.Name, "Add")
+	}
+
+	v1 := "aaa'bbb"
+	if cmd.Attrs["v1"] != v1 {
+		t.Errorf("command v1 attribute is %s, want %s", cmd.Attrs["v1"], v1)
+	}
+	v2 := "ccc\"ddd"
+	if cmd.Attrs["v2"] != v2 {
+		t.Errorf("command v2 attribute is %s, want %s", cmd.Attrs["v2"], v2)
+	}
+}
+
 func TestParse1(t *testing.T) {
 	cmd, err := Parse(`  Add value:1 c=3.1 TextField Text=aaa value="Hello,\n 'wor\"ld!" aaa='bbb' cmd2=1`, true)
 

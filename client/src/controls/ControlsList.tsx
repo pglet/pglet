@@ -19,6 +19,7 @@ import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
 import { Grid } from './Grid'
 import { Icon } from './Icon'
+import { Message } from './Message'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -44,6 +45,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'toolbar': Toolbar,
         'nav': MyNav,
         'grid': Grid,
+        'message': Message,
     }
 
     const renderChild = (control: any) => {
