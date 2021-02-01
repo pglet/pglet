@@ -3,7 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Pivot, PivotItem, IPivotProps, mergeStyles } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 import { ControlsList } from './ControlsList'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -34,8 +34,8 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const pivotClassName = mergeStyles({
-    width: control.width ? control.width : undefined,
-    height: control.height ? control.height : undefined,
+    width: control.width ? defaultPixels(control.width) : undefined,
+    height: control.height ? defaultPixels(control.height) : undefined,
   });  
 
   const pivotProps: IPivotProps = {
@@ -43,7 +43,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
     linkFormat: control.solid === 'true' ? 'tabs' : undefined,
     styles: {
       root: {
-        marginBottom: control.margin ? control.margin : undefined,
+        marginBottom: control.margin ? defaultPixels(control.margin) : undefined,
       }
     }
   };

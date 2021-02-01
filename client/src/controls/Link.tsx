@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { Link, ILinkProps } from '@fluentui/react';
 import { WebSocketContext } from '../WebSocket';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 
 export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -21,14 +21,14 @@ export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
     disabled: disabled,
     styles: {
       root: {
-        fontSize: control.size ? control.size : '14px',
+        fontSize: control.size ? defaultPixels(control.size) : '14px',
         fontWeight: control.bold === 'true' ? 'bold' : undefined,
         fontStyle: control.italic === 'true' ? 'italic' : undefined,
         textAlign: control.align !== undefined ? control.align : undefined,
-        width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined,
+        width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
         whiteSpace: control.pre === 'true' ? 'pre' : undefined,
         fontFamily: control.pre === 'true' ? preFont : undefined,
       }

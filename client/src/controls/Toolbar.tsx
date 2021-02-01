@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
 import { CommandBar, ICommandBarProps } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 import { getMenuProps } from './MenuItem'
 
 export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -43,10 +43,10 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
       root: {
         paddingLeft: 0,
         paddingRight: 0,
-        width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
+        width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined   
       }
     }
   };

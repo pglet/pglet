@@ -11,6 +11,7 @@ import {
 import { isDark } from '@fluentui/react/lib/Color';
 import { IPageProps } from './IPageProps'
 import { WebSocketContext } from '../WebSocket';
+import { defaultPixels } from './IControlProps'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
@@ -100,10 +101,10 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
       root: {
-        width: control.width ? control.width : "100%",
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding ? control.padding : "10px",
-        margin: control.margin !== undefined ? control.margin : undefined
+        width: control.width ? defaultPixels(control.width) : "100%",
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding ? defaultPixels(control.padding) : "10px",
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       }
     },
   };

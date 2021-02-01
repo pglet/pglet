@@ -10,7 +10,7 @@ import {
   ActionButton,
   IButtonProps,
   IContextualMenuProps } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -54,10 +54,10 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     menuProps: menuProps,
     styles: {    
       root: {
-        width: control.width !== undefined ? control.width : undefined,
-        height: height,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined
+        width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+        height: defaultPixels(height),
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       },    
     }
   };

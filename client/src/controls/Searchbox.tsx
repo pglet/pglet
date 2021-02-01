@@ -3,7 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SearchBox, ISearchBoxProps } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -55,10 +55,10 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
         color: control.iconcolor !== undefined ? control.iconcolor : undefined,
       },
       root: {
-        width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined
+        width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       },
     }
   };

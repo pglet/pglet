@@ -3,7 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -119,9 +119,9 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     styles: {
       root: {
         //width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
+        height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined   
       }
     }
   };
