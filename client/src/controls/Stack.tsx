@@ -2,7 +2,7 @@ import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { IControlProps, defaultPixels } from './IControlProps'
 
 export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -18,10 +18,14 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
         styles: {
             root: {
-                width: control.width ? control.width : undefined,
-                height: control.height !== undefined ? control.height : undefined,
-                padding: control.padding !== undefined ? control.padding : undefined,
-                margin: control.margin !== undefined ? control.margin : undefined
+                width: control.width ? defaultPixels(control.width) : undefined,
+                minWidth: control.minwidth ? defaultPixels(control.minwidth) : undefined,
+                maxWidth: control.maxwidth ? defaultPixels(control.maxwidth) : undefined,
+                height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+                minHeight: control.minheight !== undefined ? defaultPixels(control.minheight) : undefined,
+                maxHeight: control.maxheight !== undefined ? defaultPixels(control.maxheight) : undefined,
+                padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+                margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
             }
         },
     };

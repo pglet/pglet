@@ -2,10 +2,12 @@ import React from 'react'
 import { IControlsListProps } from './IControlsListProps'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
+import { Searchbox } from './Searchbox'
 import { MySpinButton } from './SpinButton'
 import { MyDropdown } from './Dropdown'
 import { MyChoiceGroup } from './ChoiceGroup'
 import { MyCheckbox } from './Checkbox'
+import { MyToggle } from './Toggle'
 import { Progress } from './Progress'
 import { MySpinner } from './Spinner'
 import { MySlider } from './Slider'
@@ -15,6 +17,9 @@ import { MyLink } from './Link'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
+import { Grid } from './Grid'
+import { Icon } from './Icon'
+import { Message } from './Message'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -22,7 +27,10 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
 
     const controlTypes: any = {
         'textbox': Textbox,
+        'searchbox': Searchbox,
+        'icon': Icon,
         'checkbox': MyCheckbox,
+        'toggle': MyToggle,
         'dropdown': MyDropdown,
         'choicegroup': MyChoiceGroup,
         'progress': Progress,
@@ -36,6 +44,8 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'tabs': Tabs,
         'toolbar': Toolbar,
         'nav': MyNav,
+        'grid': Grid,
+        'message': Message,
     }
 
     const renderChild = (control: any) => {

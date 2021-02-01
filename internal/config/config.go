@@ -20,6 +20,7 @@ const (
 	limitSessionsPerHour       = "LIMIT_SESSIONS_PER_HOUR"
 	limitSessionSizeBytes      = "LIMIT_SESSION_SIZE_BYTES"
 	checkReservedPages         = "CHECK_RESERVED_PAGES"
+	allowRemoteHostClients     = "ALLOW_REMOTE_HOST_CLIENTS"
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -32,6 +33,13 @@ const (
 
 func ForceSSL() bool {
 	if n, err := strconv.ParseBool(os.Getenv(forceSSL)); err == nil {
+		return n
+	}
+	return false
+}
+
+func AllowRemoteHostClients() bool {
+	if n, err := strconv.ParseBool(os.Getenv(allowRemoteHostClients)); err == nil {
 		return n
 	}
 	return false

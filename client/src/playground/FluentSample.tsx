@@ -1,7 +1,8 @@
 import React from 'react';
-import { Text, Link, FontWeights, PrimaryButton, DefaultButton, TextField, FontIcon } from '@fluentui/react';
+import { Text, Link, FontWeights, TextField, FontIcon, ContextualMenu } from '@fluentui/react';
+import { Button, MenuButton } from '@fluentui/react-button';
 import { Stack, IStackProps, ProgressIndicator, mergeStyles } from '@fluentui/react';
-//import { SharedColors, FontSizes } from '@uifabric/fluent-theme';
+import { DatePicker } from '@fluentui/react-date-time';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
@@ -22,20 +23,24 @@ const columnProps: Partial<IStackProps> = {
   styles: { root: { width: "50%" } },
 };
 
-const ButtonType = DefaultButton;
+let menu = {
+  items: [
+    { key: 'a', text: 'aaaaa' }
+  ]
+};
 
 export const FluentSample: React.FunctionComponent = () => {
   return (
     <div>
       <Stack horizontalAlign="start">
-        <PrimaryButton text="A"></PrimaryButton>
+        <DatePicker label="Select date" isRequired={true} placeholder="Select a date..." />
       </Stack>
       <Stack horizontalAlign="stretch">
         <Stack horizontal horizontalAlign='space-between'>
           <Text>Left</Text>
           <Stack horizontal>
-            <Text><PrimaryButton text="A"></PrimaryButton></Text>
-            <Text><PrimaryButton text="B"></PrimaryButton></Text>
+            <Text><MenuButton primary menu={<ContextualMenu {...menu} />}>A</MenuButton></Text>
+            <Text><Button content="B"/></Text>
           </Stack>
         </Stack>
       </Stack>
@@ -53,7 +58,7 @@ export const FluentSample: React.FunctionComponent = () => {
           { childrenGap: 15 }
         }
       >
-        <PrimaryButton text="Button 1" />
+        <Button primary content="Button 1" />
         <Stack horizontal>
           <Text variant="large" styles={{
             root: {
@@ -65,11 +70,11 @@ export const FluentSample: React.FunctionComponent = () => {
               width: '40px',
               height: '40px',
               backgroundColor: 'blue',
-              verticalAlign: 'middle',
+              //verticalAlign: 'middle',
               textAlign: 'center',
               display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              //justifyContent: 'flex-end',
               color: '#fff',
               borderColor: 'black',
               borderWidth: '1px',
@@ -118,8 +123,8 @@ export const FluentSample: React.FunctionComponent = () => {
             <TextField label="First name" styles={{ root: { width: "200px", height: "100px" } }} />
             <TextField label="Last name" />
             <Stack horizontal tokens={{ childrenGap: 10 }}>
-              <ButtonType text="Button 2" iconProps={{ iconName: "Installation" }} />
-              <PrimaryButton text="Button 3" iconProps={{ iconName: "Filter" }} styles={{ root: { width: "200px", height: "100px" } }} />
+              <Button content="Button 2" iconProps={{ iconName: "Installation" }} />
+              <Button content="Button 3" iconProps={{ iconName: "Filter" }} styles={{ root: { width: "200px", height: "100px" } }} />
             </Stack>
           </Stack>
         </Stack>

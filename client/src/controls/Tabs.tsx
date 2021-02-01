@@ -2,8 +2,8 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Pivot, PivotItem, IPivotProps, PivotLinkFormat } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { Pivot, PivotItem, IPivotProps, mergeStyles } from '@fluentui/react';
+import { IControlProps, defaultPixels } from './IControlProps'
 import { ControlsList } from './ControlsList'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -33,11 +33,17 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
+  const pivotClassName = mergeStyles({
+    width: control.width ? defaultPixels(control.width) : undefined,
+    height: control.height ? defaultPixels(control.height) : undefined,
+  });  
+
   const pivotProps: IPivotProps = {
-    linkFormat: control.solid === 'true' ? PivotLinkFormat.tabs : undefined,
+    className: pivotClassName,
+    linkFormat: control.solid === 'true' ? 'tabs' : undefined,
     styles: {
       root: {
-        marginBottom: control.margin ? control.margin : undefined,
+        marginBottom: control.margin ? defaultPixels(control.margin) : undefined,
       }
     }
   };
@@ -63,7 +69,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   return <Pivot {...pivotProps} onLinkClick={handleChange}>
-    {tabControls.map(tab =>
+    {tabControls.map((tab: any) =>
     <PivotItem key={tab.i} {...tab.props}>
       <ControlsList controls={tab.controls} parentDisabled={disabled} />
     </PivotItem>)}

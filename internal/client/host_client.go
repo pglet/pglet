@@ -163,7 +163,7 @@ func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 		return err
 	}
 
-	log.Println("Event:", payload)
+	log.Debugln("Event:", payload)
 
 	// iterate through all pipe clients
 	key := getPageSessionKey(payload.PageName, payload.SessionID)

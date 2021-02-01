@@ -5,6 +5,8 @@ import {
     registerWebClientError,
     addPageControlsSuccess,
     addPageControlsError,
+    replacePageControlsSuccess,
+    replacePageControlsError,    
     changeProps,
     appendProps,
     cleanControl,
@@ -66,8 +68,14 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 if (data.payload.error) {
                     dispatch(addPageControlsError(data.payload.error));
                 } else {
-                    dispatch(addPageControlsSuccess(data.payload.controls));
+                    dispatch(addPageControlsSuccess(data.payload));
                 }
+            } else if (data.action === "replacePageControls") {
+                if (data.payload.error) {
+                    dispatch(replacePageControlsError(data.payload.error));
+                } else {
+                    dispatch(replacePageControlsSuccess(data.payload));
+                }                
             } else if (data.action === "updateControlProps") {
                 dispatch(changeProps(data.payload.props));
             } else if (data.action === "appendControlProps") {
@@ -101,7 +109,6 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const pageEventFromWeb = (eventTarget: string, eventName: string, eventData: string) => {
 
-        console.log("ws.pageEventFromWeb()")
         var msg = {
             action: "pageEventFromWeb",
             payload: {
@@ -110,6 +117,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 eventData: eventData
             }
         }
+        console.log("ws.pageEventFromWeb()", msg.payload)
 
         socket!.send(JSON.stringify(msg));
     }

@@ -1,7 +1,7 @@
 skip_branch_with_pr: true
 
 environment:
-  GO_VERSION: 1.15.3
+  GO_VERSION: 1.16rc1
   GO_TAGS: --tags release
   GITHUB_TOKEN:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9
@@ -43,6 +43,7 @@ for:
   - set PATH=%GOPATH%\bin;%PATH%
   - echo %GOPATH%
   - echo %GOROOT%
+  - go version
 
   build_script:
   - ps: Install-Product node 12 x64
@@ -50,8 +51,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - xcopy client\build internal\server\content\ /E /Y
   - .\build.cmd
   - dir %USERPROFILE%\Go\bin
 
@@ -68,7 +68,9 @@ for:
     - job_name: Linux
 
   install:
-  - ./install_go.sh
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version
 
   build_script:
   - nvm use 12
@@ -76,8 +78,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
 
@@ -94,7 +95,9 @@ for:
     - job_name: macOS
 
   install:
-  - ./install_go.sh
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version
   - HOMEBREW_NO_AUTO_UPDATE=1 brew install yarn
 
   build_script:
@@ -103,8 +106,7 @@ for:
   - yarn
   - yarn build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...
+  - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
 
@@ -121,10 +123,14 @@ for:
     - job_name: Release
 
   install:
-  - ./install_go.sh
-  - sh: |
-      sudo snap install --classic goreleaser
-      goreleaser --version
+  - gvm install go${GO_VERSION} -B
+  - gvm use go${GO_VERSION}
+  - go version
+  - bash ./install_goreleaser.sh
+  - goreleaser --version
+  #- sh: |
+  #    sudo snap install --classic goreleaser
+  #    goreleaser --version
 
   build_script:
   - nvm use 12
@@ -133,8 +139,7 @@ for:
   - GENERATE_SOURCEMAP=false yarn build
   - ls -alR build
   - cd ..
-  - go get -u github.com/jteeuwen/go-bindata/...
-  - go-bindata -o internal/server/bindata.go --pkg server client/build/...    
+  - cp -r client/build/* internal/server/content
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
@@ -142,7 +147,11 @@ for:
         goreleaser --snapshot --skip-publish
       fi
 
+  test_script:
+  - docker images
+  - docker run --name pglet-test -d pglet/server
+  - sleep 20
+  - docker logs pglet-test
+
   artifacts:
   - path: dist/pglet-*
-
-  test: off

@@ -32,32 +32,24 @@ const pageSlice = createSlice({
             state.error = action.payload;
         },
         addPageControlsSuccess(state, action) {
-            let firstParentId = null;
-            action.payload.forEach(ctrl => {
-                if (firstParentId == null) {
-                    firstParentId = ctrl.p;
-                }
-
-                if (!state.controls[ctrl.i]) {
-                    state.controls[ctrl.i] = ctrl;
-
-                    if (ctrl.p === firstParentId) {
-                        // root control
-                        if (typeof ctrl.at === 'undefined') {
-                            // append to the end
-                            state.controls[ctrl.p].c.push(ctrl.i)
-                        } else {
-                            // insert at specified position
-                            state.controls[ctrl.p].c.splice(ctrl.at, 0, ctrl.i)
-                        }
-                    }
-                }
-            })
-            //console.log("After addPageControlsSuccess:", current(state))
+            const { controls } = action.payload
+            addControls(state, controls);
         },
         addPageControlsError(state, action) {
             state.error = action.payload;
+        },
+        replacePageControlsSuccess(state, action) {
+            const { ids, controls } = action.payload
+
+            // clean parent control
+            cleanControls(state, ids);
+
+            // add controls
+            addControls(state, controls);
         },        
+        replacePageControlsError(state, action) {
+            state.error = action.payload;
+        },
         changeProps(state, action) {
 
             action.payload.forEach(props => {
@@ -89,15 +81,7 @@ const pageSlice = createSlice({
         },  
         cleanControl(state, action) {
             const { ids } = action.payload
-
-            ids.forEach(id => {
-                // remove all children
-                const descendantIds = getAllDescendantIds(state.controls, id)
-                descendantIds.forEach(descId => delete state.controls[descId])
-
-                // cleanup children collection
-                state.controls[id].c = []
-            })
+            cleanControls(state, ids)
         },        
         removeControl(state, action) {
             const { ids } = action.payload
@@ -120,6 +104,42 @@ const pageSlice = createSlice({
     }
 })
 
+const addControls = (state, controls) => {
+    let firstParentId = null;
+    controls.forEach(ctrl => {
+        if (firstParentId == null) {
+            firstParentId = ctrl.p;
+        }
+
+        if (!state.controls[ctrl.i]) {
+            state.controls[ctrl.i] = ctrl;
+
+            if (ctrl.p === firstParentId) {
+                // root control
+                if (typeof ctrl.at === 'undefined') {
+                    // append to the end
+                    state.controls[ctrl.p].c.push(ctrl.i)
+                } else {
+                    // insert at specified position
+                    state.controls[ctrl.p].c.splice(ctrl.at, 0, ctrl.i)
+                }
+            }
+        }
+    })
+    //console.log("After addPageControlsSuccess:", current(state))
+}
+
+const cleanControls = (state, ids) => {
+    ids.forEach(id => {
+        // remove all children
+        const descendantIds = getAllDescendantIds(state.controls, id)
+        descendantIds.forEach(descId => delete state.controls[descId])
+
+        // cleanup children collection
+        state.controls[id].c = []
+    })
+}
+
 const getAllDescendantIds = (controls, nodeId) => {
     if (controls[nodeId].c) {
         return controls[nodeId].c.reduce((acc, childId) => (
@@ -134,6 +154,8 @@ export const {
     registerWebClientError,
     addPageControlsSuccess,
     addPageControlsError,
+    replacePageControlsSuccess,
+    replacePageControlsError,    
     changeProps,
     appendProps,
     cleanControl,

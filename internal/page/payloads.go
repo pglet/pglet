@@ -79,6 +79,11 @@ type AddPageControlsPayload struct {
 	Controls []*model.Control `json:"controls"`
 }
 
+type ReplacePageControlsPayload struct {
+	IDs      []string         `json:"ids"`
+	Controls []*model.Control `json:"controls"`
+}
+
 type UpdateControlPropsPayload struct {
 	Props []map[string]interface{} `json:"props"`
 }
