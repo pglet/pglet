@@ -20,16 +20,21 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
 
     let selectedKey = option!.key as string
 
-    const payload = [
-      {
-        i: control.i,
-        "value": selectedKey
-      }
-    ];
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = selectedKey
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["value"] = selectedKey
+    }
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
-    ws.pageEventFromWeb(control.i, 'change', selectedKey)
+    ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${selectedKey}` : selectedKey)
   }
 
   const dropdownProps: IDropdownProps = {

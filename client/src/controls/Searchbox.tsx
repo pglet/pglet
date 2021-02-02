@@ -16,31 +16,36 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
 
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
 
-    const payload = [
-      {
-        i: control.i,
-        "value": newValue
-      }
-    ];
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = newValue
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["value"] = newValue
+    }
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
 
     if (control.onchange === 'true') {
-      ws.pageEventFromWeb(control.i, 'change', newValue!)
+      ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
   }
 
   const handleClear = (ev?: any) => {
-    ws.pageEventFromWeb(control.i, 'clear', "")
+    ws.pageEventFromWeb(control.i, 'clear', control.data)
   }
 
   const handleEscape = (ev?: any) => {
-    ws.pageEventFromWeb(control.i, 'escape', "")
+    ws.pageEventFromWeb(control.i, 'escape', control.data)
   }
 
   const handleSearch = (newValue: any) => {
-    ws.pageEventFromWeb(control.i, 'search', newValue)
+    ws.pageEventFromWeb(control.i, 'search', control.data ? `${control.data}|${newValue!}` : newValue!)
   }  
 
   // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color

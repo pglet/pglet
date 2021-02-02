@@ -16,18 +16,23 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
   
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 
-    const payload = [
-      {
-        i: control.i,
-        "value": newValue
-      }
-    ];
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = newValue
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["value"] = newValue
+    }
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
 
     if (control.onchange === 'true') {
-      ws.pageEventFromWeb(control.i, 'change', newValue!)
+      ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
   }
 

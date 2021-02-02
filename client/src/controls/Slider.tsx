@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -13,18 +13,33 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
 
   const dispatch = useDispatch();
 
+  const [prevValue, setPrevValue] = useState<number | null>(null);
+
   const handleChange = (value: number) => {
 
-    const payload = [
-      {
-        i: control.i,
-        "value": value
-      }
-    ];
+    if (prevValue === value) {
+      return
+    }
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
-    ws.pageEventFromWeb(control.i, 'change', String(value))
+    const val = String(value)
+
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = val
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["value"] = val
+    }
+
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${val}` : val)
+
+    setPrevValue(value)
   }
 
   //console.log(`render Text: ${control.i}`);

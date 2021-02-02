@@ -60,17 +60,18 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   function cloneControls(controls:any[], item:any): any[] {
     return controls.map((c:any) => {
-      //console.log(c.t, "=====================")
       let clone: any = {}
       Object.getOwnPropertyNames(c).forEach(p => {
-        //console.log("prop", p);
         let val = c[p]
         if (typeof val === 'string' && val.startsWith('{') && val.endsWith('}')) {
           const fieldName = val.substring(1, val.length - 1).toLowerCase()
           val = item[fieldName]
+          // set binding redirect
+          if (p === "value") {
+            clone["f"] = `${item.i}|${fieldName}`
+          }
         }
         clone[p] = val
-        //console.log(p, val);
       })
       clone.children = cloneControls(c.children, item)
       return clone

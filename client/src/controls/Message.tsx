@@ -12,16 +12,24 @@ export const Message = React.memo<IControlProps>(({ control }) => {
   const dispatch = useDispatch();
 
   const handleDismiss = (actionName: string) => {
-    const payload = [
-      {
-        i: control.i,
-        "visible": "false"
-      }
-    ];
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
-    ws.pageEventFromWeb(control.i, 'dismiss', actionName)
+    const val = "false"
+
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = val
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["visible"] = val
+    }
+
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb(control.i, 'dismiss', control.data ? `${control.data}|${actionName}` : actionName)
   }
 
   const buttons = useSelector<any, IButtonProps[]>((state: any) => control.c.map((childId: any) =>
