@@ -42,7 +42,9 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         childrenGap: control.gap ? control.gap : 10
     }
 
-    const childControls = useSelector((state: any) => control.c.map((childId: any) => state.page.controls[childId]), shallowEqual);
+    const childControls = useSelector((state: any) => {
+        return control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId])
+    }, shallowEqual);
 
     return <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />

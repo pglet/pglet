@@ -4,11 +4,12 @@ import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
+import { ControlsList } from './ControlsList'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Dropdown: ${control.i}`);
-  //let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
 
@@ -57,6 +58,31 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'itemInvoke', item.i)
   }
 
+  function cloneControls(controls:any[], item:any): any[] {
+    return controls.map((c:any) => {
+      //console.log(c.t, "=====================")
+      let clone: any = {}
+      Object.getOwnPropertyNames(c).forEach(p => {
+        //console.log("prop", p);
+        let val = c[p]
+        if (typeof val === 'string' && val.startsWith('{') && val.endsWith('}')) {
+          const fieldName = val.substring(1, val.length - 1).toLowerCase()
+          val = item[fieldName]
+        }
+        clone[p] = val
+        //console.log(p, val);
+      })
+      clone.children = cloneControls(c.children, item)
+      return clone
+    })
+  }
+
+  const _columnOnRender = (item?: any, index?: number, column?: IColumn) => {
+    //console.log("Column render:", column?.fieldName, item);
+    let template = cloneControls((column as any).template, item);
+    return <ControlsList controls={template} parentDisabled={disabled} />
+  }
+
   columns = useSelector<any, IColumn[]>((state: any) => {
 
     function getTemplateControls(state: any, parent: any): any {
@@ -70,6 +96,8 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
       .filter((c: any) => c.t === 'columns').map((columns: any) =>
         columns.c.map((childId: any) => state.page.controls[childId]))
         .reduce((acc: any, columns: any) => ([...acc, ...columns])).map((cc: any) => {
+
+          const template = getTemplateControls(state, cc);
 
           return {
             key: cc.i,
@@ -89,12 +117,13 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             onColumnClick: _onColumnClick,
             columnActionsMode: cc.onclick === 'true' ||
               (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled,
-            template: getTemplateControls(state, cc)
+            template: template,
+            onRender: template.length > 0 ? _columnOnRender : undefined
           }
         });
   }, shallowEqual);
 
-  console.log("columns:", columns);
+  //console.log("columns:", columns);
 
   items = useSelector<any, any>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
