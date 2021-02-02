@@ -111,7 +111,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             isSortable: cc.sortable,
             isSorted: cc.sorted === 'true' || cc.sorted === 'asc' || cc.sorted === 'desc',
             isSortedDescending: cc.sorted === 'desc',
-            isPadded: true,
+            //isPadded: true,
             minWidth: cc.minwidth ? parseInt(cc.minwidth) : undefined,
             maxWidth: cc.maxwidth ? parseInt(cc.maxwidth) : undefined,
             onClick: cc.onclick === 'true',

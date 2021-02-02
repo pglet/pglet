@@ -32,8 +32,8 @@ export const Message = React.memo<IControlProps>(({ control }) => {
     ws.pageEventFromWeb(control.i, 'dismiss', control.data ? `${control.data}|${actionName}` : actionName)
   }
 
-  const buttons = useSelector<any, IButtonProps[]>((state: any) => control.c.map((childId: any) =>
-    state.page.controls[childId])
+  const buttons = useSelector<any, IButtonProps[]>((state: any) =>
+      (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
       .filter((oc: any) => oc.t === 'button')
       .map((oc: any) => ({
         key: oc.i,

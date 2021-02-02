@@ -32,8 +32,8 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
       payload["value"] = selectedKey
     }
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
     ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${selectedKey}` : selectedKey)
   }
 
@@ -53,8 +53,8 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
     }
   };
 
-  dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) => control.c.map((childId: any) =>
-    state.page.controls[childId])
+  dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) =>
+    (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
       .filter((oc: any) => oc.t === 'option')
       .map((oc: any) => ({
         key: oc.key,

@@ -51,8 +51,8 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
     }
   };
 
-  choiceProps.options = useSelector<any, IChoiceGroupOption[]>((state: any) => control.c.map((childId: any) =>
-    state.page.controls[childId])
+  choiceProps.options = useSelector<any, IChoiceGroupOption[]>((state: any) =>
+    (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
     .filter((oc: any) => oc.t === 'option')
     .map((oc: any) => {
       let option: any = {

@@ -54,8 +54,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
   };
 
   const tabControls = useSelector<any, any[]>((state: any) => {
-    return control.c.map((childId: any) =>
-          state.page.controls[childId])
+    return (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
           .filter((tc: any) => tc.t === 'tab' && tc.visible !== "false")
           .map((tab:any) => ({
             i: tab.i,
@@ -65,7 +64,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
               itemIcon: tab.icon ? tab.icon : undefined,
               itemCount: tab.count !== undefined ? tab.count : undefined
             },
-            controls: tab.c.map((childId: any) => state.page.controls[childId])
+            controls: (tab.children !== undefined ? tab.children : tab.c.map((childId: any) => state.page.controls[childId]))
           }));
   }, shallowEqual)
 
