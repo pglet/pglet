@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -10,13 +10,14 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
 
     let disabled = (control.disabled === 'true') || parentDisabled;
 
-    //console.log(`render stack: ${control.i}`);
+    console.log(`render dialog: ${control.i}`);
+
     const ws = useContext(WebSocketContext);
     const dispatch = useDispatch();
   
     const handleDismiss = () => {
   
-      const val = "false"
+      const val = "true"
   
       let payload: any = {}
       if (control.f) {
@@ -27,7 +28,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
       } else {
         // unbound control
         payload["i"] = control.i
-        payload["visible"] = val
+        payload["hidden"] = val
       }
   
       dispatch(changeProps([payload]));
@@ -35,9 +36,23 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
       ws.pageEventFromWeb(control.i, 'dismiss', control.data)
     }
 
+    useEffect(() => {
+        //console.log('Dialog mount')
+        return () => {
+            const layers = document.body.getElementsByClassName("ms-Layer--fixed")
+            for (let i = 0; i < layers.length; i++) {
+                let layer: Element = layers[i];
+                if (!layer.hasChildNodes()) {
+                    console.log('Dialog dismount', layer)
+                    document.body.removeChild(layer);
+                }
+            }
+        };
+      }, [control, ws]);
+
     // dialog props
     const props: IDialogProps = {
-        hidden: control.visible === 'false',
+        hidden: !control.hidden || control.hidden === 'true',
         minWidth: control.width ? defaultPixels(control.width) : undefined,
         maxWidth: control.maxwidth ? defaultPixels(control.maxwidth) : undefined,
         modalProps: {
