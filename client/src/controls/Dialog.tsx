@@ -17,7 +17,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
   
     const handleDismiss = () => {
   
-      const val = "true"
+      const val = "false"
   
       let payload: any = {}
       if (control.f) {
@@ -28,7 +28,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
       } else {
         // unbound control
         payload["i"] = control.i
-        payload["hidden"] = val
+        payload["open"] = val
       }
   
       dispatch(changeProps([payload]));
@@ -43,7 +43,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
             for (let i = 0; i < layers.length; i++) {
                 let layer: Element = layers[i];
                 if (!layer.hasChildNodes()) {
-                    console.log('Dialog dismount', layer)
+                    //console.log('Dialog dismount', layer)
                     document.body.removeChild(layer);
                 }
             }
@@ -52,7 +52,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
 
     // dialog props
     const props: IDialogProps = {
-        hidden: !control.hidden || control.hidden === 'true',
+        hidden: control.open !== 'true',
         minWidth: control.width ? defaultPixels(control.width) : undefined,
         maxWidth: control.maxwidth ? defaultPixels(control.maxwidth) : undefined,
         modalProps: {
@@ -61,8 +61,8 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         },
         dialogContentProps: {
             type: control.largeheader === 'true' ? 1 : control.close === 'true' ? 2 : 0,
-            title: control.title ? control.title : false,
-            subText: control.subtext ? control.subtext : false,          
+            title: control.title ? control.title : undefined,
+            subText: control.subtext ? control.subtext : undefined,          
         },
         styles: {
             main: {

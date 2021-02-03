@@ -21,6 +21,7 @@ import { Grid } from './Grid'
 import { Icon } from './Icon'
 import { Message } from './Message'
 import { MyDialog } from './Dialog'
+import { MyPanel } from './Panel'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -48,6 +49,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'grid': Grid,
         'message': Message,
         'dialog': MyDialog,
+        'panel': MyPanel,
     }
 
     const renderChild = (control: any) => {
