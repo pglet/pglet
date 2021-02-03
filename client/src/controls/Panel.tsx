@@ -6,11 +6,11 @@ import { ControlsList } from './ControlsList'
 import { Panel, IPanelProps, PanelType } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
-export const MyPanel = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
     let disabled = (control.disabled === 'true') || parentDisabled;
 
-    console.log(`render dialog: ${control.i}`);
+    //console.log(`render dialog: ${control.i}`);
 
     const ws = useContext(WebSocketContext);
     const dispatch = useDispatch();
@@ -20,32 +20,40 @@ export const MyPanel = React.memo<IControlProps>(({control, parentDisabled}) => 
         for (let i = 0; i < layers.length; i++) {
             let layer: Element = layers[i];
             if (!layer.hasChildNodes()) {
-                //console.log('Dialog dismount', layer)
                 document.body.removeChild(layer);
             }
-        }  
+        }
     }
-  
-    const handleDismiss = () => {
-  
-      const val = "false"
-  
-      let payload: any = {}
-      if (control.f) {
-        // binding redirect
-        const p = control.f.split('|')
-        payload["i"] = p[0]
-        payload[p[1]] = val
-      } else {
-        // unbound control
-        payload["i"] = control.i
-        payload["open"] = val
-      }
-  
-      dispatch(changeProps([payload]));
-      ws.updateControlProps([payload]);
-      ws.pageEventFromWeb(control.i, 'dismiss', control.data)
-      cleanupLayers();
+
+    const handleDismiss = (ev?: React.SyntheticEvent<HTMLElement> | KeyboardEvent) => {
+
+        const autoDismiss = !control.autodismiss || control.autodismiss === 'true';
+
+        if (autoDismiss) {
+            const val = "false"
+
+            let payload: any = {}
+            if (control.f) {
+                // binding redirect
+                const p = control.f.split('|')
+                payload["i"] = p[0]
+                payload[p[1]] = val
+            } else {
+                // unbound control
+                payload["i"] = control.i
+                payload["open"] = val
+            }
+    
+            dispatch(changeProps([payload]));
+            ws.updateControlProps([payload]);
+        }
+
+        ws.pageEventFromWeb(control.i, 'dismiss', control.data)
+
+        if (!autoDismiss) {
+            ev?.preventDefault();
+            return
+        }
     }
 
     // dialog props
@@ -54,9 +62,12 @@ export const MyPanel = React.memo<IControlProps>(({control, parentDisabled}) => 
         isLightDismiss: control.lightdismiss === 'true',
         isBlocking: control.blocking !== 'false',
         headerText: control.title ? control.title : undefined,
+        layerProps: {
+            onLayerWillUnmount: () => cleanupLayers()
+        },   
     };
 
-    switch(control.type ? control.type.toLowerCase() : '') {
+    switch (control.type ? control.type.toLowerCase() : '') {
         case 'small': props.type = PanelType.smallFixedFar; break;
         case 'smallleft': props.type = PanelType.smallFixedNear; break;
         case 'medium': props.type = PanelType.medium; break;
@@ -75,17 +86,17 @@ export const MyPanel = React.memo<IControlProps>(({control, parentDisabled}) => 
 
     const bodyControls = useSelector((state: any) =>
         (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
-        .filter((oc: any) => oc.t !== 'footer'), shallowEqual);
+            .filter((oc: any) => oc.t !== 'footer'), shallowEqual);
 
     const footerControls = useSelector((state: any) =>
         (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
-        .filter((oc: any) => oc.t === 'footer')
-        .map((footer: any) => footer.children !== undefined ? footer.children : footer.c.map((childId: any) => state.page.controls[childId]))
-        .reduce((acc: any, footerControls: any) => ([...acc, ...footerControls])), shallowEqual);
+            .filter((oc: any) => oc.t === 'footer')
+            .map((footer: any) => footer.children !== undefined ? footer.children : footer.c.map((childId: any) => state.page.controls[childId]))
+            .reduce((acc: any, footerControls: any) => ([...acc, ...footerControls])), shallowEqual);
 
     const onRenderFooterContent = React.useCallback(
-            () => (<ControlsList controls={footerControls} parentDisabled={disabled} />),
-            [footerControls, disabled]);
+        () => (<ControlsList controls={footerControls} parentDisabled={disabled} />),
+        [footerControls, disabled]);
 
     if (footerControls.length > 0) {
         props.onRenderFooterContent = onRenderFooterContent

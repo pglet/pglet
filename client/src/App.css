@@ -1,3 +1,7 @@
 .ms-Viewport {
   width: 100%;
 }
+
+span.ms-layer {
+  margin: 0!important;
+}

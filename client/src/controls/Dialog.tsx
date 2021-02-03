@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -10,45 +10,51 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
 
     let disabled = (control.disabled === 'true') || parentDisabled;
 
-    console.log(`render dialog: ${control.i}`);
+    //console.log(`render dialog: ${control.i}`);
 
     const ws = useContext(WebSocketContext);
     const dispatch = useDispatch();
   
-    const handleDismiss = () => {
+    const handleDismiss = (ev?: React.MouseEvent<HTMLButtonElement>) => {
   
-      const val = "false"
-  
-      let payload: any = {}
-      if (control.f) {
-        // binding redirect
-        const p = control.f.split('|')
-        payload["i"] = p[0]
-        payload[p[1]] = val
-      } else {
-        // unbound control
-        payload["i"] = control.i
-        payload["open"] = val
-      }
-  
-      dispatch(changeProps([payload]));
-      ws.updateControlProps([payload]);
-      ws.pageEventFromWeb(control.i, 'dismiss', control.data)
+        const autoDismiss = !control.autodismiss || control.autodismiss === 'true';
+
+        if (autoDismiss) {
+            const val = "false"
+
+            let payload: any = {}
+            if (control.f) {
+                // binding redirect
+                const p = control.f.split('|')
+                payload["i"] = p[0]
+                payload[p[1]] = val
+            } else {
+                // unbound control
+                payload["i"] = control.i
+                payload["open"] = val
+            }
+    
+            dispatch(changeProps([payload]));
+            ws.updateControlProps([payload]);
+        }
+
+        ws.pageEventFromWeb(control.i, 'dismiss', control.data)
+
+        if (!autoDismiss) {
+            ev?.preventDefault();
+            return
+        }
     }
 
-    useEffect(() => {
-        //console.log('Dialog mount')
-        return () => {
-            const layers = document.body.getElementsByClassName("ms-Layer--fixed")
-            for (let i = 0; i < layers.length; i++) {
-                let layer: Element = layers[i];
-                if (!layer.hasChildNodes()) {
-                    //console.log('Dialog dismount', layer)
-                    document.body.removeChild(layer);
-                }
+    const cleanupLayers = () => {
+        const layers = document.body.getElementsByClassName("ms-Layer--fixed")
+        for (let i = 0; i < layers.length; i++) {
+            let layer: Element = layers[i];
+            if (!layer.hasChildNodes()) {
+                document.body.removeChild(layer);
             }
-        };
-      }, [control, ws]);
+        }
+    }
 
     // dialog props
     const props: IDialogProps = {
@@ -56,6 +62,9 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         minWidth: control.width ? defaultPixels(control.width) : undefined,
         maxWidth: control.maxwidth ? defaultPixels(control.maxwidth) : undefined,
         modalProps: {
+            layerProps: {
+                onLayerWillUnmount: () => cleanupLayers()
+            },
             topOffsetFixed: control.fixedtop === 'true',
             isBlocking: control.blocking === 'true',
         },
