@@ -57,6 +57,7 @@ for:
   - yarn
   - yarn build
   - cd ..
+  - mkdir internal\server\content
   - xcopy client\build internal\server\content\ /E /Y
   - .\build.cmd
   - dir %USERPROFILE%\Go\bin
@@ -84,6 +85,7 @@ for:
   - yarn
   - yarn build
   - cd ..
+  - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
@@ -112,6 +114,7 @@ for:
   - yarn
   - yarn build
   - cd ..
+  - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - ./build.sh
   - ls $GOPATH/bin
@@ -145,6 +148,7 @@ for:
   - GENERATE_SOURCEMAP=false yarn build
   - ls -alR build
   - cd ..
+  - mkdir internal/server/content
   - cp -r client/build/* internal/server/content
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
