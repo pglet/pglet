@@ -16,4 +16,5 @@
 # vendor/
 
 /internal/server/bindata.go
+/internal/server/content/index.html
 /internal/server/content/
