@@ -11,17 +11,17 @@ environment:
     secure: CYe208WXo3I42XVd+JYQHw==
 
   matrix:
-    # - job_name: Windows
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    - job_name: Windows
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    # - job_name: Linux
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - job_name: Linux
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
-    # - job_name: macOS
-    #   job_group: tests
-    #   APPVEYOR_BUILD_WORKER_IMAGE: macOS
+    - job_name: macOS
+      job_group: tests
+      APPVEYOR_BUILD_WORKER_IMAGE: macOS
 
     - job_name: Release
       job_depends_on: tests
@@ -156,8 +156,13 @@ for:
   - docker run --name pglet-test -d pglet/server
   - sleep 10
   - docker logs pglet-test
-  - echo "$DOCKER_REGISTRY_PASS" | docker login --username $DOCKER_REGISTRY_USER --password-stdin
-  - docker image push --all-tags pglet/server
+
+  deploy_script:
+  - sh: |
+      if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
+        echo "$DOCKER_REGISTRY_PASS" | docker login --username $DOCKER_REGISTRY_USER --password-stdin
+        docker image push --all-tags pglet/server
+      fi
 
   artifacts:
   - path: dist/pglet-*
