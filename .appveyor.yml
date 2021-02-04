@@ -9,19 +9,21 @@ environment:
     secure: NJVK0u9M6ZhmQKUeR6Gnxg==
   DOCKER_REGISTRY_PASS:
     secure: CYe208WXo3I42XVd+JYQHw==
+  GCR_SA_JSON:
+    secure: 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
 
   matrix:
-    - job_name: Windows
-      job_group: tests
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    # - job_name: Windows
+    #   job_group: tests
+    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    - job_name: Linux
-      job_group: tests
-      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    # - job_name: Linux
+    #   job_group: tests
+    #   APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
 
-    - job_name: macOS
-      job_group: tests
-      APPVEYOR_BUILD_WORKER_IMAGE: macOS
+    # - job_name: macOS
+    #   job_group: tests
+    #   APPVEYOR_BUILD_WORKER_IMAGE: macOS
 
     - job_name: Release
       job_depends_on: tests
@@ -163,6 +165,10 @@ for:
         echo "$DOCKER_REGISTRY_PASS" | docker login --username $DOCKER_REGISTRY_USER --password-stdin
         docker image push --all-tags pglet/server
       fi
+    echo "$GCR_SA_JSON" > /tmp/gcp.json
+    gcloud auth activate-service-account --key-file=/tmp/gcp.json
+    gcloud auth configure-docker -q
+    docker image push --all-tags us.gcr.io/pglet-app/pglet-server
 
   artifacts:
   - path: dist/pglet-*

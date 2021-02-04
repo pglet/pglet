@@ -33,7 +33,7 @@ dockers:
     image_templates:
     - "pglet/server:latest"
     - "pglet/server:{{ .Version }}"
-    #- "gcr.io/myuser/myimage:latest"
+    - "us.gcr.io/pglet-app/pglet-server:{{ .Version }}"
 
     skip_push: true
     dockerfile: Dockerfile
