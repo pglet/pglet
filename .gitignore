@@ -15,6 +15,4 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-/internal/server/bindata.go
-/internal/server/content/index.html
-/internal/server/content/
+internal/server/content/

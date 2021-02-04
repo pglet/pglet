@@ -6,7 +6,7 @@ builds:
     env:
       - CGO_ENABLED=0  
     flags:
-      - -tags=release  
+      - -tags=release
     ldflags: >
       -X github.com/pglet/pglet/internal/commands.version={{.Version}}
       -X github.com/pglet/pglet/internal/commands.commit={{.ShortCommit}}

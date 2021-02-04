@@ -25,7 +25,6 @@ import (
 
 const (
 	apiRoutePrefix      string = "/api"
-	contentRootFolder   string = "content/"
 	siteDefaultDocument string = "index.html"
 )
 
@@ -37,9 +36,6 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
-
-//go:embed content/*
-var f embed.FS
 
 type pgletFS struct {
 	prefix string
