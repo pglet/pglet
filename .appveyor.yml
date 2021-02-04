@@ -150,7 +150,7 @@ for:
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         goreleaser
       else
-        goreleaser --snapshot --skip-publish
+        goreleaser --skip-publish
       fi
 
   test_script:
