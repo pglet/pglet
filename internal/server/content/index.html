@@ -12,8 +12,7 @@ cd client
 yarn
 yarn build
 cd ..
-go get -u github.com/jteeuwen/go-bindata/...
-go-bindata -o internal/server/bindata.go --pkg server client/build/...
+cp -r client/build/* internal/server/content
 </pre>
 </body>
 </html>

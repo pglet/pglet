@@ -3,7 +3,9 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -63,10 +65,10 @@ func TrimQuotes(s string) string {
 }
 
 func ReplaceEscapeSymbols(s string) string {
-	r := strings.ReplaceAll(s, "\\n", "\n")
-	r = strings.ReplaceAll(r, "\\t", "\t")
-	r = strings.ReplaceAll(r, "\\'", "'")
-	r = strings.ReplaceAll(r, "\\\"", "\"")
+	r, err := strconv.Unquote(fmt.Sprintf("\"%s\"", s))
+	if err != nil {
+		return strings.ReplaceAll(s, "\\'", "'")
+	}
 	return r
 }
 

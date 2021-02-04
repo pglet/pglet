@@ -21,6 +21,8 @@ const (
 
 	AddPageControlsAction = "addPageControls"
 
+	ReplacePageControlsAction = "replacePageControls"
+
 	UpdateControlPropsAction = "updateControlProps"
 
 	AppendControlPropsAction = "appendControlProps"

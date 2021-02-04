@@ -1,7 +1,10 @@
 project_name: pglet
 
 builds:
-  - main: cmd/pglet/main.go
+  - id: pglet
+    main: cmd/pglet/main.go
+    env:
+      - CGO_ENABLED=0  
     flags:
       - -tags=release  
     ldflags: >
@@ -13,15 +16,45 @@ builds:
       - windows
     goarch:
       - amd64
-    env:
-      - CGO_ENABLED=0
+      - arm
+      - arm64
+    goarm:
+      - 7
+
+dockers:
+  -
+    goos: linux
+    goarch: amd64
+    goarm: ''
+
+    builds:
+    - pglet
+
+    image_templates:
+    - "pglet/server:latest"
+    - "pglet/server:{{ .Version }}"
+    - "us.gcr.io/pglet-app/pglet-server:{{ .Version }}"
+
+    skip_push: true
+    dockerfile: Dockerfile
+    use_buildx: true
+
+    # Template of the docker build flags.
+    build_flag_templates:
+    - "--pull"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+    #- "--build-arg=FOO={{.Env.Bar}}"
+    - "--platform=linux/amd64"
 
 archives:
   - id: binary
     format: binary
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
   - id: zip
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip    

@@ -77,21 +77,23 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 	sl := h.lockSession()
 	defer sl.Unlock()
 
-	log.Printf("Execute command for page %s session %s: %+v\n",
+	log.Debugf("Execute command for page %s session %s: %+v\n",
 		h.session.Page.Name, h.session.ID, cmd)
 
 	handlers := map[string]commandHandlerFn{
-		command.Add:     h.add,
-		command.Addf:    h.add,
-		command.Set:     h.set,
-		command.Setf:    h.set,
-		command.Append:  h.appendHandler,
-		command.Appendf: h.appendHandler,
-		command.Get:     h.get,
-		command.Clean:   h.clean,
-		command.Cleanf:  h.clean,
-		command.Remove:  h.remove,
-		command.Removef: h.remove,
+		command.Add:      h.add,
+		command.Addf:     h.add,
+		command.Replace:  h.replace,
+		command.Replacef: h.replace,
+		command.Set:      h.set,
+		command.Setf:     h.set,
+		command.Append:   h.appendHandler,
+		command.Appendf:  h.appendHandler,
+		command.Get:      h.get,
+		command.Clean:    h.clean,
+		command.Cleanf:   h.clean,
+		command.Remove:   h.remove,
+		command.Removef:  h.remove,
 	}
 
 	handler := handlers[strings.ToLower(cmd.Name)]
@@ -103,6 +105,19 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 }
 
 func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
+	ids, controls, err := h.addInternal(cmd)
+	if err != nil {
+		return "", err
+	}
+
+	// broadcast new controls to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, &AddPageControlsPayload{
+		Controls: controls,
+	}))
+	return strings.Join(ids, " "), nil
+}
+
+func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, controls []*model.Control, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
@@ -138,7 +153,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 
 		childCmd, err := command.Parse(line, false)
 		if err != nil {
-			return "", err
+			return nil, nil, err
 		}
 		childCmd.Name = "add"
 		childCmd.Indent += indent
@@ -148,12 +163,10 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 	}
 
 	// list of control IDs
-	ids := make([]string, 0)
+	ids = make([]string, 0)
 
 	// list of controls to broadcast
-	payload := &AddPageControlsPayload{
-		Controls: make([]*model.Control, 0),
-	}
+	controls = make([]*model.Control, 0)
 
 	affectedParents := make(map[string]bool)
 
@@ -162,15 +175,15 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 
 		// first value must be control type
 		if len(batchItem.command.Values) == 0 {
-			return "", errors.New("Control type is not specified")
+			return nil, nil, errors.New("Control type is not specified")
 		}
 
-		controlType := batchItem.command.Values[0]
+		controlType := strings.ToLower(batchItem.command.Values[0])
 
 		// other values go to boolean properties
 		if len(batchItem.command.Values) > 1 {
 			for _, v := range batchItem.command.Values[1:] {
-				batchItem.command.Attrs[v] = "true"
+				batchItem.command.Attrs[strings.ToLower(v)] = "true"
 			}
 		}
 
@@ -195,11 +208,10 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 		id := batchItem.command.Attrs["id"]
 		if id == "" {
 			id = h.nextControlID()
-		} else {
-			// generate unique ID
-			parentIDs := h.getControlParentIDs(parentID)
-			id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 		}
+		// generate unique ID
+		parentIDs := h.getControlParentIDs(parentID)
+		id = strings.Join(append(parentIDs, id), ControlIDSeparator)
 
 		batchItem.control = model.NewControl(controlType, parentID, id)
 		affectedParents[parentID] = true
@@ -215,25 +227,47 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 			}
 		}
 
-		err = h.addControl(batchItem.control)
+		err := h.addControl(batchItem.control)
 		if err != nil {
-			return "", err
+			return nil, nil, err
 		}
-		payload.Controls = append(payload.Controls, batchItem.control)
+		controls = append(controls, batchItem.control)
 		ids = append(ids, id)
 	}
 
 	// re-read affected parents
-	for i, ctrl := range payload.Controls {
+	for i, ctrl := range controls {
 		if affectedParents[ctrl.ID()] {
-			payload.Controls[i] = store.GetSessionControl(h.session, ctrl.ID())
+			controls[i] = store.GetSessionControl(h.session, ctrl.ID())
 		}
 	}
 
-	//log.Println("CONTROLS:", utils.ToJSON(session.Controls))
+	return ids, controls, nil
+}
+
+func (h *sessionHandler) replace(cmd *command.Command) (result string, err error) {
+
+	// parent ID
+	parentID := cmd.Attrs["to"]
+
+	if parentID == "" {
+		parentID = ReservedPageID
+	}
+
+	// clean control
+	allIDs, err := h.cleanInternal([]string{parentID}, -1)
+
+	cmd.Name = "add"
+	ids, controls, err := h.addInternal(cmd)
+	if err != nil {
+		return "", err
+	}
 
 	// broadcast new controls to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage(ReplacePageControlsAction, &ReplacePageControlsPayload{
+		IDs:      allIDs,
+		Controls: controls,
+	}))
 	return strings.Join(ids, " "), nil
 }
 
@@ -426,31 +460,45 @@ func (h *sessionHandler) clean(cmd *command.Command) (result string, err error) 
 		return "", errors.New("'at' cannot be specified with a list of IDs")
 	}
 
+	allIds, err := h.cleanInternal(ids, at)
+	if err != nil {
+		return "", err
+	}
+
+	// broadcast command to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
+		IDs: allIds,
+	}))
+	return "", nil
+}
+
+func (h *sessionHandler) cleanInternal(ids []string, at int) (allIDs []string, err error) {
+
+	allIDs = make([]string, len(ids))
+
 	// control ID
 	for i, id := range ids {
 		ctrl := h.getControl(id)
 		if ctrl == nil {
-			return "", fmt.Errorf("control with ID '%s' not found", id)
+			return nil, fmt.Errorf("control with ID '%s' not found", id)
 		}
 
 		if at != -1 {
 			childIDs := ctrl.GetChildrenIds()
 			if at > len(childIDs)-1 {
-				return "", fmt.Errorf("'at' is out of range")
+				return nil, fmt.Errorf("'at' is out of range")
 			}
 
-			ids[i] = childIDs[at]
-			ctrl = h.getControl(ids[i])
+			allIDs[i] = childIDs[at]
+			ctrl = h.getControl(allIDs[i])
+		} else {
+			allIDs[i] = ids[i]
 		}
 
 		h.cleanControl(ctrl)
 	}
 
-	// broadcast command to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(CleanControlAction, &CleanControlPayload{
-		IDs: ids,
-	}))
-	return "", nil
+	return allIDs, nil
 }
 
 func (h *sessionHandler) remove(cmd *command.Command) (result string, err error) {

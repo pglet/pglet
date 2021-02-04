@@ -2,10 +2,10 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Checkbox, ICheckboxProps } from '@fluentui/react';
+import { Toggle, IToggleProps } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
-export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   //console.log(`render Checkbox: ${control.i}`);
 
@@ -39,10 +39,12 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
     }
   }
 
-  const checkboxProps: ICheckboxProps = {
+  const toggleProps: IToggleProps = {
     checked: control.value === "true",
-    label: control.label ? control.label : null,
-    boxSide: control.boxside ? control.boxside : 'start',
+    inlineLabel: control.inline === "true",
+    label: control.label ? control.label : undefined,
+    onText: control.ontext ? control.ontext : undefined,
+    offText: control.offtext ? control.offtext : undefined,
     disabled: disabled,
     styles: {
       root: {
@@ -54,5 +56,5 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
     }
   };
 
-  return <Checkbox {...checkboxProps} onChange={handleChange} />;
+  return <Toggle {...toggleProps} onChange={handleChange} />;
 })

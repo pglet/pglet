@@ -1,7 +1,17 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
-import { PrimaryButton, DefaultButton, IButtonProps } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { shallowEqual, useSelector } from 'react-redux'
+import {
+  PrimaryButton,
+  DefaultButton,
+  CompoundButton,
+  CommandBarButton,
+  IconButton,
+  ActionButton,
+  IButtonProps,
+  IContextualMenuProps } from '@fluentui/react';
+import { IControlProps, defaultPixels } from './IControlProps'
+import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -11,20 +21,70 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = useContext(WebSocketContext);
 
-  let ButtonType = (control.primary) ? PrimaryButton : DefaultButton;
+  let ButtonType = DefaultButton;
+  if (control.compound === 'true') {
+    ButtonType = CompoundButton
+  } else if (control.toolbar === 'true') {
+    ButtonType = CommandBarButton
+  } else if (control.primary === 'true') {
+    ButtonType = PrimaryButton
+  } else if (control.action === 'true') {
+    ButtonType = ActionButton
+  } else if (control.icon && control.text === undefined) {
+    ButtonType = IconButton
+  }
 
-  let buttonProps: IButtonProps = {
+  let height = control.height !== undefined ? control.height : undefined;
+  if (control.toolbar === 'true' && control.height === undefined) {
+    height = 40;
+  }
+
+  const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
+    getMenuProps(state, control, disabled, ws), shallowEqual)
+
+  let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,
+    href: control.url ? control.url : undefined,
+    title: control.title ? control.title : undefined,
+    target: control.newwindow === 'true' ? '_blank' : undefined,
+    secondaryText: control.secondarytext ? control.secondarytext : undefined,
     disabled: disabled,
-    styles: {
+    primary: control.compound === 'true' && control.primary === 'true' ? true : undefined,
+    split: control.split === 'true' ? true : undefined,
+    menuProps: menuProps,
+    styles: {    
       root: {
-        width: control.width !== undefined ? control.width : undefined,
-        height: control.height !== undefined ? control.height : undefined,
-        padding: control.padding !== undefined ? control.padding : undefined,
-        margin: control.margin !== undefined ? control.margin : undefined   
-      }
+        width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+        height: defaultPixels(height),
+        padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
+      },    
     }
   };
+
+  // https://stackoverflow.com/questions/62532550/how-can-i-change-the-hover-style-of-a-primarybutton-in-fluent-ui
+
+  if (control.icon) {
+    buttonProps.iconProps = {
+      iconName: control.icon
+    }
+
+    if (control.iconcolor !== undefined) {
+      buttonProps.styles!.icon = {
+        color: control.iconcolor
+      }
+      buttonProps.styles!.rootHovered = {
+        '.ms-Button-icon': {
+          color: control.iconcolor
+        }
+      };
+      buttonProps.styles!.rootPressed = {
+        '.ms-Button-icon': {
+          color: control.iconcolor
+        }
+      }
+    }
+  }
 
   const handleClick = () => {
     ws.pageEventFromWeb(control.i, 'click', control.data)

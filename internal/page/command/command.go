@@ -10,34 +10,38 @@ import (
 )
 
 const (
-	Add     string = "add"
-	Addf           = "addf"
-	Set            = "set"
-	Setf           = "setf"
-	Append         = "append"
-	Appendf        = "appendf"
-	Get            = "get"
-	Clean          = "clean"
-	Cleanf         = "cleanf"
-	Remove         = "remove"
-	Removef        = "removef"
-	Quit           = "quit"
+	Add      string = "add"
+	Addf            = "addf"
+	Replace         = "replace"
+	Replacef        = "replacef"
+	Set             = "set"
+	Setf            = "setf"
+	Append          = "append"
+	Appendf         = "appendf"
+	Get             = "get"
+	Clean           = "clean"
+	Cleanf          = "cleanf"
+	Remove          = "remove"
+	Removef         = "removef"
+	Quit            = "quit"
 )
 
 var (
 	supportedCommands = map[string]*CommandMetadata{
-		Add:     {Name: Add, ShouldReturn: true},
-		Addf:    {Name: Addf, ShouldReturn: false},
-		Set:     {Name: Set, ShouldReturn: true},
-		Setf:    {Name: Setf, ShouldReturn: false},
-		Append:  {Name: Set, ShouldReturn: true},
-		Appendf: {Name: Setf, ShouldReturn: false},
-		Get:     {Name: Get, ShouldReturn: true},
-		Clean:   {Name: Clean, ShouldReturn: true},
-		Cleanf:  {Name: Cleanf, ShouldReturn: false},
-		Remove:  {Name: Remove, ShouldReturn: true},
-		Removef: {Name: Removef, ShouldReturn: false},
-		Quit:    {Name: Quit, ShouldReturn: false},
+		Add:      {Name: Add, ShouldReturn: true},
+		Addf:     {Name: Addf, ShouldReturn: false},
+		Replace:  {Name: Replace, ShouldReturn: true},
+		Replacef: {Name: Replacef, ShouldReturn: false},
+		Set:      {Name: Set, ShouldReturn: true},
+		Setf:     {Name: Setf, ShouldReturn: false},
+		Append:   {Name: Set, ShouldReturn: true},
+		Appendf:  {Name: Setf, ShouldReturn: false},
+		Get:      {Name: Get, ShouldReturn: true},
+		Clean:    {Name: Clean, ShouldReturn: true},
+		Cleanf:   {Name: Cleanf, ShouldReturn: false},
+		Remove:   {Name: Remove, ShouldReturn: true},
+		Removef:  {Name: Removef, ShouldReturn: false},
+		Quit:     {Name: Quit, ShouldReturn: false},
 	}
 )
 
