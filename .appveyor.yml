@@ -159,7 +159,7 @@ for:
   - sleep 10
   - docker logs pglet-test
 
-  deploy_script:
+#  deploy_script:
   - sh: |
       if [[ "$APPVEYOR_REPO_TAG" == "true" ]]; then
         echo "$DOCKER_REGISTRY_PASS" | docker login --username $DOCKER_REGISTRY_USER --password-stdin
