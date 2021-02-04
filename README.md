@@ -23,7 +23,7 @@ Create `hello.sh` with the following contents:
 ```bash
 . pglet.sh
 pglet_page
-pglet_add "text value='Hello, world!"
+pglet_add "text value='Hello, world!'"
 ```
 
 Run `sh hello.sh` and in a new browser window you'll get:
@@ -37,7 +37,7 @@ Now, add `PGLET_WEB=true` before `pglet_page`:
 ```bash
 . pglet.sh
 PGLET_WEB=true pglet_page
-pglet_add "text value='Hello, world!"
+pglet_add "text value='Hello, world!'"
 ```
 
 and instantly make your app available on the web!
