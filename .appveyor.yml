@@ -165,10 +165,10 @@ for:
         echo "$DOCKER_REGISTRY_PASS" | docker login --username $DOCKER_REGISTRY_USER --password-stdin
         docker image push --all-tags pglet/server
       fi
-    echo "$GCR_SA_JSON" > /tmp/gcp.json
-    gcloud auth activate-service-account --key-file=/tmp/gcp.json
-    gcloud auth configure-docker -q
-    docker image push --all-tags us.gcr.io/pglet-app/pglet-server
+  - sh: echo "$GCR_SA_JSON" > /tmp/gcp.json
+  - sh: gcloud auth activate-service-account --key-file=/tmp/gcp.json
+  - sh: gcloud auth configure-docker -q
+  - sh: docker image push --all-tags us.gcr.io/pglet-app/pglet-server
 
   artifacts:
   - path: dist/pglet-*
