@@ -110,7 +110,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	results.PageURL = getPageURL(serverURL, payload.PageName)
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds)
+	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds, args.TickerDuration)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 	}
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds)
+	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds, args.TickerDuration)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	m, err := filemutex.New(lockFilename)
 	if err != nil {
-		log.Fatalln("Directory did not exist or file could not created")
+		log.Fatalln("Directory did not exist or file could not be created")
 	}
 
 	err = m.TryLock()

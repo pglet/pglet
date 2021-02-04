@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -20,9 +21,10 @@ type PipeClient struct {
 	sessionID  string
 	pipe       pipe
 	hostClient *HostClient
+	done       chan bool
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool) (*PipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, tickerDuration int) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
 	var err error
@@ -43,9 +45,28 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool) 
 		sessionID:  sessionID,
 		pipe:       p,
 		hostClient: hc,
+		done:       make(chan bool),
+	}
+
+	if tickerDuration > 0 {
+		go pc.timerTicker(tickerDuration)
 	}
 
 	return pc, nil
+}
+
+func (pc *PipeClient) timerTicker(tickerDuration int) {
+	ticker := time.NewTicker(time.Duration(tickerDuration) * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-pc.done:
+			return
+		case <-ticker.C:
+			pc.emitEvent("timer tick")
+		}
+	}
+
 }
 
 func (pc *PipeClient) CommandPipeName() string {
@@ -123,6 +144,7 @@ func (pc *PipeClient) emitEvent(evt string) {
 func (pc *PipeClient) close() {
 	log.Println("Closing pipe client...")
 
+	pc.done <- true
 	pc.pipe.close()
 
 	pc.hostClient.UnregisterPipeClient(pc)

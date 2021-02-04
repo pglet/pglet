@@ -23,11 +23,12 @@ type Client struct {
 }
 
 type ConnectPageArgs struct {
-	PageName string
-	Web      bool
-	Server   string
-	Token    string
-	Uds      bool
+	PageName       string
+	Web            bool
+	Server         string
+	Token          string
+	Uds            bool
+	TickerDuration int
 }
 
 type ConnectPageResults struct {
