@@ -1,4 +1,5 @@
 import React from 'react'
+import { MessageBar, MessageBarType } from '@fluentui/react'
 import { IControlsListProps } from './IControlsListProps'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
@@ -57,8 +58,12 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
             return null;
         }
         const ControlType = controlTypes[control.t];
-        if (ControlType === null) {
-            console.log(`Unknown control type: ${control.t}`)
+        if (!ControlType) {
+            const props = Object.getOwnPropertyNames(control)
+                .filter(p => p.length > 1)
+                .map(p => `${p}="${control[p]}"`).join(' ');
+            return <MessageBar key={control.i} messageBarType={MessageBarType.error} messageBarIconProps={ { iconName: 'WebComponents'} }
+                isMultiline><b>Unknown control:</b> {`${control.t} ${props}`}</MessageBar>
         }
         return <ControlType key={control.i} control={control} parentDisabled={parentDisabled} />
     }
