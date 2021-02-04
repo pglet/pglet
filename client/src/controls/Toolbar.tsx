@@ -17,8 +17,8 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
     getMenuProps(state, control, disabled, ws), shallowEqual)
 
   const overflowItems = useSelector<any, any>((state: any) => {
-    const overflowControls = control.c.map((childId: any) =>
-        state.page.controls[childId]).filter((ic: any) => ic.t === 'overflow' && ic.visible !== "false");
+    const overflowControls = (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
+      .filter((ic: any) => ic.t === 'overflow' && ic.visible !== "false");
     if (overflowControls.length === 0) {
         return null
     }
@@ -27,8 +27,8 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   }, shallowEqual)
 
   const farItems = useSelector<any, any>((state: any) => {
-    const farControls = control.c.map((childId: any) =>
-        state.page.controls[childId]).filter((ic: any) => ic.t === 'far' && ic.visible !== "false");
+    const farControls = (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
+      .filter((ic: any) => ic.t === 'far' && ic.visible !== "false");
     if (farControls.length === 0) {
         return null
     }

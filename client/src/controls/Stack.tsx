@@ -25,7 +25,14 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
                 minHeight: control.minheight !== undefined ? defaultPixels(control.minheight) : undefined,
                 maxHeight: control.maxheight !== undefined ? defaultPixels(control.maxheight) : undefined,
                 padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
-                margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
+                margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
+                backgroundColor: control.bgcolor ? control.bgcolor : undefined,
+                border: control.border ? control.border : undefined,
+                borderRadius: control.borderradius ? defaultPixels(control.borderradius) : undefined,
+                borderLeft: control.borderleft ? control.borderleft : undefined,
+                borderRight: control.borderright ? control.borderright : undefined,
+                borderTop: control.bordertop ? control.bordertop : undefined,
+                borderBottom: control.borderbottom ? control.borderbottom : undefined,                
             }
         },
     };
@@ -42,7 +49,9 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         childrenGap: control.gap ? control.gap : 10
     }
 
-    const childControls = useSelector((state: any) => control.c.map((childId: any) => state.page.controls[childId]), shallowEqual);
+    const childControls = useSelector((state: any) => {
+        return control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId])
+    }, shallowEqual);
 
     return <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />

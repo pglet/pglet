@@ -16,8 +16,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
   const navItems = useSelector<any, any>((state: any) => {
 
     function getNavLinks(parent: any): any {
-      const itemControls = parent.c.map((childId: any) =>
-        state.page.controls[childId])
+      const itemControls = (parent.children !== undefined ? parent.children : parent.c.map((childId: any) => state.page.controls[childId]))
         .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
 
       if (itemControls.length === 0) {

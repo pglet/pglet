@@ -16,16 +16,21 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
   const handleChange = (event: React.SyntheticEvent<HTMLElement>, newValue?: string) => {
     //console.log(newValue);
 
-    const payload = [
-      {
-        i: control.i,
-        "value": newValue
-      }
-    ];
+    let payload: any = {}
+    if (control.f) {
+      // binding redirect
+      const p = control.f.split('|')
+      payload["i"] = p[0]
+      payload[p[1]] = newValue
+    } else {
+      // unbound control
+      payload["i"] = control.i
+      payload["value"] = newValue
+    }    
 
-    dispatch(changeProps(payload));
-    ws.updateControlProps(payload);
-    ws.pageEventFromWeb(control.i, 'change', newValue!)
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
   }
 
   //console.log(`render Text: ${control.i}`);

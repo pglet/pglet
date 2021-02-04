@@ -5,9 +5,10 @@ import {
 import { IWebSocket } from '../WebSocket';
 
 export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket): any {
-    const itemControls = parent.c.map((childId: any) =>
-        state.page.controls[childId])
-        .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
+    const childControls = parent.children !== undefined ? parent.children
+    : parent.c.map((childId: any) => state.page.controls[childId]);
+
+    const itemControls = childControls.filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
 
     if (itemControls.length === 0) {
         return null

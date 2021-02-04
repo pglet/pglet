@@ -16,6 +16,7 @@ func newPageCommand() *cobra.Command {
 	var server string
 	var token string
 	var uds bool
+	var tickerDuration int
 	var noWindow bool
 	var window string
 
@@ -33,11 +34,12 @@ func newPageCommand() *cobra.Command {
 			}
 
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
-				PageName: pageName,
-				Web:      web,
-				Server:   server,
-				Token:    token,
-				Uds:      uds,
+				PageName:       pageName,
+				Web:            web,
+				Server:         server,
+				Token:          token,
+				Uds:            uds,
+				TickerDuration: tickerDuration,
 			})
 
 			if err != nil {
@@ -57,6 +59,7 @@ func newPageCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
+	cmd.Flags().IntVarP(&tickerDuration, "ticker", "", 0, "interval in milliseconds between 'tick' events; disabled if not specified.")
 	cmd.Flags().StringVarP(&window, "window", "", "", "open page in a window with specified dimensions and position: [x,y,]width,height")
 	cmd.Flags().BoolVarP(&noWindow, "no-window", "", false, "do not open browser window")
 

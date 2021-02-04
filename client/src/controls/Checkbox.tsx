@@ -18,16 +18,24 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
   const handleChange = (event?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
 
     if (checked !== undefined) {
-      const payload = [
-        {
-          i: control.i,
-          "value": checked.toString()
-        }
-      ];
+
+      const val = checked.toString();
+
+      let payload: any = {}
+      if (control.f) {
+        // binding redirect
+        const p = control.f.split('|')
+        payload["i"] = p[0]
+        payload[p[1]] = val
+      } else {
+        // unbound control
+        payload["i"] = control.i
+        payload["value"] = val
+      }
   
-      dispatch(changeProps(payload));
-      ws.updateControlProps(payload);
-      ws.pageEventFromWeb(control.i, 'change', checked.toString())
+      dispatch(changeProps([payload]));
+      ws.updateControlProps([payload]);
+      ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${val}` : val)
     }
   }
 

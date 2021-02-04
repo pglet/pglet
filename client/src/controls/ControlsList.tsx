@@ -20,10 +20,12 @@ import { MyNav } from './Nav'
 import { Grid } from './Grid'
 import { Icon } from './Icon'
 import { Message } from './Message'
+import { MyDialog } from './Dialog'
+import { MyPanel } from './Panel'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
-    //console.log(`render ControlsList: ${id}`);
+    //console.log(`render ControlsList:`, controls);
 
     const controlTypes: any = {
         'textbox': Textbox,
@@ -46,6 +48,8 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'nav': MyNav,
         'grid': Grid,
         'message': Message,
+        'dialog': MyDialog,
+        'panel': MyPanel,
     }
 
     const renderChild = (control: any) => {
@@ -53,6 +57,9 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
             return null;
         }
         const ControlType = controlTypes[control.t];
+        if (ControlType === null) {
+            console.log(`Unknown control type: ${control.t}`)
+        }
         return <ControlType key={control.i} control={control} parentDisabled={parentDisabled} />
     }
 
