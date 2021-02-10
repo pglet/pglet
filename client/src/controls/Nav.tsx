@@ -30,8 +30,8 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
         let item: any = {
           id: itemControls[i].i,
-          key: itemControls[i].key ? itemControls[i].key : undefined,
-          name: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : undefined),
+          key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
+          name: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
           url: itemControls[i].url ? itemControls[i].url : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
@@ -52,14 +52,6 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
             });
           }
         }
-
-        // if (item.links.length > 0) {
-        //   item.onClick = () => {
-        //     //ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
-        //     console.log(item.isExpanded);
-        //   }
-        //   item.forceAnchor = true;
-        // }
 
         items.push(item)
       }
@@ -84,6 +76,9 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
   const handleExpandLink = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
     //console.log("EXPAND:", item!.isExpanded)
 
+    const selectedKey = item!.key as string
+    const eventName = item!.isExpanded ? "collapse" : "expand";
+
     const payload = [
       {
         i: item!.id,
@@ -93,14 +88,14 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
-    //ws.pageEventFromWeb(control.i, 'click', selectedKey)
+    ws.pageEventFromWeb(control.i, eventName, selectedKey)
   }
 
   const handleLinkClick = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
 
     //console.log("ITEM:", item!.links!.length);
 
-    let selectedKey = item!.key as string
+    const selectedKey = item!.key as string
     if (selectedKey === undefined) {
       return
     }
@@ -114,7 +109,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
-    ws.pageEventFromWeb(control.i, 'click', selectedKey)
+    ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
   if (control.value) {
