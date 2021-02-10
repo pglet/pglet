@@ -33,25 +33,21 @@ export const Message = React.memo<IControlProps>(({ control }) => {
   }
 
   const buttons = useSelector<any, IButtonProps[]>((state: any) =>
-      (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
+    (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
       .filter((oc: any) => oc.t === 'button')
       .map((oc: any) => ({
         key: oc.i,
         text: oc.text ? oc.text : oc.action,
         onClick: () => handleDismiss(oc.action ? oc.action : oc.text)
-      })), shallowEqual);    
+      })), shallowEqual);
 
-  let barType = 0; // info
-  if (control.error === 'true') {
-    barType = MessageBarType.error;
-  } else if (control.blocked === 'true') {
-    barType = MessageBarType.blocked;
-  } else if (control.severewarning === 'true') {
-    barType = MessageBarType.severeWarning;
-  } else if (control.success === 'true') {
-    barType = MessageBarType.success;
-  } else if (control.warning === 'true') {
-    barType = MessageBarType.warning;
+  let barType = MessageBarType.info; // info
+  switch (control.type ? control.type.toLowerCase() : '') {
+    case 'error': barType = MessageBarType.error; break;
+    case 'blocked': barType = MessageBarType.blocked; break;
+    case 'severewarning': barType = MessageBarType.severeWarning; break;
+    case 'success': barType = MessageBarType.success; break;
+    case 'warning': barType = MessageBarType.warning; break;
   }
 
   const props: IMessageBarProps = {
@@ -89,7 +85,7 @@ export const Message = React.memo<IControlProps>(({ control }) => {
       props.dismissIconProps = {
         iconName: control.dismissicon
       }
-  
+
       if (control.dismissiconcolor) {
         props.dismissIconProps!.styles = {
           root: {
@@ -97,12 +93,12 @@ export const Message = React.memo<IControlProps>(({ control }) => {
           }
         }
       }
-    }    
+    }
   }
 
   if (buttons.length > 0) {
     props.actions = <div>
-      {buttons.map(buttonProps => (<MessageBarButton {...buttonProps}/>))}
+      {buttons.map(buttonProps => (<MessageBarButton {...buttonProps} />))}
     </div>
   }
 
