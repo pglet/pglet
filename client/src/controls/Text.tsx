@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, ITextProps } from '@fluentui/react';
+import { Text, ITextProps, IFontStyles } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
 export const MyText = React.memo<IControlProps>(({control}) => {
@@ -36,10 +36,25 @@ export const MyText = React.memo<IControlProps>(({control}) => {
     } else if (textAlign === 'center' || textAlign === 'middle') {
       justifyContent = "center";
     }
-  }  
+  }
+
+  let variant: keyof IFontStyles | undefined = undefined;
+  switch (control.size ? control.size.toLowerCase() : '') {
+    case 'tiny': variant = 'tiny'; break;
+    case 'xsmall': variant = 'xSmall'; break;
+    case 'small': variant = 'small'; break;
+    case 'smallplus': variant = 'smallPlus'; break;
+    case 'medium': variant = 'medium'; break;
+    case 'mediumplus': variant = 'mediumPlus'; break;
+    case 'large': variant = 'large'; break;
+    case 'xlarge': variant = 'xLarge'; break;
+    case 'xxlarge': variant = 'xxLarge'; break;
+    case 'superlarge': variant = 'superLarge'; break;
+    case 'mega': variant = 'mega'; break;
+}
 
   const textProps: ITextProps = {
-    variant: control.size ? control.size : null,
+    variant: variant,
     nowrap: control.nowrap !== undefined ? control.nowrap : undefined,
     block: control.block !== undefined ? control.block : undefined,
     styles: {
