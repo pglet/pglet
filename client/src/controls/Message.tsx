@@ -37,8 +37,8 @@ export const Message = React.memo<IControlProps>(({ control }) => {
       .filter((oc: any) => oc.t === 'button')
       .map((oc: any) => ({
         key: oc.i,
-        text: oc.text ? oc.text : oc.i,
-        onClick: () => handleDismiss(oc.action ? oc.action : oc.text ? oc.text : oc.i)
+        text: oc.text ? oc.text : oc.action,
+        onClick: () => handleDismiss(oc.action ? oc.action : oc.text)
       })), shallowEqual);    
 
   let barType = 0; // info

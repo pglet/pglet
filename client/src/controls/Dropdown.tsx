@@ -57,7 +57,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
     (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
       .filter((oc: any) => oc.t === 'option')
       .map((oc: any) => ({
-        key: oc.key,
+        key: oc.key ? oc.key : oc.text,
         text: oc.text ? oc.text : oc.key
       })), shallowEqual);  
 
