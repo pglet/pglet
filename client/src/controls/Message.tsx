@@ -68,8 +68,36 @@ export const Message = React.memo<IControlProps>(({ control }) => {
     }
   };
 
+  if (control.icon) {
+    props.messageBarIconProps = {
+      iconName: control.icon
+    }
+
+    if (control.iconcolor) {
+      props.messageBarIconProps!.styles = {
+        root: {
+          color: control.iconcolor
+        }
+      }
+    }
+  }
+
   if (control.dismiss) {
     props.onDismiss = () => handleDismiss("");
+
+    if (control.dismissicon) {
+      props.dismissIconProps = {
+        iconName: control.dismissicon
+      }
+  
+      if (control.dismissiconcolor) {
+        props.dismissIconProps!.styles = {
+          root: {
+            color: control.dismissiconcolor + "!important"
+          }
+        }
+      }
+    }    
   }
 
   if (buttons.length > 0) {
