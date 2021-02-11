@@ -39,10 +39,14 @@ const pageSlice = createSlice({
             state.error = action.payload;
         },
         replacePageControlsSuccess(state, action) {
-            const { ids, controls } = action.payload
+            const { ids, remove, controls } = action.payload
 
-            // clean parent control
-            cleanControls(state, ids);
+            // clean or remove controls
+            if (remove) {
+                removeControls(state, ids);
+            } else {
+                cleanControls(state, ids);
+            }
 
             // add controls
             addControls(state, controls);
@@ -85,21 +89,7 @@ const pageSlice = createSlice({
         },        
         removeControl(state, action) {
             const { ids } = action.payload
-
-            ids.forEach(id => {
-                const ctrl = state.controls[id]
-
-                // remove all children
-                const descendantIds = getAllDescendantIds(state.controls, id)
-                descendantIds.forEach(descId => delete state.controls[descId])
-    
-                // delete control itself
-                delete state.controls[id]
-    
-                // remove ID from parent's children collection
-                const parent = state.controls[ctrl.p]
-                parent.c = parent.c.filter(childId => childId !== id)  
-            })          
+            removeControls(state, ids)
         }
     }
 })
@@ -137,6 +127,23 @@ const cleanControls = (state, ids) => {
 
         // cleanup children collection
         state.controls[id].c = []
+    })
+}
+
+const removeControls = (state, ids) => {
+    ids.forEach(id => {
+        const ctrl = state.controls[id]
+
+        // remove all children
+        const descendantIds = getAllDescendantIds(state.controls, id)
+        descendantIds.forEach(descId => delete state.controls[descId])
+
+        // delete control itself
+        delete state.controls[id]
+
+        // remove ID from parent's children collection
+        const parent = state.controls[ctrl.p]
+        parent.c = parent.c.filter(childId => childId !== id)  
     })
 }
 
