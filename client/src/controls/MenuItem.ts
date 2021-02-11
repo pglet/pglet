@@ -23,7 +23,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
 
         let item: ICommandBarItemProps = {
             key: itemControls[i].i,
-            text: itemControls[i].text ? itemControls[i].text : (itemControls[i].key ? itemControls[i].key : itemControls[i].i),
+            text: itemControls[i].text ? itemControls[i].text : itemControls[i].i,
             secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
             href: itemControls[i].url ? itemControls[i].url : undefined,
             target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,

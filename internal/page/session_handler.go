@@ -254,8 +254,18 @@ func (h *sessionHandler) replace(cmd *command.Command) (result string, err error
 		parentID = ReservedPageID
 	}
 
+	at := -1
+	if a, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
+		at = a
+	}
+
 	// clean control
-	allIDs, err := h.cleanInternal([]string{parentID}, -1)
+	var allIDs []string
+	if at == -1 {
+		allIDs, err = h.cleanInternal([]string{parentID}, -1)
+	} else {
+		allIDs, err = h.removeInternal([]string{parentID}, at)
+	}
 
 	cmd.Name = "add"
 	ids, controls, err := h.addInternal(cmd)
@@ -266,6 +276,7 @@ func (h *sessionHandler) replace(cmd *command.Command) (result string, err error
 	// broadcast new controls to all connected web clients
 	h.broadcastCommandToWebClients(NewMessage(ReplacePageControlsAction, &ReplacePageControlsPayload{
 		IDs:      allIDs,
+		Remove:   at != -1,
 		Controls: controls,
 	}))
 	return strings.Join(ids, " "), nil
@@ -524,31 +535,45 @@ func (h *sessionHandler) remove(cmd *command.Command) (result string, err error)
 		return "", errors.New("'at' cannot be specified with a list of IDs")
 	}
 
+	allIds, err := h.removeInternal(ids, at)
+	if err != nil {
+		return "", err
+	}
+
+	// broadcast command to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
+		IDs: allIds,
+	}))
+	return "", nil
+}
+
+func (h *sessionHandler) removeInternal(ids []string, at int) (allIDs []string, err error) {
+
+	allIDs = make([]string, len(ids))
+
 	// control ID
 	for i, id := range ids {
 		ctrl := h.getControl(id)
 		if ctrl == nil {
-			return "", fmt.Errorf("control with ID '%s' not found", id)
+			return nil, fmt.Errorf("control with ID '%s' not found", id)
 		}
 
 		if at != -1 {
 			childIDs := ctrl.GetChildrenIds()
 			if at > len(childIDs)-1 {
-				return "", fmt.Errorf("'at' is out of range")
+				return nil, fmt.Errorf("'at' is out of range")
 			}
 
-			ids[i] = childIDs[at]
-			ctrl = h.getControl(ids[i])
+			allIDs[i] = childIDs[at]
+			ctrl = h.getControl(allIDs[i])
+		} else {
+			allIDs[i] = ids[i]
 		}
 
 		h.deleteControl(ctrl)
 	}
 
-	// broadcast command to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(RemoveControlAction, &RemoveControlPayload{
-		IDs: ids,
-	}))
-	return "", nil
+	return allIDs, nil
 }
 
 func (h *sessionHandler) updateControlProps(props []map[string]interface{}) error {

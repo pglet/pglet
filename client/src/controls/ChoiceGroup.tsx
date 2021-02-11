@@ -56,7 +56,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
     .filter((oc: any) => oc.t === 'option')
     .map((oc: any) => {
       let option: any = {
-        key: oc.key,
+        key: oc.key ? oc.key : oc.text,
         text: oc.text ? oc.text : oc.key,
       }
       if (oc.icon) {

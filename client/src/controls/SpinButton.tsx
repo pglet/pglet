@@ -42,7 +42,7 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,
     max: control.max ? parseInt(control.max) : undefined,
-    step: control.step ? parseInt(control.step) : undefined,
+    step: control.step ? parseFloat(control.step) : undefined,
     disabled: disabled,
     styles: {
       root: {

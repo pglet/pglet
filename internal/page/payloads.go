@@ -81,6 +81,7 @@ type AddPageControlsPayload struct {
 
 type ReplacePageControlsPayload struct {
 	IDs      []string         `json:"ids"`
+	Remove   bool             `json:"remove"`
 	Controls []*model.Control `json:"controls"`
 }
 
