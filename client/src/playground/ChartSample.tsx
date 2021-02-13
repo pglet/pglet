@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { VerticalBarChart, IVerticalBarChartProps, IDataPoint } from '@fluentui/react-charting';
-import { DefaultPalette } from '@fluentui/react/lib/Styling';
+import React from 'react';
+import { VerticalBarChart, IVerticalBarChartProps, IVerticalBarChartDataPoint } from '@fluentui/react-charting';
+import { DefaultPalette/*, SharedColors, NeutralColors*/ } from '@fluentui/react';
 import { DefaultButton } from '@fluentui/react/lib/Button';
 
 export const ChartSample: React.FunctionComponent = () => {
 
-  const [dynamicData, setDynamicData] = useState<IDataPoint[]>();
-  const [colors, setColors] = useState<string[]>();
-  const [x, setX] = useState<number>();
+  const [dynamicData, setDynamicData] = React.useState<IVerticalBarChartDataPoint[]>();
+  const [colors, setColors] = React.useState<string[]>();
+  const [x, setX] = React.useState<number>();
 
   const [dimensions, setDimensions] = React.useState({ 
     height: window.innerHeight,
@@ -44,14 +44,20 @@ export const ChartSample: React.FunctionComponent = () => {
     return Math.random() * 45 + 5;
   }
 
-  const xRef = useRef(x);
+  const xRef = React.useRef(x);
   xRef.current = x;
 
-  useEffect(() => {
+  let scolor = 'neutralQuaternaryAlt';
+  const color = Object.getOwnPropertyNames(DefaultPalette).filter(p => p.toLowerCase() === scolor.toLowerCase())
+  if (color.length > 0) {
+    scolor = (DefaultPalette as any)[color[0]]
+  }
+
+  React.useEffect(() => {
     let arr = [
-      { x: '23', y: 10 },
-      { x: '24', y: 36 },
-      { x: '25', y: 20 },
+      { x: '23', y: 10, legend: 'Bar 1', color: 'salmon', },
+      { x: '24', y: 36, legend: 'Bar 2', color: scolor, },
+      { x: '25', y: 20, xAxisCalloutData: 'X value', yAxisCalloutData: 'Y value' },
       { x: '26', y: 46 },
       { x: '27', y: 13 },
       { x: '28', y: 43 },
@@ -74,33 +80,38 @@ export const ChartSample: React.FunctionComponent = () => {
     //   setX(x => x! + 1);
     // }, 2000);
 
-    setColors(_colors[0]);
+    //setColors(_colors[0]);
 
+    let resizeTimeout:any = null;
     function handleResize() {
-      setDimensions({
-        height: window.innerHeight,
-        width: window.innerWidth
-      })
-
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        setDimensions({
+          height: window.innerHeight,
+          width: window.innerWidth
+        })
+      }, 500)
     }
 
     window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener("resize", handleResize);
+  }, [scolor]);
 
-  }, []);
+  let props: IVerticalBarChartProps = {
+    data: dynamicData,
+    colors: colors,
+    chartLabel: 'Chart with Dynamic Data',
+    hideLegend: true,
+    hideTooltip: true,
+    yMaxValue: 50,
+    yAxisTickCount: 1,
+    height: dimensions.height,
+    width: dimensions.width
+  }
 
   return (
     <div style={{ width: '100%', height: '400px' }}>
-      <VerticalBarChart
-        data={dynamicData}
-        colors={colors}
-        chartLabel={'Chart with Dynamic Data'}
-        hideLegend={true}
-        hideTooltip={true}
-        yMaxValue={50}
-        yAxisTickCount={5}
-        height={dimensions.height}
-        width={dimensions.width}
-      />
+      <VerticalBarChart {...props} />
       <DefaultButton text="Change data" onClick={_changeData} />
       <DefaultButton text="Change colors" onClick={_changeColors} />
     </div>
