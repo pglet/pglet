@@ -4,7 +4,7 @@ import { VerticalBarChart, IVerticalBarChartProps } from '@fluentui/react-charti
 import { IControlProps, defaultPixels } from './IControlProps'
 import { parseNumber } from './ChartUtils'
 
-export const Chart = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const [dimensions, setDimensions] = React.useState({ 
     height: window.innerHeight,
