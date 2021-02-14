@@ -1,8 +1,8 @@
 import React from 'react';
 import { shallowEqual, useSelector } from 'react-redux'
 import { VerticalBarChart, IVerticalBarChartProps } from '@fluentui/react-charting';
-import * as d3 from 'd3-format';
 import { IControlProps, defaultPixels } from './IControlProps'
+import { parseNumber } from './ChartUtils'
 
 export const Chart = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -36,7 +36,7 @@ export const Chart = React.memo<IControlProps>(({control, parentDisabled}) => {
     yMinValue: control.ymin !== undefined ? parseFloat(control.ymin) : undefined,
     yMaxValue: control.ymax !== undefined ? parseFloat(control.ymax) : undefined,
     yAxisTickCount: control.yticks !== undefined ? parseInt(control.yticks) : 1,
-    yAxisTickFormat: control.yformat !== undefined ? d3.format(control.yformat) : undefined,
+    yAxisTickFormat: control.yformat !== undefined ? (y:any) => control.yformat.replace('{y}', y) : undefined,
     height: dimensions.height,
     width: dimensions.width,
     styles: {
@@ -57,8 +57,8 @@ export const Chart = React.memo<IControlProps>(({control, parentDisabled}) => {
         points: data.c.map((childId: any) => {
           const p = state.page.controls[childId];
           return {
-            x: p.x,
-            y: parseFloat(p.y),
+            x: control.xnum === 'true' ? parseNumber(p.x) : p.x,
+            y: parseNumber(p.y),
             legend: p.legend,
             color: p.color,
             xAxisCalloutData: p.xtooltip,
