@@ -2,7 +2,8 @@ import React from 'react';
 import { shallowEqual, useSelector } from 'react-redux'
 import { VerticalBarChart, IVerticalBarChartProps } from '@fluentui/react-charting';
 import { IControlProps, defaultPixels } from './IControlProps'
-import { parseNumber } from './ChartUtils'
+import { parseNumber, getThemeColor } from './ChartUtils'
+import { useTheme } from '@fluentui/react';
 
 export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -28,11 +29,15 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const theme = useTheme();
+  const startColor = getThemeColor(theme, "themeLighter");
+  const endColor = getThemeColor(theme, "themeDarker");
+
   const chartProps: IVerticalBarChartProps = {
     hideLegend: control.legend !== 'true',
     hideTooltip: control.tooltips !== 'true',
     barWidth: control.barwidth !== undefined ? parseInt(control.barwidth) : undefined,
-    colors: control.colors !== undefined ? control.colors.split(/[ ,]+/g) : undefined,
+    colors: control.colors !== undefined ? control.colors.split(/[ ,]+/g) : [startColor, endColor],
     yMinValue: control.ymin !== undefined ? parseFloat(control.ymin) : undefined,
     yMaxValue: control.ymax !== undefined ? parseFloat(control.ymax) : undefined,
     yAxisTickCount: control.yticks !== undefined ? parseInt(control.yticks) : 1,
