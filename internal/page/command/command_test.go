@@ -1,12 +1,67 @@
 package command
 
 import (
+	"fmt"
 	"log"
 	"testing"
+
+	"github.com/pglet/pglet/internal/utils"
 )
 
+func TestTrimQuotes(t *testing.T) {
+
+	r := utils.TrimQuotes("\"Hello, world!\"")
+	expR := "Hello, world!"
+
+	if r != expR {
+		t.Errorf("TestTrimQuotes returned %s, want %s", r, expR)
+	}
+}
+
+func TestUnquote(t *testing.T) {
+
+	r := utils.ReplaceEscapeSymbols("Hello, \\\"world!\\\"")
+	fmt.Println("Original:", r)
+
+	expR := "Hello, \"world!\""
+	fmt.Println("Expected:", expR)
+
+	if r != expR {
+		t.Errorf("TestUnquote returned %s, want %s", r, expR)
+	}
+}
+
+func TestUnquote2(t *testing.T) {
+
+	cmdText := "add text markdown text='\"line 1\"' value='```powershell\\nInvoke-Pglet \"clean page\"\\n```'"
+	fmt.Println(cmdText)
+
+	cmd, err := Parse(cmdText, true)
+	if err != nil {
+		t.Fatal("Error parsing command", err)
+	}
+
+	fmt.Println("TestUnquote2:", cmd)
+}
+
+func TestUnquote3(t *testing.T) {
+
+	r := utils.ReplaceEscapeSymbols("line\\\"1")
+	fmt.Println("Original:", r)
+
+	expR := "line\"1"
+	fmt.Println("Expected:", expR)
+
+	if r != expR {
+		t.Errorf("TestUnquote3 returned %s, want %s", r, expR)
+	}
+}
+
 func TestParseQuotes(t *testing.T) {
-	cmd, err := Parse(`  Add v1='aaa\'bbb' v2="ccc\"ddd"`, true)
+	cmdText := `  Add v1='aaa\'bbb' v2="ccc\"ddd"`
+	fmt.Println(cmdText)
+
+	cmd, err := Parse(cmdText, true)
 
 	if err != nil {
 		t.Fatal("Error parsing command", err)
@@ -27,6 +82,19 @@ func TestParseQuotes(t *testing.T) {
 	if cmd.Attrs["v2"] != v2 {
 		t.Errorf("command v2 attribute is %s, want %s", cmd.Attrs["v2"], v2)
 	}
+}
+
+func TestParseQuotes2(t *testing.T) {
+	cmdText := `add text id='txt1' value="Hello, \"world!\"" v`
+	fmt.Println(cmdText)
+
+	cmd, err := Parse(cmdText, true)
+
+	if err != nil {
+		t.Fatal("Error parsing command", err)
+	}
+
+	fmt.Println("TestParseQuotes2 results:", cmd.Attrs["value"])
 }
 
 func TestParse1(t *testing.T) {
