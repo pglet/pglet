@@ -2,7 +2,7 @@ import React, { useEffect, useContext } from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider } from '@fluentui/react';
 import {
   BaseSlots,
   ThemeGenerator,
@@ -53,22 +53,9 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     [key: string]: string;
   } = ThemeGenerator.getThemeAsJson(themeRules);
 
-  const finalTheme = createTheme({
+  const theme = createTheme({
     ...{ palette: themeAsJson },
     isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
-  });
-
-  // https://github.com/microsoft/fluentui/blob/master/packages/merge-styles/README.md
-  const className = mergeStyles({
-    selectors: {
-      '& pre': {
-        backgroundColor: finalTheme.palette.neutralLighter,
-        borderRadius: "2px"
-      },
-      '& a': {
-        color: finalTheme.palette.themePrimary,
-      }      
-    }
   });
 
   // strip out the unnecessary shade slots from the final output theme
@@ -128,8 +115,8 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   document.documentElement.style.background = themeBackgroundColor
 
-  return <ThemeProvider theme={finalTheme}>
-    <Stack className={className} tokens={stackTokens} {...stackProps}>
+  return <ThemeProvider theme={theme}>
+    <Stack tokens={stackTokens} {...stackProps}>
       <ControlsList controls={childControls} parentDisabled={disabled} />
     </Stack>
   </ThemeProvider>

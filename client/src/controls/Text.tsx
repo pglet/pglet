@@ -1,12 +1,12 @@
 import React from 'react'
-import { Text, ITextProps, IFontStyles } from '@fluentui/react';
+import { Text, ITextProps, IFontStyles, mergeStyles, useTheme } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
 // Markdown support
 import ReactMarkdown from 'react-markdown'
 import gfm from 'remark-gfm'
 
-export const MyText = React.memo<IControlProps>(({control}) => {
+export const MyText = React.memo<IControlProps>(({ control }) => {
 
   //console.log(`render Text: ${control.i}`);
 
@@ -23,7 +23,7 @@ export const MyText = React.memo<IControlProps>(({control}) => {
   if (verticalAlign !== undefined) {
     // enable flex mode
     display = 'inline-flex';
-    
+
     if (verticalAlign === 'top') {
       alignItems = "flex-start";
     } else if (verticalAlign === 'bottom') {
@@ -55,10 +55,25 @@ export const MyText = React.memo<IControlProps>(({control}) => {
     case 'xxlarge': variant = 'xxLarge'; break;
     case 'superlarge': variant = 'superLarge'; break;
     case 'mega': variant = 'mega'; break;
-}
+  }
+
+  // https://github.com/microsoft/fluentui/blob/master/packages/merge-styles/README.md
+  const theme = useTheme();
+  const className = mergeStyles({
+    selectors: {
+      '& pre': {
+        backgroundColor: theme.palette.neutralLighter,
+        borderRadius: "2px"
+      },
+      '& a': {
+        color: theme.palette.themePrimary,
+      }
+    }
+  });
 
   const textProps: ITextProps = {
     variant: variant,
+    className: className,
     nowrap: control.nowrap !== undefined ? control.nowrap : undefined,
     block: control.block !== undefined ? control.block : undefined,
     styles: {
@@ -78,7 +93,7 @@ export const MyText = React.memo<IControlProps>(({control}) => {
         fontWeight: control.bold === 'true' ? 'bold' : undefined,
         fontStyle: control.italic === 'true' ? 'italic' : undefined,
         whiteSpace: control.pre === 'true' ? 'pre' : undefined,
-        fontFamily: control.pre === 'true' ? preFont : undefined,        
+        fontFamily: control.pre === 'true' ? preFont : undefined,
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
@@ -88,8 +103,8 @@ export const MyText = React.memo<IControlProps>(({control}) => {
   };
 
   if (control.markdown === 'true') {
-    return <Text><ReactMarkdown plugins={[gfm]} children={control.value} /></Text>;
+    return <Text className={className}><ReactMarkdown plugins={[gfm]} children={control.value} /></Text>;
   } else {
-    return <Text {...textProps}>{ control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Text>;
+    return <Text {...textProps}>{control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Text>;
   }
 })
