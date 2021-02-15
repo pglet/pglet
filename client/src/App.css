@@ -5,3 +5,9 @@
 span.ms-layer {
   margin: 0!important;
 }
+
+pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 7px;
+}

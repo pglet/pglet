@@ -2,12 +2,21 @@ import React from 'react';
 import { Text, ContextualMenu, IContextualMenuItem } from '@fluentui/react';
 import { MenuButton } from '@fluentui/react-button';
 import { Stack } from '@fluentui/react';
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
-import {dark} from 'react-syntax-highlighter/dist/esm/styles/prism'
+//import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+//import { github } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-const ReactMarkdown = require('react-markdown')
-const gfm = require('remark-gfm')
+import ReactMarkdown from 'react-markdown'
+import gfm from 'remark-gfm'
 
+// import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
+// import powershell from 'react-syntax-highlighter/dist/esm/languages/hljs/powershell';
+// import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+// import js from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+
+// SyntaxHighlighter.registerLanguage('javascript', js);
+// SyntaxHighlighter.registerLanguage('powershell', powershell);
+// SyntaxHighlighter.registerLanguage('python', python);
+// SyntaxHighlighter.registerLanguage('bash', bash);
 
 let menu = {
   items: [
@@ -39,7 +48,15 @@ A table:
 | a | b |
 | - | - |
 
-## HTML block below
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+##### Heading 5
 
 <blockquote>
   This blockquote will change based on the HTML settings above.
@@ -47,7 +64,7 @@ A table:
 
 ## How about some code?
 
-\`\`\`js
+\`\`\`javascript
 var React = require('react');
 var Markdown = require('react-markdown');
 
@@ -57,13 +74,20 @@ React.render(
 );
 \`\`\`
 
+\`\`\`powershell
+for($i = 20; $i -lt 41; $i++) {
+  Invoke-Pglet "setf rdp y=$i"
+  Start-Sleep -ms 100
+}
+\`\`\`
+
 Pretty neat, eh?`
 
-const renderers = {
-  code: (code: any) => {
-    return <SyntaxHighlighter style={dark} language={code.language} children={code.value} />
-  }
-}
+// const renderers = {
+//   code: (code: any) => {
+//     return <SyntaxHighlighter style={github} language={code.language} children={code.value} />
+//   }
+// }
 
   return (
     <div>
@@ -77,8 +101,8 @@ const renderers = {
       </Stack>
       <Stack>
         <Text>
-          <ReactMarkdown plugins={[gfm]} renderers={renderers} children={markdown} />
-        </Text>
+          <ReactMarkdown plugins={[gfm]} children={markdown} />
+        </Text>    
       </Stack>
     </div>
   );

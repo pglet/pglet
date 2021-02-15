@@ -2,6 +2,10 @@ import React from 'react'
 import { Text, ITextProps, IFontStyles } from '@fluentui/react';
 import { IControlProps, defaultPixels } from './IControlProps'
 
+// Markdown support
+import ReactMarkdown from 'react-markdown'
+import gfm from 'remark-gfm'
+
 export const MyText = React.memo<IControlProps>(({control}) => {
 
   //console.log(`render Text: ${control.i}`);
@@ -83,5 +87,9 @@ export const MyText = React.memo<IControlProps>(({control}) => {
     }
   };
 
-  return <Text {...textProps}>{control.value}</Text>;
+  if (control.markdown === 'true') {
+    return <Text><ReactMarkdown plugins={[gfm]} children={control.value} /></Text>;
+  } else {
+    return <Text {...textProps}>{ control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Text>;
+  }
 })
