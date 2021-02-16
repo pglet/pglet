@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -8,9 +8,9 @@ import { defaultPixels } from './Utils'
 
 export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-  const [prevValue, setPrevValue] = useState<number | null>(null);
+  const [prevValue, setPrevValue] = React.useState<number | null>(null);
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 

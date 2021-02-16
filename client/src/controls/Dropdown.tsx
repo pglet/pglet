@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -8,9 +8,9 @@ import { defaultPixels } from './Utils'
 
 export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-  
+
   let disabled = (control.disabled === 'true') || parentDisabled;
   
   const handleChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {

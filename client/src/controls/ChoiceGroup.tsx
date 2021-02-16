@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -8,10 +8,10 @@ import { getThemeColor, defaultPixels } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
-  
+
   let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {

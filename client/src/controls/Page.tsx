@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react'
+import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
@@ -15,7 +15,7 @@ import { defaultPixels } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
 
   // page title
   let title = `${pageName} - pglet`;
@@ -74,7 +74,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
-  useEffect(() => {
+  React.useEffect(() => {
     // https://danburzo.github.io/react-recipes/recipes/use-effect.html
     // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
     const handleWindowClose = (e: any) => {

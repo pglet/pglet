@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Link, ILinkProps } from '@fluentui/react';
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
@@ -8,7 +8,7 @@ import { defaultPixels } from './Utils'
 
 export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 

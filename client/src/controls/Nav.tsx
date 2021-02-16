@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
@@ -9,7 +9,7 @@ import { getThemeColor } from './Utils'
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const dispatch = useDispatch();
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
 
   const navItems = useSelector<any, any>((state: any) => {

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
 import { CommandBar, ICommandBarProps, useTheme } from '@fluentui/react';
@@ -8,7 +8,7 @@ import { getMenuProps } from './MenuItem'
 
 export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
 
   let disabled = (control.disabled === 'true') || parentDisabled;

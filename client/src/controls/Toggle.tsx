@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -8,7 +8,7 @@ import { defaultPixels } from './Utils'
 
 export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
   let disabled = (control.disabled === 'true') || parentDisabled;
