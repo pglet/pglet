@@ -35,8 +35,8 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           url: itemControls[i].url ? itemControls[i].url : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
-          isExpanded: itemControls[i].expanded ? itemControls[i].expanded : false,
-          collapseByDefault: itemControls[i].collapsed === 'true', // groups only
+          isExpanded: itemControls[i].expanded === "true",
+          collapseByDefault: itemControls[i].expanded === 'false', // groups only
         };
 
         item.links = getNavLinks(itemControls[i]);
@@ -74,7 +74,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
   };
 
   const handleExpandLink = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
-    //console.log("EXPAND:", item!.isExpanded)
+    //console.log("EXPAND:", item!.isExpanded!.toString())
 
     const selectedKey = item!.key as string
     const eventName = item!.isExpanded ? "collapse" : "expand";
@@ -82,7 +82,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     const payload = [
       {
         i: item!.id,
-        "expanded": !item!.isExpanded
+        "expanded": (!item!.isExpanded!).toString()
       }
     ];
 
