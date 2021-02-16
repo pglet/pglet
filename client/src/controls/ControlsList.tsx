@@ -14,6 +14,7 @@ import { MySpinner } from './Spinner'
 import { MySlider } from './Slider'
 import { Button } from './Button'
 import { MyText } from './Text'
+import { MyImage } from './Image'
 import { MyLink } from './Link'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
@@ -41,6 +42,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'text': MyText,
         'spinbutton': MySpinButton,
         'link': MyLink,
+        'image': MyImage,
         'button': Button,
         'stack': MyStack,
         'tabs': Tabs,
