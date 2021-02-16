@@ -1,8 +1,7 @@
 import React from 'react';
-import { Text, Link, FontWeights, TextField, FontIcon, ContextualMenu } from '@fluentui/react';
-import { Button, MenuButton } from '@fluentui/react-button';
+import { Text, Link, FontWeights, TextField, FontIcon, PrimaryButton } from '@fluentui/react';
 import { Stack, IStackProps, ProgressIndicator, mergeStyles } from '@fluentui/react';
-import { DatePicker } from '@fluentui/react-date-time';
+import { DatePicker } from '@fluentui/react';
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
@@ -23,24 +22,17 @@ const columnProps: Partial<IStackProps> = {
   styles: { root: { width: "50%" } },
 };
 
-let menu = {
-  items: [
-    { key: 'a', text: 'aaaaa' }
-  ]
-};
-
 export const FluentSample: React.FunctionComponent = () => {
   return (
     <div>
       <Stack horizontalAlign="start">
-        <DatePicker label="Select date" isRequired={true} placeholder="Select a date..." />
+        <DatePicker label="Select date" placeholder="Select a date..." />
       </Stack>
       <Stack horizontalAlign="stretch">
         <Stack horizontal horizontalAlign='space-between'>
           <Text>Left</Text>
           <Stack horizontal>
-            <Text><MenuButton primary menu={<ContextualMenu {...menu} />}>A</MenuButton></Text>
-            <Text><Button content="B"/></Text>
+            <Text><PrimaryButton content="B"/></Text>
           </Stack>
         </Stack>
       </Stack>
@@ -58,7 +50,7 @@ export const FluentSample: React.FunctionComponent = () => {
           { childrenGap: 15 }
         }
       >
-        <Button primary content="Button 1" />
+        <PrimaryButton primary content="Button 1" />
         <Stack horizontal>
           <Text variant="large" styles={{
             root: {
@@ -123,8 +115,8 @@ export const FluentSample: React.FunctionComponent = () => {
             <TextField label="First name" styles={{ root: { width: "200px", height: "100px" } }} />
             <TextField label="Last name" />
             <Stack horizontal tokens={{ childrenGap: 10 }}>
-              <Button content="Button 2" iconProps={{ iconName: "Installation" }} />
-              <Button content="Button 3" iconProps={{ iconName: "Filter" }} styles={{ root: { width: "200px", height: "100px" } }} />
+              <PrimaryButton content="Button 2" iconProps={{ iconName: "Installation" }} />
+              <PrimaryButton content="Button 3" iconProps={{ iconName: "Filter" }} styles={{ root: { width: "200px", height: "100px" } }} />
             </Stack>
           </Stack>
         </Stack>

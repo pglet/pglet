@@ -1,6 +1,6 @@
 import React from 'react'
 import { MessageBar, MessageBarType } from '@fluentui/react'
-import { IControlsListProps } from './IControlsListProps'
+import { IControlsListProps } from './Control.types'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
 import { Searchbox } from './Searchbox'
@@ -14,6 +14,7 @@ import { MySpinner } from './Spinner'
 import { MySlider } from './Slider'
 import { Button } from './Button'
 import { MyText } from './Text'
+import { MyImage } from './Image'
 import { MyLink } from './Link'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
@@ -23,10 +24,9 @@ import { Icon } from './Icon'
 import { Message } from './Message'
 import { MyDialog } from './Dialog'
 import { MyPanel } from './Panel'
+import { MyVerticalBarChart } from './VerticalBarChart'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
-
-    //console.log(`render ControlsList:`, controls);
 
     const controlTypes: any = {
         'textbox': Textbox,
@@ -42,6 +42,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'text': MyText,
         'spinbutton': MySpinButton,
         'link': MyLink,
+        'image': MyImage,
         'button': Button,
         'stack': MyStack,
         'tabs': Tabs,
@@ -51,6 +52,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'message': Message,
         'dialog': MyDialog,
         'panel': MyPanel,
+        'verticalbarchart': MyVerticalBarChart,
     }
 
     const renderChild = (control: any) => {

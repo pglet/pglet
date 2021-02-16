@@ -1,19 +1,18 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { Dialog, DialogFooter, IDialogProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
-
-    //console.log(`render dialog: ${control.i}`);
-
-    const ws = useContext(WebSocketContext);
+    const ws = React.useContext(WebSocketContext);
     const dispatch = useDispatch();
+
+    let disabled = (control.disabled === 'true') || parentDisabled;
   
     const handleDismiss = (ev?: React.MouseEvent<HTMLButtonElement>) => {
   

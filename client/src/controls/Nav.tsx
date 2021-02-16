@@ -1,20 +1,18 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
-import { Nav, INavProps, INavLink, mergeStyles } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { Nav, INavProps, INavLink, mergeStyles, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor } from './Utils'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Button: ${control.i}`);
-
   const dispatch = useDispatch();
-
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
+  const theme = useTheme();
 
   const navItems = useSelector<any, any>((state: any) => {
-
     function getNavLinks(parent: any): any {
       const itemControls = (parent.children !== undefined ? parent.children : parent.c.map((childId: any) => state.page.controls[childId]))
         .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
@@ -33,10 +31,11 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
           name: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
           url: itemControls[i].url ? itemControls[i].url : undefined,
+          title: itemControls[i].title ? itemControls[i].title : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
-          isExpanded: itemControls[i].expanded ? itemControls[i].expanded : false,
-          collapseByDefault: itemControls[i].collapsed === 'true', // groups only
+          isExpanded: itemControls[i].expanded === "true",
+          collapseByDefault: itemControls[i].expanded === 'false', // groups only
         };
 
         item.links = getNavLinks(itemControls[i]);
@@ -48,7 +47,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
           if (itemControls[i].iconcolor !== undefined && !disabled) {
             item.iconProps.className = mergeStyles({
-              color: itemControls[i].iconcolor + '!important'
+              color: getThemeColor(theme, itemControls[i].iconcolor) + '!important'
             });
           }
         }
@@ -74,7 +73,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
   };
 
   const handleExpandLink = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
-    //console.log("EXPAND:", item!.isExpanded)
+    //console.log("EXPAND:", item!.isExpanded!.toString())
 
     const selectedKey = item!.key as string
     const eventName = item!.isExpanded ? "collapse" : "expand";
@@ -82,7 +81,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     const payload = [
       {
         i: item!.id,
-        "expanded": !item!.isExpanded
+        "expanded": (!item!.isExpanded!).toString()
       }
     ];
 

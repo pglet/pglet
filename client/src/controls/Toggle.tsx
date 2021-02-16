@@ -1,20 +1,18 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Toggle, IToggleProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Checkbox: ${control.i}`);
+  const ws = React.useContext(WebSocketContext);
+  const dispatch = useDispatch();
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
-
-  const dispatch = useDispatch();
-  
   const handleChange = (event?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
 
     if (checked !== undefined) {

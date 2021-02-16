@@ -1,12 +1,13 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
-import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-    //console.log(`render stack: ${control.i}`);
+    const theme = useTheme();
 
     let disabled = (control.disabled === 'true') || parentDisabled;
 
@@ -16,6 +17,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         verticalFill: control.verticalfill ? control.verticalfill : false,
         // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
+        wrap: control.wrap === "true",
         styles: {
             root: {
                 width: control.width ? defaultPixels(control.width) : undefined,
@@ -26,7 +28,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
                 maxHeight: control.maxheight !== undefined ? defaultPixels(control.maxheight) : undefined,
                 padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
                 margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
-                backgroundColor: control.bgcolor ? control.bgcolor : undefined,
+                backgroundColor: control.bgcolor ? getThemeColor(theme, control.bgcolor) : undefined,
                 border: control.border ? control.border : undefined,
                 borderRadius: control.borderradius ? defaultPixels(control.borderradius) : undefined,
                 borderLeft: control.borderleft ? control.borderleft : undefined,

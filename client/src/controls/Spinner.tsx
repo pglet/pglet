@@ -1,10 +1,9 @@
 import React from 'react';
 import { Spinner, ISpinnerProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MySpinner = React.memo<IControlProps>(({control}) => {
-
-  //console.log(`render Progress: ${control.i}`);
 
   const spinnerProps: ISpinnerProps = {
     label: control.label ? control.label : null,

@@ -1,19 +1,18 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Pivot, PivotItem, IPivotProps, mergeStyles } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
 import { ControlsList } from './ControlsList'
+import { defaultPixels } from './Utils'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
-  const ws = useContext(WebSocketContext);
-
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
   
   const handleChange = (item?: PivotItem, ev?: React.MouseEvent<HTMLElement>) => {
 

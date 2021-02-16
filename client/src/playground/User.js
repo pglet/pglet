@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchUser } from '../slices/userSlice'
 
@@ -12,7 +12,7 @@ const User = ({userId}) => {
 
     const dispatch = useDispatch();
 
-    useEffect(() => {
+    React.useEffect(() => {
         dispatch(fetchUser(userId));
     }, [userId, dispatch]);
 

@@ -55,19 +55,21 @@ func SliceRemove(arr []interface{}, elem interface{}) []interface{} {
 }
 
 func TrimQuotes(s string) string {
-	if strings.HasPrefix(s, "\"") {
-		return strings.Trim(s, "\"")
-	} else if strings.HasPrefix(s, "'") {
-		return strings.Trim(s, "'")
-	} else {
-		return s
+	if strings.HasPrefix(s, "\"") && strings.HasSuffix(s, "\"") {
+		return strings.ReplaceAll(s[1:len(s)-1], "'", "\\'")
+	} else if strings.HasPrefix(s, "'") && strings.HasSuffix(s, "'") {
+		return strings.ReplaceAll(s[1:len(s)-1], "\"", "\\\"")
 	}
+	return s
 }
 
 func ReplaceEscapeSymbols(s string) string {
-	r, err := strconv.Unquote(fmt.Sprintf("\"%s\"", s))
+	//fmt.Println("ReplaceEscapeSymbols:", s)
+	r, err := strconv.Unquote(fmt.Sprintf("\"%s\"",
+		strings.ReplaceAll(s, "\\'", "'")))
 	if err != nil {
-		return strings.ReplaceAll(s, "\\'", "'")
+		//fmt.Println("ERROR unescaping:", err, ":", s)
+		return s
 	}
 	return r
 }

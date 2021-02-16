@@ -1,10 +1,8 @@
-import {
-    ICommandBarItemProps,
-    ContextualMenuItemType
-} from '@fluentui/react';
+import { ICommandBarItemProps, ContextualMenuItemType, Theme} from '@fluentui/react';
 import { IWebSocket } from '../WebSocket';
+import { getThemeColor } from './Utils'
 
-export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket): any {
+export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket, theme: Theme): any {
     const childControls = parent.children !== undefined ? parent.children
     : parent.c.map((childId: any) => state.page.controls[childId]);
 
@@ -26,6 +24,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             text: itemControls[i].text ? itemControls[i].text : itemControls[i].i,
             secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
             href: itemControls[i].url ? itemControls[i].url : undefined,
+            title: itemControls[i].title ? itemControls[i].title : undefined,
             target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
             disabled: disabled,
             split: itemControls[i].split === 'true' ? true : undefined
@@ -39,18 +38,18 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             if (itemControls[i].iconcolor !== undefined) {
                 item.iconProps!.styles = {
                     root: {
-                        color: itemControls[i].iconcolor
+                        color: getThemeColor(theme, itemControls[i].iconcolor)
                     }
                 }
                 item.buttonStyles = {
                     rootHovered: {
                         '.ms-Button-icon': {
-                            color: itemControls[i].iconcolor
+                            color: getThemeColor(theme, itemControls[i].iconcolor)
                         }
                     },
                     rootPressed: {
                         '.ms-Button-icon': {
-                            color: itemControls[i].iconcolor
+                            color: getThemeColor(theme, itemControls[i].iconcolor)
                         }
                     }
                 }
@@ -65,7 +64,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
         }
 
-        const subMenuProps = getMenuProps(state, itemControls[i], disabled, ws);
+        const subMenuProps = getMenuProps(state, itemControls[i], disabled, ws, theme);
         if (subMenuProps !== null) {
             item.subMenuProps = subMenuProps
         }

@@ -1,28 +1,24 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 import { ControlsList } from './ControlsList'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
+  const ws = React.useContext(WebSocketContext);
+  const dispatch = useDispatch();
+
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
-
-  const dispatch = useDispatch();
-  
-  //console.log("GRID - START REDNER");
 
   let columns: IColumn[] = [];
   let items: any = null;
 
   const _onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn): void => {
-    //console.log(column)
-    //console.log("DROPDOWN:", option);
 
     if ((column as any).onClick) {
       ws.pageEventFromWeb(control.i, 'click', control.data)
@@ -47,8 +43,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
       }
       payload.push(pc);
     })
-
-    //console.log(payload);
 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
@@ -124,8 +118,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
         });
   }, shallowEqual);
 
-  //console.log("columns:", columns);
-
   items = useSelector<any, any>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
     .filter((c: any) => c.t === 'items').map((items: any) =>
@@ -177,8 +169,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     getKey: (item: any) => item.i.toString()
   });
 
-  // _selection.setItems(items);
-
   // selection mode
   gridProps.selectionMode = SelectionMode.none;
   if (control.selection === 'single' || control.selection === 'multiple') {
@@ -186,9 +176,6 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     gridProps.selection = _selection;
     gridProps.selectionPreservedOnEmptyClick = control.preserveselection === 'true';
   }
-
-  //console.log("END RENDER GRID");
-  // _selection.setChangeEvents(true, false);
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>
   return <ShimmeredDetailsList {...gridProps} />;

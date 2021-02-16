@@ -1,18 +1,18 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
-  const ws = useContext(WebSocketContext);
-
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
+  const theme = useTheme();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 
@@ -62,6 +62,14 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
       if (oc.icon) {
         option.iconProps = {
           iconName: oc.icon
+        }
+
+        if (oc.iconcolor !== undefined) {
+          option.iconProps!.styles = {
+              root: {
+                  color: getThemeColor(theme, oc.iconcolor)
+              }
+          }
         }
       }
       return option;

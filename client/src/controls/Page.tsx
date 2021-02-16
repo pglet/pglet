@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react'
+import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
@@ -9,15 +9,13 @@ import {
   themeRulesStandardCreator,
 } from '@fluentui/react/lib/ThemeGenerator';
 import { isDark } from '@fluentui/react/lib/Color';
-import { IPageProps } from './IPageProps'
+import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
-import { defaultPixels } from './IControlProps'
+import { defaultPixels } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
-  //console.log(`render page: ${control.i}`);
-
-  const ws = useContext(WebSocketContext);
+  const ws = React.useContext(WebSocketContext);
 
   // page title
   let title = `${pageName} - pglet`;
@@ -53,7 +51,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     [key: string]: string;
   } = ThemeGenerator.getThemeAsJson(themeRules);
 
-  const finalTheme = createTheme({
+  const theme = createTheme({
     ...{ palette: themeAsJson },
     isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
   });
@@ -76,7 +74,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
-  useEffect(() => {
+  React.useEffect(() => {
     // https://danburzo.github.io/react-recipes/recipes/use-effect.html
     // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
     const handleWindowClose = (e: any) => {
@@ -115,7 +113,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   document.documentElement.style.background = themeBackgroundColor
 
-  return <ThemeProvider theme={finalTheme}>
+  return <ThemeProvider theme={theme}>
     <Stack tokens={stackTokens} {...stackProps}>
       <ControlsList controls={childControls} parentDisabled={disabled} />
     </Stack>

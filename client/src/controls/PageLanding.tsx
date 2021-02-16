@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React from 'react';
 import { useParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { Page } from './Page'
@@ -24,9 +24,9 @@ export const PageLanding = () => {
 
     let fullPageName = `${accountName}/${pageName}`;
 
-    const ws = useContext(WebSocketContext);
+    const ws = React.useContext(WebSocketContext);
 
-    useEffect(() => {
+    React.useEffect(() => {
 
         ws.registerWebClient(fullPageName);
 

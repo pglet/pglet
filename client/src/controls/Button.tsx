@@ -1,7 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
 import {
+  useTheme,
   PrimaryButton,
   DefaultButton,
   CompoundButton,
@@ -10,16 +11,16 @@ import {
   ActionButton,
   IButtonProps,
   IContextualMenuProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Button: ${control.i}`);
+  const ws = React.useContext(WebSocketContext);
+  const theme = useTheme();
 
   let disabled = (control.disabled === 'true') || parentDisabled;
-
-  const ws = useContext(WebSocketContext);
 
   let ButtonType = DefaultButton;
   if (control.compound === 'true') {
@@ -40,7 +41,7 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
-    getMenuProps(state, control, disabled, ws), shallowEqual)
+    getMenuProps(state, control, disabled, ws, theme), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,
@@ -70,17 +71,20 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     }
 
     if (control.iconcolor !== undefined) {
+
+      const iconColor = getThemeColor(theme, control.iconcolor);
+
       buttonProps.styles!.icon = {
-        color: control.iconcolor
+        color: iconColor
       }
       buttonProps.styles!.rootHovered = {
         '.ms-Button-icon': {
-          color: control.iconcolor
+          color: iconColor
         }
       };
       buttonProps.styles!.rootPressed = {
         '.ms-Button-icon': {
-          color: control.iconcolor
+          color: iconColor
         }
       }
     }

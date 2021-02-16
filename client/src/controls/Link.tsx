@@ -1,23 +1,26 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Link, ILinkProps } from '@fluentui/react';
+import { shallowEqual, useSelector } from 'react-redux'
+import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
-export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Text: ${control.i}`);
-
-  // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
-
-  const preFont = 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+  const ws = React.useContext(WebSocketContext);
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
+  const handleClick = () => {
+    ws.pageEventFromWeb(control.i, 'click', control.data)
+  }
 
   const linkProps: ILinkProps = {
     href: control.url ? control.url : undefined,
     target: control.newwindow === 'true' ? '_blank' : undefined,
+    title: control.title ? control.title : undefined,
+    onClick: handleClick,
     disabled: disabled,
     styles: {
       root: {
@@ -29,19 +32,15 @@ export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
-        whiteSpace: control.pre === 'true' ? 'pre' : undefined,
-        fontFamily: control.pre === 'true' ? preFont : undefined,
       }
     }
   };
 
-  const handleClick = () => {
-    ws.pageEventFromWeb(control.i, 'click', control.data)
-  }
+  const childControls = useSelector((state: any) => {
+    return control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId])
+  }, shallowEqual);
 
-  if (!linkProps.href) {
-    linkProps.onClick = handleClick;
-  }
-
-  return <Link {...linkProps}>{control.value}</Link>;
+  return <Link {...linkProps}>{childControls.length > 0 ?
+    <ControlsList controls={childControls} parentDisabled={disabled} />
+    : control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Link>;
 })

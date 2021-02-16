@@ -1,17 +1,17 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SpinButton, ISpinButtonProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
-  const ws = useContext(WebSocketContext);
-
+  const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (event: React.SyntheticEvent<HTMLElement>, newValue?: string) => {
     //console.log(newValue);
