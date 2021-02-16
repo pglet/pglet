@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +106,7 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 }
 
 func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
-	ids, controls, err := h.addInternal(cmd)
+	ids, trimIDs, controls, err := h.addInternal(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -113,17 +114,24 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 	// broadcast new controls to all connected web clients
 	h.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, &AddPageControlsPayload{
 		Controls: controls,
+		TrimIDs:  trimIDs,
 	}))
 	return strings.Join(ids, " "), nil
 }
 
-func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, controls []*model.Control, err error) {
+func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimIDs []string, controls []*model.Control, err error) {
 
 	// parent ID
 	topParentID := cmd.Attrs["to"]
 	topParentAt := -1
 	if ta, err := strconv.Atoi(cmd.Attrs["at"]); err == nil {
 		topParentAt = ta
+	}
+
+	// trim
+	trim := 0
+	if tc, err := strconv.Atoi(cmd.Attrs["trim"]); err == nil {
+		trim = tc
 	}
 
 	if topParentID == "" {
@@ -153,7 +161,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, contro
 
 		childCmd, err := command.Parse(line, false)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		childCmd.Name = "add"
 		childCmd.Indent += indent
@@ -175,7 +183,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, contro
 
 		// first value must be control type
 		if len(batchItem.command.Values) == 0 {
-			return nil, nil, errors.New("Control type is not specified")
+			return nil, nil, nil, errors.New("Control type is not specified")
 		}
 
 		controlType := strings.ToLower(batchItem.command.Values[0])
@@ -229,7 +237,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, contro
 
 		err := h.addControl(batchItem.control)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		controls = append(controls, batchItem.control)
 		ids = append(ids, id)
@@ -242,7 +250,24 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, contro
 		}
 	}
 
-	return ids, controls, nil
+	// trim
+	trimIDs = make([]string, 0)
+	if trim != 0 {
+		// negative - trim from the end
+		// positive - trim from the start
+		childIDs := h.getControl(topParentID).GetChildrenIds()
+		trimCount := int(math.Abs(float64(trim)))
+		if len(childIDs) > trimCount {
+			if trim < 0 {
+				trimIDs = childIDs[trimCount:]
+			} else {
+				trimIDs = childIDs[:len(childIDs)-trimCount]
+			}
+			h.removeInternal(trimIDs, -1)
+		}
+	}
+
+	return
 }
 
 func (h *sessionHandler) replace(cmd *command.Command) (result string, err error) {
@@ -268,7 +293,7 @@ func (h *sessionHandler) replace(cmd *command.Command) (result string, err error
 	}
 
 	cmd.Name = "add"
-	ids, controls, err := h.addInternal(cmd)
+	ids, _, controls, err := h.addInternal(cmd)
 	if err != nil {
 		return "", err
 	}

@@ -54,6 +54,8 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
     }
   };
 
+  const xtype = control.xtype ? control.xtype : "string"
+
   const data = useSelector<any, any>((state: any) => {
     return control.c.map((childId: any) => state.page.controls[childId])
     .filter((c: any) => c.t === 'data').map((data: any) => 
@@ -62,7 +64,7 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
         points: data.c.map((childId: any) => {
           const p = state.page.controls[childId];
           return {
-            x: control.xnum === 'true' ? parseNumber(p.x) : p.x,
+            x: xtype === "number" ? parseNumber(p.x) : p.x,
             y: parseNumber(p.y),
             legend: p.legend,
             color: p.color,

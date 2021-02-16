@@ -32,8 +32,9 @@ const pageSlice = createSlice({
             state.error = action.payload;
         },
         addPageControlsSuccess(state, action) {
-            const { controls } = action.payload
+            const { controls, trimIDs } = action.payload
             addControls(state, controls);
+            removeControls(state, trimIDs);
         },
         addPageControlsError(state, action) {
             state.error = action.payload;

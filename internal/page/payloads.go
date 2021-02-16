@@ -77,6 +77,7 @@ type PageEventPayload struct {
 
 type AddPageControlsPayload struct {
 	Controls []*model.Control `json:"controls"`
+	TrimIDs  []string         `json:"trimIDs"`
 }
 
 type ReplacePageControlsPayload struct {

@@ -26,7 +26,7 @@ export const FluentSample: React.FunctionComponent = () => {
   return (
     <div>
       <Stack horizontalAlign="start">
-        <DatePicker label="Select date" isRequired={true} placeholder="Select a date..." />
+        <DatePicker label="Select date" placeholder="Select a date..." />
       </Stack>
       <Stack horizontalAlign="stretch">
         <Stack horizontal horizontalAlign='space-between'>
