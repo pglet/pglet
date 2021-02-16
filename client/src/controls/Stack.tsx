@@ -16,6 +16,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         verticalFill: control.verticalfill ? control.verticalfill : false,
         // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
+        wrap: control.wrap === "true",
         styles: {
             root: {
                 width: control.width ? defaultPixels(control.width) : undefined,
