@@ -17,7 +17,8 @@ export const MyImage = React.memo<IControlProps>(({control}) => {
 
   const imgProps: IImageProps = {
     src: control.src ? control.src : undefined,
-    alt: control.alt ? control.src : undefined,
+    alt: control.alt ? control.alt : undefined,
+    title: control.title ? control.title : undefined,
     width: control.width !== undefined ? defaultPixels(control.width) : undefined,
     height: control.height !== undefined ? defaultPixels(control.height) : undefined,
     imageFit: fit,

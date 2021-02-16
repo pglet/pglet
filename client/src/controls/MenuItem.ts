@@ -24,6 +24,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             text: itemControls[i].text ? itemControls[i].text : itemControls[i].i,
             secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
             href: itemControls[i].url ? itemControls[i].url : undefined,
+            title: itemControls[i].title ? itemControls[i].title : undefined,
             target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
             disabled: disabled,
             split: itemControls[i].split === 'true' ? true : undefined

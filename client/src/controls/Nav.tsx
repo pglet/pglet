@@ -31,6 +31,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           key: itemControls[i].key ? itemControls[i].key : itemControls[i].text,
           name: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
           url: itemControls[i].url ? itemControls[i].url : undefined,
+          title: itemControls[i].title ? itemControls[i].title : undefined,
           target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
           disabled: disabled,
           isExpanded: itemControls[i].expanded === "true",
