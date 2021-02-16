@@ -2,8 +2,9 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { SearchBox, ISearchBoxProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { SearchBox, ISearchBoxProps, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -11,8 +12,8 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
 
@@ -57,7 +58,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     disabled: disabled,
     styles: {
       icon: {
-        color: control.iconcolor !== undefined ? control.iconcolor : undefined,
+        color: control.iconcolor !== undefined ? getThemeColor(theme, control.iconcolor) : undefined,
       },
       root: {
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,

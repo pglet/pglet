@@ -1,6 +1,7 @@
 import React from 'react'
 import { Text, ITextProps, IFontStyles, mergeStyles, useTheme } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 // Markdown support
 import ReactMarkdown from 'react-markdown'
@@ -82,9 +83,12 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
         alignItems: alignItems,
         justifyContent: justifyContent,
         textAlign: textAlign,
-        color: control.color ? control.color : undefined,
-        backgroundColor: control.bgcolor ? control.bgcolor : undefined,
+        color: control.color ? getThemeColor(theme, control.color) : undefined,
+        backgroundColor: control.bgcolor ? getThemeColor(theme, control.bgcolor) : undefined,
         border: control.border ? control.border : undefined,
+        borderWidth: control.borderwidth ? defaultPixels(control.borderwidth) : undefined,
+        borderColor: control.bordercolor ? getThemeColor(theme, control.bordercolor) : undefined,
+        borderStyle: control.borderstyle ? control.borderstyle : undefined,
         borderRadius: control.borderradius ? defaultPixels(control.borderradius) : undefined,
         borderLeft: control.borderleft ? control.borderleft : undefined,
         borderRight: control.borderright ? control.borderright : undefined,

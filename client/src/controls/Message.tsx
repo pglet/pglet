@@ -2,14 +2,16 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { MessageBar, MessageBarType, IMessageBarProps, MessageBarButton, IButtonProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { MessageBar, MessageBarType, IMessageBarProps, MessageBarButton, IButtonProps, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 export const Message = React.memo<IControlProps>(({ control }) => {
 
   //console.log(`render Textbox: ${control.i}`);
   const ws = useContext(WebSocketContext);
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const handleDismiss = (actionName: string) => {
 
@@ -72,7 +74,7 @@ export const Message = React.memo<IControlProps>(({ control }) => {
     if (control.iconcolor) {
       props.messageBarIconProps!.styles = {
         root: {
-          color: control.iconcolor
+          color: getThemeColor(theme, control.iconcolor)
         }
       }
     }
@@ -89,7 +91,7 @@ export const Message = React.memo<IControlProps>(({ control }) => {
       if (control.dismissiconcolor) {
         props.dismissIconProps!.styles = {
           root: {
-            color: control.dismissiconcolor + "!important"
+            color: getThemeColor(theme, control.dismissiconcolor) + "!important"
           }
         }
       }

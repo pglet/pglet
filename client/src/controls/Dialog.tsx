@@ -4,7 +4,8 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { Dialog, DialogFooter, IDialogProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) => {
 

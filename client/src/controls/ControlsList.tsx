@@ -1,6 +1,6 @@
 import React from 'react'
 import { MessageBar, MessageBarType } from '@fluentui/react'
-import { IControlsListProps } from './IControlsListProps'
+import { IControlsListProps } from './Control.types'
 import { MyStack } from './Stack'
 import { Textbox } from './Textbox'
 import { Searchbox } from './Searchbox'

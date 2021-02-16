@@ -3,7 +3,8 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Dropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
 

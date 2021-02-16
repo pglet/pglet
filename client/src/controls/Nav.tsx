@@ -2,19 +2,19 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
-import { Nav, INavProps, INavLink, mergeStyles } from '@fluentui/react';
-import { IControlProps } from './IControlProps'
+import { Nav, INavProps, INavLink, mergeStyles, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor } from './Utils'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   //console.log(`render Button: ${control.i}`);
 
   const dispatch = useDispatch();
-
   const ws = useContext(WebSocketContext);
+  const theme = useTheme();
 
   const navItems = useSelector<any, any>((state: any) => {
-
     function getNavLinks(parent: any): any {
       const itemControls = (parent.children !== undefined ? parent.children : parent.c.map((childId: any) => state.page.controls[childId]))
         .filter((ic: any) => ic.t === 'item' && ic.visible !== "false");
@@ -48,7 +48,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
           if (itemControls[i].iconcolor !== undefined && !disabled) {
             item.iconProps.className = mergeStyles({
-              color: itemControls[i].iconcolor + '!important'
+              color: getThemeColor(theme, itemControls[i].iconcolor) + '!important'
             });
           }
         }

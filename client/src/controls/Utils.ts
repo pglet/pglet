@@ -1,5 +1,18 @@
 import { Theme, SharedColors } from '@fluentui/react';
 
+export function defaultPixels(size:any) {
+    if (!size) {
+        return size
+    }
+
+    const m = size.toString().match(/^\d*(\.\d+)?$/)
+    if (m) {
+        // just number
+        return `${size}px`;
+    }
+    return size;
+}
+
 export function parseNumber(n: any): number {
     try {
         const v = parseFloat(n.toString());

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Spinner, ISpinnerProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MySpinner = React.memo<IControlProps>(({control}) => {
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ProgressIndicator, IProgressIndicatorProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const Progress = React.memo<IControlProps>(({control}) => {
 

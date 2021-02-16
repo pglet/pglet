@@ -1,8 +1,8 @@
 import React from 'react';
 import { shallowEqual, useSelector } from 'react-redux'
 import { VerticalBarChart, IVerticalBarChartProps } from '@fluentui/react-charting';
-import { IControlProps, defaultPixels } from './IControlProps'
-import { parseNumber, getThemeColor } from './ChartUtils'
+import { IControlProps } from './Control.types'
+import { parseNumber, getThemeColor, defaultPixels } from './Utils'
 import { useTheme } from '@fluentui/react';
 
 export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDisabled}) => {

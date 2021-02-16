@@ -9,9 +9,9 @@ import {
   themeRulesStandardCreator,
 } from '@fluentui/react/lib/ThemeGenerator';
 import { isDark } from '@fluentui/react/lib/Color';
-import { IPageProps } from './IPageProps'
+import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
-import { defaultPixels } from './IControlProps'
+import { defaultPixels } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 

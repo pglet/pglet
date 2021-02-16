@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
-import { CommandBar, ICommandBarProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { CommandBar, ICommandBarProps, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 import { getMenuProps } from './MenuItem'
 
 export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -12,9 +13,10 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
   const ws = useContext(WebSocketContext);
+  const theme = useTheme();
 
   const barItems = useSelector<any, any>((state: any) =>
-    getMenuProps(state, control, disabled, ws), shallowEqual)
+    getMenuProps(state, control, disabled, ws, theme), shallowEqual)
 
   const overflowItems = useSelector<any, any>((state: any) => {
     const overflowControls = (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
@@ -23,7 +25,7 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
         return null
     }
 
-    return getMenuProps(state, overflowControls[0], disabled, ws)
+    return getMenuProps(state, overflowControls[0], disabled, ws, theme)
   }, shallowEqual)
 
   const farItems = useSelector<any, any>((state: any) => {
@@ -32,7 +34,7 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
     if (farControls.length === 0) {
         return null
     }
-    return getMenuProps(state, farControls[0], disabled, ws)
+    return getMenuProps(state, farControls[0], disabled, ws, theme)
   }, shallowEqual)  
 
   let toolbarProps: ICommandBarProps = {

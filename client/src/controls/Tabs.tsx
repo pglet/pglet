@@ -3,8 +3,9 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Pivot, PivotItem, IPivotProps, mergeStyles } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
 import { ControlsList } from './ControlsList'
+import { defaultPixels } from './Utils'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
 

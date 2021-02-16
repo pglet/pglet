@@ -1,7 +1,8 @@
 import React, { useContext } from 'react'
 import { Link, ILinkProps } from '@fluentui/react';
 import { WebSocketContext } from '../WebSocket';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
 

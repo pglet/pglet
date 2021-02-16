@@ -4,7 +4,8 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { Panel, IPanelProps, PanelType } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { IControlProps } from './Control.types'
+import { defaultPixels } from './Utils'
 
 export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) => {
 

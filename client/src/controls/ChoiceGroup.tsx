@@ -2,8 +2,9 @@ import React, { useContext } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps } from '@fluentui/react';
-import { IControlProps, defaultPixels } from './IControlProps'
+import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
+import { IControlProps } from './Control.types'
+import { getThemeColor, defaultPixels } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -13,6 +14,8 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
   const ws = useContext(WebSocketContext);
 
   const dispatch = useDispatch();
+
+  const theme = useTheme();
 
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 
@@ -67,7 +70,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
         if (oc.iconcolor !== undefined) {
           option.iconProps!.styles = {
               root: {
-                  color: oc.iconcolor
+                  color: getThemeColor(theme, oc.iconcolor)
               }
           }
         }
