@@ -63,6 +63,14 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
         option.iconProps = {
           iconName: oc.icon
         }
+
+        if (oc.iconcolor !== undefined) {
+          option.iconProps!.styles = {
+              root: {
+                  color: oc.iconcolor
+              }
+          }
+        }
       }
       return option;
     }), shallowEqual);
