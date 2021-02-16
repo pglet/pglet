@@ -5,8 +5,6 @@ import { getThemeColor, defaultPixels } from './Utils'
 
 export const Icon = React.memo<IControlProps>(({control}) => {
 
-  //console.log(`render Text: ${control.i}`);
-
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/icon
   // https://developer.microsoft.com/en-us/fluentui#/styles/web/icons#fabric-react
 

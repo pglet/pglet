@@ -5,8 +5,6 @@ import { defaultPixels } from './Utils'
 
 export const MySpinner = React.memo<IControlProps>(({control}) => {
 
-  //console.log(`render Progress: ${control.i}`);
-
   const spinnerProps: ISpinnerProps = {
     label: control.label ? control.label : null,
     labelPosition: control.labelposition ? control.labelposition : null,

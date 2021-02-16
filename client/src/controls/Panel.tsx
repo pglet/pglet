@@ -9,12 +9,10 @@ import { defaultPixels } from './Utils'
 
 export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
-
-    //console.log(`render dialog: ${control.i}`);
-
     const ws = useContext(WebSocketContext);
     const dispatch = useDispatch();
+
+    let disabled = (control.disabled === 'true') || parentDisabled;
 
     const cleanupLayers = () => {
         const layers = document.body.getElementsByClassName("ms-Layer--fixed")

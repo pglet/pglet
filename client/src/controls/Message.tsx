@@ -8,7 +8,6 @@ import { getThemeColor, defaultPixels } from './Utils'
 
 export const Message = React.memo<IControlProps>(({ control }) => {
 
-  //console.log(`render Textbox: ${control.i}`);
   const ws = useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();

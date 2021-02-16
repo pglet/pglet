@@ -8,14 +8,11 @@ import { defaultPixels } from './Utils'
 
 export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Checkbox: ${control.i}`);
+  const ws = useContext(WebSocketContext);
+  const dispatch = useDispatch();
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
-
-  const dispatch = useDispatch();
-  
   const handleChange = (event?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
 
     if (checked !== undefined) {

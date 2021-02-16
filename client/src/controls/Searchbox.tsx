@@ -8,12 +8,11 @@ import { getThemeColor, defaultPixels } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Textbox: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
 

@@ -8,14 +8,11 @@ import { getThemeColor, defaultPixels } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
-
   const theme = useTheme();
+  
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 

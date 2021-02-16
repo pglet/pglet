@@ -17,13 +17,10 @@ import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Button: ${control.i}`);
+  const ws = useContext(WebSocketContext);
+  const theme = useTheme();
 
   let disabled = (control.disabled === 'true') || parentDisabled;
-
-  const ws = useContext(WebSocketContext);
-
-  const theme = useTheme();
 
   let ButtonType = DefaultButton;
   if (control.compound === 'true') {

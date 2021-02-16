@@ -8,12 +8,10 @@ import { defaultPixels } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Textbox: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
   
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 

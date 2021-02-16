@@ -8,11 +8,10 @@ import { defaultPixels } from './Utils'
 
 export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (event: React.SyntheticEvent<HTMLElement>, newValue?: string) => {
     //console.log(newValue);

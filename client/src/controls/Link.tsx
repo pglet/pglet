@@ -6,19 +6,18 @@ import { defaultPixels } from './Utils'
 
 export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Text: ${control.i}`);
-
-  // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
-
-  const preFont = 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+  const ws = useContext(WebSocketContext);
 
   let disabled = (control.disabled === 'true') || parentDisabled;
 
-  const ws = useContext(WebSocketContext);
+  const handleClick = () => {
+    ws.pageEventFromWeb(control.i, 'click', control.data)
+  }
 
   const linkProps: ILinkProps = {
     href: control.url ? control.url : undefined,
     target: control.newwindow === 'true' ? '_blank' : undefined,
+    onClick: handleClick,
     disabled: disabled,
     styles: {
       root: {
@@ -30,19 +29,9 @@ export const MyLink = React.memo<IControlProps>(({control, parentDisabled}) => {
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
-        whiteSpace: control.pre === 'true' ? 'pre' : undefined,
-        fontFamily: control.pre === 'true' ? preFont : undefined,
       }
     }
   };
 
-  const handleClick = () => {
-    ws.pageEventFromWeb(control.i, 'click', control.data)
-  }
-
-  if (!linkProps.href) {
-    linkProps.onClick = handleClick;
-  }
-
-  return <Link {...linkProps}>{control.value}</Link>;
+  return <Link {...linkProps}>{ control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Link>;
 })

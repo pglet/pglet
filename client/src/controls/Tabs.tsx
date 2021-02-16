@@ -9,12 +9,10 @@ import { defaultPixels } from './Utils'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
+  
+  let disabled = (control.disabled === 'true') || parentDisabled;
   
   const handleChange = (item?: PivotItem, ev?: React.MouseEvent<HTMLElement>) => {
 

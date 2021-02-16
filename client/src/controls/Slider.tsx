@@ -8,13 +8,11 @@ import { defaultPixels } from './Utils'
 
 export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
-
   const [prevValue, setPrevValue] = useState<number | null>(null);
+
+  let disabled = (control.disabled === 'true') || parentDisabled;
 
   const handleChange = (value: number) => {
 

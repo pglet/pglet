@@ -8,8 +8,6 @@ import { getThemeColor } from './Utils'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-  //console.log(`render Button: ${control.i}`);
-
   const dispatch = useDispatch();
   const ws = useContext(WebSocketContext);
   const theme = useTheme();

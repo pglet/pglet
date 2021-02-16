@@ -15,8 +15,6 @@ import { defaultPixels } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
-  //console.log(`render page: ${control.i}`);
-
   const ws = useContext(WebSocketContext);
 
   // page title

@@ -7,6 +7,7 @@ import { useTheme } from '@fluentui/react';
 
 export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDisabled}) => {
 
+  const theme = useTheme();
   const [dimensions, setDimensions] = React.useState({ 
     height: window.innerHeight,
     width: window.innerWidth
@@ -29,7 +30,6 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const theme = useTheme();
   const startColor = getThemeColor(theme, "themeLighter");
   const endColor = getThemeColor(theme, "themeDarker");
 
@@ -73,8 +73,6 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
       })
     );
   }, shallowEqual);
-
-  //console.log(data);
 
   if (data.length > 0) {
     chartProps.data = data[0].points;

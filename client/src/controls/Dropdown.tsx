@@ -8,12 +8,10 @@ import { defaultPixels } from './Utils'
 
 export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
 
-  //console.log(`render Dropdown: ${control.i}`);
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
   const ws = useContext(WebSocketContext);
-
   const dispatch = useDispatch();
+  
+  let disabled = (control.disabled === 'true') || parentDisabled;
   
   const handleChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {
 

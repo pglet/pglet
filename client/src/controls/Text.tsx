@@ -9,11 +9,7 @@ import gfm from 'remark-gfm'
 
 export const MyText = React.memo<IControlProps>(({ control }) => {
 
-  //console.log(`render Text: ${control.i}`);
-
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
-
-  const preFont = 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
 
   const textAlign = control.align !== undefined ? control.align : undefined;
   const verticalAlign = control.verticalalign !== undefined ? control.verticalalign : undefined;
@@ -64,7 +60,8 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
     selectors: {
       '& pre': {
         backgroundColor: theme.palette.neutralLighter,
-        borderRadius: "2px"
+        borderRadius: "2px",
+        padding: "7px"
       },
       '& a': {
         color: theme.palette.themePrimary,
@@ -96,12 +93,11 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
         borderBottom: control.borderbottom ? control.borderbottom : undefined,
         fontWeight: control.bold === 'true' ? 'bold' : undefined,
         fontStyle: control.italic === 'true' ? 'italic' : undefined,
-        whiteSpace: control.pre === 'true' ? 'pre' : undefined,
-        fontFamily: control.pre === 'true' ? preFont : undefined,
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
+        overflowY: "auto"
       }
     }
   };

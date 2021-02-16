@@ -27,8 +27,6 @@ import { MyVerticalBarChart } from './VerticalBarChart'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
-    //console.log(`render ControlsList:`, controls);
-
     const controlTypes: any = {
         'textbox': Textbox,
         'searchbox': Searchbox,

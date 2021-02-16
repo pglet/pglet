@@ -5,8 +5,6 @@ import { defaultPixels } from './Utils'
 
 export const Progress = React.memo<IControlProps>(({control}) => {
 
-  //console.log(`render Progress: ${control.i}`);
-
   const progressProps: IProgressIndicatorProps = {
     percentComplete: control.value ? parseInt(control.value) / 100 : undefined,
     label: control.label ? control.label : null,
