@@ -2,7 +2,7 @@ import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
 import {
   BaseSlots,
   ThemeGenerator,
@@ -94,7 +94,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // stack props
   const stackProps: IStackProps = {
-    verticalFill: control.verticalfill ? control.verticalfill : true,
+    verticalFill: control.verticalfill ? control.verticalfill === "true" : true,
     horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
@@ -107,13 +107,17 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     },
   };
 
+  document.documentElement.style.background = themeBackgroundColor;
+
   const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
 
-  document.documentElement.style.background = themeBackgroundColor
+  const className = mergeStyles({
+    height: '100vh'
+  });
 
-  return <ThemeProvider theme={theme}>
+  return <ThemeProvider theme={theme} className={className}>
     <Stack tokens={stackTokens} {...stackProps}>
       <ControlsList controls={childControls} parentDisabled={disabled} />
     </Stack>
