@@ -135,11 +135,11 @@ for:
   - gvm install go${GO_VERSION} -B
   - gvm use go${GO_VERSION}
   - go version
-  - bash ./install_goreleaser.sh
-  - goreleaser --version
-  #- sh: |
-  #    sudo snap install --classic goreleaser
-  #    goreleaser --version
+  # - bash ./install_goreleaser.sh
+  # - goreleaser --version
+  - sh: |
+     sudo snap install --classic goreleaser
+     goreleaser --version
 
   build_script:
   - nvm use 12
