@@ -19,6 +19,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
+
   // page title
   let title = `${pageName} - pglet`;
   if (control.title) {
@@ -76,16 +77,23 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
-  function updateHash(hash: string) {
+  const data = {
+    fireUpdateHashEvent: true
+  }
 
-    const payload: any = {
-      i: "page",
-      hash: hash
+  function updateHash(hash: string) {
+    if (data.fireUpdateHashEvent) {
+      const payload: any = {
+        i: "page",
+        hash: hash
+      }
+  
+      dispatch(changeProps([payload]));
+      ws.updateControlProps([payload]);
+      ws.pageEventFromWeb("page", 'hash', hash);
     }
 
-    dispatch(changeProps([payload]));
-    ws.updateControlProps([payload]);
-    ws.pageEventFromWeb("page", 'hash', hash);
+    data.fireUpdateHashEvent = true;
   }
 
   React.useEffect(() => {
@@ -95,10 +103,9 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
     if (pageHash !== hash) {
       window.location.hash = pageHash ? "#" + pageHash : "";
+      data.fireUpdateHashEvent = false;
     }
 
-    // https://danburzo.github.io/react-recipes/recipes/use-effect.html
-    // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
     const handleWindowClose = (e: any) => {
       ws.pageEventFromWeb(control.i, 'close', control.data);
     }
