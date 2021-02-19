@@ -62,6 +62,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 } else {
                     dispatch(registerWebClientSuccess({
                         pageName: _registeredPageName,
+                        pageHash: _registeredPageHash,
                         session: data.payload.session
                     }));
                 }
@@ -101,7 +102,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
             payload: {
                 pageName: pageName,
                 pageHash: pageHash,
-                sessionID: cookies.get(`sid-${pageName}`)
+                sessionID: cookies.get(`sid-${pageName}#${pageHash}`)
             }
         }
 

@@ -18,7 +18,7 @@ const pageSlice = createSlice({
             state.loading = false;
             state.sessionId = action.payload.session.id;
             state.controls = action.payload.session.controls;
-            cookies.set(`sid-${action.payload.pageName}`, action.payload.session.id, { path: '/' });
+            cookies.set(`sid-${action.payload.pageName}#${action.payload.pageHash}`, action.payload.session.id, { path: '/', sameSite: true });
         },
         registerWebClientError(state, action) {
             state.loading = false;
