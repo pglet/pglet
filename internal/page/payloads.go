@@ -38,6 +38,7 @@ type RegisterHostClientResponsePayload struct {
 
 type RegisterWebClientRequestPayload struct {
 	PageName  string `json:"pageName"`
+	PageHash  string `json:"pageHash"`
 	SessionID string `json:"sessionID"`
 }
 

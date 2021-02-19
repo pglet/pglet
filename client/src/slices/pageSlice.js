@@ -5,15 +5,8 @@ import Cookies from 'universal-cookie';
 const cookies = new Cookies();
 
 const initialState = {
-    "name": "test-1",
     "error": null,
     "controls": {
-        "page": {
-            "c": [],
-            "i": "page",
-            "p": "",
-            "t": "page"
-        }
     }
 }
 

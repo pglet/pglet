@@ -1,5 +1,5 @@
 import React from 'react'
-import { shallowEqual, useSelector } from 'react-redux'
+import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
 import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
@@ -11,11 +11,13 @@ import {
 import { isDark } from '@fluentui/react/lib/Color';
 import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
-import { defaultPixels } from './Utils'
+import { changeProps } from '../slices/pageSlice'
+import { defaultPixels, getWindowHash } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const ws = React.useContext(WebSocketContext);
+  const dispatch = useDispatch();
 
   // page title
   let title = `${pageName} - pglet`;
@@ -27,7 +29,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   // theme
   const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
   const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'  
+  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
 
   //console.log("themeBackgroundColor:", themeBackgroundColor);  
 
@@ -74,14 +76,45 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
+  function updateHash(hash: string) {
+
+    const payload: any = {
+      i: "page",
+      hash: hash
+    }
+
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb("page", 'hash', hash);
+  }
+
   React.useEffect(() => {
+
+    const hash = getWindowHash();
+    const pageHash = control.hash !== undefined ? control.hash : "";
+
+    if (pageHash !== hash) {
+      window.location.hash = pageHash ? "#" + pageHash : "";
+    }
+
     // https://danburzo.github.io/react-recipes/recipes/use-effect.html
     // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
     const handleWindowClose = (e: any) => {
       ws.pageEventFromWeb(control.i, 'close', control.data);
     }
+
+    const handleHashChange = (e: any) => {
+      updateHash(getWindowHash());
+    }
+
     window.addEventListener("beforeunload", handleWindowClose);
-    return () => window.removeEventListener("beforeunload", handleWindowClose);
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleWindowClose);
+      window.removeEventListener("hashchange", handleHashChange);
+    }
+    // eslint-disable-next-line
   }, [control, ws]);
 
   const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);

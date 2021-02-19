@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { Page } from './Page'
 import { WebSocketContext } from '../WebSocket';
-import { MessageBar, MessageBarType } from '@fluentui/react'
+import { MessageBar, MessageBarType, Spinner } from '@fluentui/react'
+import { getWindowHash } from './Utils'
 
 interface ParamTypes {
     accountName: string,
@@ -28,16 +29,18 @@ export const PageLanding = () => {
 
     React.useEffect(() => {
 
-        ws.registerWebClient(fullPageName);
+        ws.registerWebClient(fullPageName, getWindowHash());
 
     }, [fullPageName, ws])
 
     const err = useSelector((state: any) => state.page.error);
-    const root = useSelector((state: any) => state.page.controls['page']);
+    const page = useSelector((state: any) => state.page.controls['page']);
 
     if (err) {
         return <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>{err}</MessageBar>
+    } else if (!page) {
+        return <Spinner label="Loading page, please wait..." labelPosition="right" styles={{ root: { height: "35px" }}} />
     } else {
-        return <Page control={root} pageName={fullPageName} />
+        return <Page control={page} pageName={fullPageName} />
     }
 }
