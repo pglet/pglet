@@ -24,6 +24,7 @@ import { Icon } from './Icon'
 import { Message } from './Message'
 import { MyDialog } from './Dialog'
 import { MyPanel } from './Panel'
+import { IFrame } from './IFrame'
 import { MyVerticalBarChart } from './VerticalBarChart'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
@@ -52,6 +53,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'message': Message,
         'dialog': MyDialog,
         'panel': MyPanel,
+        'iframe': IFrame,
         'verticalbarchart': MyVerticalBarChart,
     }
 
