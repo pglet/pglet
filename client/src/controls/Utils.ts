@@ -44,3 +44,7 @@ export function getWindowHash() {
   let hash = window.location.hash;
   return hash.length > 0 ? hash.substring(1) : hash;
 }
+
+export function isTrue(value:any) {
+    return value !== undefined && value != null && value.toString().toLowerCase() === "true";
+}
