@@ -26,7 +26,7 @@ import { MyDialog } from './Dialog'
 import { MyPanel } from './Panel'
 import { IFrame } from './IFrame'
 import { MyVerticalBarChart } from './VerticalBarChart'
-import { MyDonutChart } from './DonutChart'
+import { MyPieChart } from './PieChart'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -56,7 +56,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'panel': MyPanel,
         'iframe': IFrame,
         'verticalbarchart': MyVerticalBarChart,
-        'donutchart': MyDonutChart,
+        'piechart': MyPieChart,
     }
 
     const renderChild = (control: any) => {

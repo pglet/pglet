@@ -5,7 +5,7 @@ import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels } from './Utils'
 import { useTheme, mergeStyles } from '@fluentui/react';
 
-export const MyDonutChart = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyPieChart = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const theme = useTheme();
 
@@ -41,10 +41,10 @@ export const MyDonutChart = React.memo<IControlProps>(({control, parentDisabled}
   });
 
   const chartProps: IDonutChartProps = {
-    valueInsideDonut: control.value !== undefined ? control.value : undefined,
+    valueInsideDonut: control.innervalue !== undefined ? control.innervalue : undefined,
+    innerRadius: control.innerradius !== undefined ? parseInt(control.innerradius) : undefined,
     hideLegend: control.legend !== 'true',
     hideTooltip: control.tooltips !== 'true',
-    innerRadius: control.innerradius !== undefined ? parseInt(control.innerradius) : undefined,
     width: dimensions.width ? dimensions.width : containerRef.current?.offsetWidth,
     height: dimensions.height ? dimensions.height : containerRef.current?.offsetHeight,
   };
