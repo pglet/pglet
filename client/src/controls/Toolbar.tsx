@@ -52,6 +52,8 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
     }
   };
 
+  const darkerBkg = "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1)) !important";
+
   toolbarProps.overflowButtonProps = {
     styles: {
       root: {
@@ -59,19 +61,19 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
         color: '#fff'
       },
       rootHovered: {
-        backgroundColor: "yellow",
+        background: darkerBkg,
       },
       rootExpanded: {
-        backgroundColor: "yellow!important",
+        background: darkerBkg,
       },
       rootPressed: {
-        backgroundColor: "yellow",
+        background: darkerBkg,
       },      
       menuIcon: {
         color: '#fff!important',
       },
       menuIconExpanded: {
-        backgroundColor: "yellow!important",
+        background: "transparent!important",
       }
     }
   }

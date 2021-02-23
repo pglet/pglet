@@ -60,29 +60,32 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             item.key = "divider_" + itemControls[i].i;
         }
 
+        const darkerBkg = "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1))";
+
         item.buttonStyles = {
             root: {
                 backgroundColor: "inherit",
-                color: "#fff"
+                color: getThemeColor(theme, "white")
             },
             rootHovered: {
-                backgroundColor: 'red',
-                color: "#fff"
+                //backgroundColor: 'red',
+                background: darkerBkg,
+                color: getThemeColor(theme, "white")
             },
             rootPressed: {
-                backgroundColor: 'red',
-                color: "#fff"
+                background: darkerBkg,
+                color: getThemeColor(theme, "white")
             },
             rootExpanded: {
-                backgroundColor: 'red',
-                color: "#fff"
+                background: darkerBkg,
+                color: getThemeColor(theme, "white")
             },
             rootExpandedHovered: {
-                backgroundColor: 'red',
-                color: "#fff"
+                background: darkerBkg,
+                color: getThemeColor(theme, "white")
             },
             icon: {
-                color: "#fff!important"
+                color: getThemeColor(theme, "white") + "!important",
             },
             // iconHovered: {
             //     color: "#fff"
@@ -94,7 +97,8 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             //     color: "#fff!important"
             // },
             menuIcon: {
-                color: "#fff!important"
+                color: getThemeColor(theme, "white") + "!important",
+                background: "transparent"
             },
             // menuIconHovered: {
             //     color: "#fff"
@@ -105,31 +109,31 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             // menuIconExpanded: {
             //     color: "#fff"
             // },            
-            // menuIconExpandedHovered: {
-            //     color: "#fff"
-            // },
+            menuIconExpandedHovered: {
+                background: "transparent"
+            },
             splitButtonDivider: {
-                backgroundColor: '#000'
+                background: darkerBkg
             },
             splitButtonMenuButton: {
-                backgroundColor: "blue",
+                background: "inherit",
                 ":hover": {
-                    backgroundColor: "yellow",
+                    background: darkerBkg,
                 },
                 ":active": {
-                    backgroundColor: "orange",
+                    background: darkerBkg,
                 }                
             },
             splitButtonMenuIcon: {
-                color: "#fff"
+                color: getThemeColor(theme, "white")
             },
             splitButtonMenuButtonExpanded: {
-                backgroundColor: "green",
+                background: darkerBkg,
                 ":hover": {
-                    backgroundColor: "yellow",
+                    background: darkerBkg,
                 },
                 ":active": {
-                    backgroundColor: "orange",
+                    background: darkerBkg,
                 }                  
             },
         }
