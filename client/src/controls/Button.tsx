@@ -41,7 +41,7 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
-    getMenuProps(state, control, disabled, ws, theme), shallowEqual)
+    getMenuProps(state, control, disabled, ws, theme, false), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
     text: control.text ? control.text : control.i,

@@ -2,7 +2,7 @@ import { ICommandBarItemProps, ContextualMenuItemType, Theme} from '@fluentui/re
 import { IWebSocket } from '../WebSocket';
 import { getThemeColor } from './Utils'
 
-export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket, theme: Theme): any {
+export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket, theme: Theme, inverted: boolean): any {
     const childControls = parent.children !== undefined ? parent.children
     : parent.c.map((childId: any) => state.page.controls[childId]);
 
@@ -60,89 +60,110 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             item.key = "divider_" + itemControls[i].i;
         }
 
-        const darkerBkg = "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1))";
-
-        item.buttonStyles = {
-            root: {
-                backgroundColor: "inherit",
-                color: getThemeColor(theme, "white")
-            },
-            rootHovered: {
-                //backgroundColor: 'red',
-                background: darkerBkg,
-                color: getThemeColor(theme, "white")
-            },
-            rootPressed: {
-                background: darkerBkg,
-                color: getThemeColor(theme, "white")
-            },
-            rootExpanded: {
-                background: darkerBkg,
-                color: getThemeColor(theme, "white")
-            },
-            rootExpandedHovered: {
-                background: darkerBkg,
-                color: getThemeColor(theme, "white")
-            },
-            icon: {
-                color: getThemeColor(theme, "white") + "!important",
-            },
-            // iconHovered: {
-            //     color: "#fff"
-            // },
-            // iconPressed: {
-            //     color: "#fff"
-            // },
-            // iconExpanded: {
-            //     color: "#fff!important"
-            // },
-            menuIcon: {
-                color: getThemeColor(theme, "white") + "!important",
-                background: "transparent"
-            },
-            // menuIconHovered: {
-            //     color: "#fff"
-            // },
-            // menuIconPressed: {
-            //     color: "#fff"
-            // },
-            // menuIconExpanded: {
-            //     color: "#fff"
-            // },            
-            menuIconExpandedHovered: {
-                background: "transparent"
-            },
-            splitButtonDivider: {
-                background: darkerBkg
-            },
-            splitButtonMenuButton: {
-                background: "inherit",
-                ":hover": {
-                    background: darkerBkg,
+        if (inverted) {
+            const darkerBkg = "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1))";
+            const menuColor = getThemeColor(theme, theme.isInverted ? "neutralPrimary" : "neutralLight");
+            const whiteColor = getThemeColor(theme, theme.isInverted ? "black" : "white");
+    
+            item.buttonStyles = {
+                root: {
+                    backgroundColor: "inherit",
+                    color: menuColor
                 },
-                ":active": {
+                rootHovered: {
+                    //backgroundColor: 'red',
                     background: darkerBkg,
-                }                
-            },
-            splitButtonMenuIcon: {
-                color: getThemeColor(theme, "white")
-            },
-            splitButtonMenuButtonExpanded: {
-                background: darkerBkg,
-                ":hover": {
-                    background: darkerBkg,
+                    color: whiteColor
                 },
-                ":active": {
+                rootPressed: {
                     background: darkerBkg,
-                }                  
-            },
+                    color: whiteColor
+                },
+                rootExpanded: {
+                    background: darkerBkg,
+                    color: whiteColor
+                },
+                rootExpandedHovered: {
+                    background: darkerBkg,
+                    color: whiteColor
+                },
+    
+                icon: {
+                    color: menuColor,
+                },
+                iconHovered: {
+                    color: whiteColor
+                },
+                iconPressed: {
+                    color: whiteColor
+                },
+                iconExpanded: {
+                    color: whiteColor + "!important"
+                },
+    
+                menuIcon: {
+                    color: menuColor,
+                    background: "transparent"
+                },
+                menuIconHovered: {
+                    color: whiteColor,
+                    ".ms-Button-icon": {
+                        color: whiteColor,
+                    },                 
+                },
+                menuIconPressed: {
+                    color: whiteColor
+                },
+                menuIconExpanded: {
+                    color: whiteColor + "!important"
+                },            
+                menuIconExpandedHovered: {
+                    color: whiteColor,
+                    background: "transparent"
+                },
+    
+                splitButtonDivider: {
+                    background: darkerBkg
+                },
+                splitButtonMenuButton: {
+                    background: "inherit",
+                    ":hover": {
+                        color: whiteColor,
+                        background: darkerBkg,
+                    },
+                    ":hover .ms-Button-icon": {
+                        color: whiteColor,
+                    },                
+                    ":active": {
+                        background: darkerBkg,
+                    },
+                    ":active .ms-Button-icon": {
+                        color: whiteColor,
+                    },                 
+                },
+                splitButtonMenuIcon: {
+                    color: menuColor
+                },
+                splitButtonMenuButtonExpanded: {
+                    background: darkerBkg,
+                    ":hover": {
+                        background: darkerBkg,
+                    },
+                    ":active": {
+                        background: darkerBkg,
+                    },
+                    ".ms-Button-icon": {
+                        color: whiteColor,
+                    },                
+                },
+            }
         }
 
         item.onClick = () => {
             ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
         }
 
-        const subMenuProps = getMenuProps(state, itemControls[i], disabled, ws, theme);
+        const subMenuProps = getMenuProps(state, itemControls[i], disabled, ws, theme, inverted);
         if (subMenuProps !== null) {
             item.subMenuProps = subMenuProps
         }
