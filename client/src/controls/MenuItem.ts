@@ -60,6 +60,80 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             item.key = "divider_" + itemControls[i].i;
         }
 
+        item.buttonStyles = {
+            root: {
+                backgroundColor: "inherit",
+                color: "#fff"
+            },
+            rootHovered: {
+                backgroundColor: 'red',
+                color: "#fff"
+            },
+            rootPressed: {
+                backgroundColor: 'red',
+                color: "#fff"
+            },
+            rootExpanded: {
+                backgroundColor: 'red',
+                color: "#fff"
+            },
+            rootExpandedHovered: {
+                backgroundColor: 'red',
+                color: "#fff"
+            },
+            icon: {
+                color: "#fff!important"
+            },
+            // iconHovered: {
+            //     color: "#fff"
+            // },
+            // iconPressed: {
+            //     color: "#fff"
+            // },
+            // iconExpanded: {
+            //     color: "#fff!important"
+            // },
+            menuIcon: {
+                color: "#fff!important"
+            },
+            // menuIconHovered: {
+            //     color: "#fff"
+            // },
+            // menuIconPressed: {
+            //     color: "#fff"
+            // },
+            // menuIconExpanded: {
+            //     color: "#fff"
+            // },            
+            // menuIconExpandedHovered: {
+            //     color: "#fff"
+            // },
+            splitButtonDivider: {
+                backgroundColor: '#000'
+            },
+            splitButtonMenuButton: {
+                backgroundColor: "blue",
+                ":hover": {
+                    backgroundColor: "yellow",
+                },
+                ":active": {
+                    backgroundColor: "orange",
+                }                
+            },
+            splitButtonMenuIcon: {
+                color: "#fff"
+            },
+            splitButtonMenuButtonExpanded: {
+                backgroundColor: "green",
+                ":hover": {
+                    backgroundColor: "yellow",
+                },
+                ":active": {
+                    backgroundColor: "orange",
+                }                  
+            },
+        }
+
         item.onClick = () => {
             ws.pageEventFromWeb(itemControls[i].i, 'click', itemControls[i].data)
         }

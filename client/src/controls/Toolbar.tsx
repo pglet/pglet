@@ -41,6 +41,7 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
     farItems: farItems != null ? farItems.items : [],
     styles: {
       root: {
+        backgroundColor: "inherit",
         paddingLeft: 0,
         paddingRight: 0,
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
@@ -50,6 +51,30 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
       }
     }
   };
+
+  toolbarProps.overflowButtonProps = {
+    styles: {
+      root: {
+        backgroundColor: "inherit",
+        color: '#fff'
+      },
+      rootHovered: {
+        backgroundColor: "yellow",
+      },
+      rootExpanded: {
+        backgroundColor: "yellow!important",
+      },
+      rootPressed: {
+        backgroundColor: "yellow",
+      },      
+      menuIcon: {
+        color: '#fff!important',
+      },
+      menuIconExpanded: {
+        backgroundColor: "yellow!important",
+      }
+    }
+  }
 
   return <CommandBar {...toolbarProps} />;
 })
