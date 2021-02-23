@@ -51,7 +51,7 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
           return {
             x: xtype === "date" ? new Date(p.x) : parseNumber(p.x),
             y: y,
-            tick: p.tick ? xtype === "date" ? new Date(p.tick) : parseNumber(p.tick) : undefined,
+            tick: p.tick && p.tick.length > 0 ? xtype === "date" ? new Date(p.tick) : parseNumber(p.tick) : undefined,
             legend: p.legend,
             xAxisCalloutData: p.xtooltip ? p.xtooltip : p.x,
             yAxisCalloutData: p.ytooltip ? p.ytooltip : control.yformat !== undefined ? control.yformat.replace('{y}', y) : y
@@ -63,6 +63,8 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
 
   const ticks = data.map((d:any) => d.data.filter((p:any) => p.tick !== undefined).map((p:any) => p.tick))
     .reduce((acc: any, items: any) => ([...acc, ...items]));
+
+  console.log(ticks);
 
   const chartProps: ILineChartProps = {
     data: {
