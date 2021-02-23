@@ -44,7 +44,7 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
     .filter((c: any) => c.t === 'data').map((data: any) => 
       ({
         ...data,
-        color: data.color !== undefined ? data.color : colors[colorIdx++ % colors.length],
+        color: data.color !== undefined ? getThemeColor(theme, data.color) : colors[colorIdx++ % colors.length],
         data: data.c.map((childId: any) => {
           const p = state.page.controls[childId];
           const y = parseNumber(p.y)
@@ -63,8 +63,6 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
 
   const ticks = data.map((d:any) => d.data.filter((p:any) => p.tick !== undefined).map((p:any) => p.tick))
     .reduce((acc: any, items: any) => ([...acc, ...items]));
-
-  console.log(ticks);
 
   const chartProps: ILineChartProps = {
     data: {

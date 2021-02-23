@@ -66,7 +66,7 @@ export const MyPieChart = React.memo<IControlProps>(({control, parentDisabled}) 
           return {
             legend: p.legend,
             data: p.value,
-            color: p.color !== undefined ? p.color : colors[colorIdx++ % colors.length],
+            color: p.color !== undefined ? getThemeColor(theme, p.color) : colors[colorIdx++ % colors.length],
             xAxisCalloutData: p.tooltip,
           }
         })

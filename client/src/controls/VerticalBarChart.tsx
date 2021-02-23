@@ -37,7 +37,7 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
     hideLegend: control.legend !== 'true',
     hideTooltip: control.tooltips !== 'true',
     barWidth: control.barwidth !== undefined ? parseInt(control.barwidth) : undefined,
-    colors: control.colors !== undefined ? control.colors.split(/[ ,]+/g) : [startColor, endColor],
+    colors: control.colors !== undefined ? control.colors.split(/[ ,]+/g).map((c:any) => getThemeColor(theme, c)) : [startColor, endColor],
     yMinValue: control.ymin !== undefined ? parseFloat(control.ymin) : undefined,
     yMaxValue: control.ymax !== undefined ? parseFloat(control.ymax) : undefined,
     yAxisTickCount: control.yticks !== undefined ? parseInt(control.yticks) : 1,
@@ -67,7 +67,7 @@ export const MyVerticalBarChart = React.memo<IControlProps>(({control, parentDis
             x: xtype === "number" ? parseNumber(p.x) : p.x,
             y: parseNumber(p.y),
             legend: p.legend,
-            color: p.color,
+            color: getThemeColor(theme, p.color),
             xAxisCalloutData: p.xtooltip,
             yAxisCalloutData: p.ytooltip
           }
