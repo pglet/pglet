@@ -27,7 +27,8 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             title: itemControls[i].title ? itemControls[i].title : undefined,
             target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
             disabled: disabled,
-            split: itemControls[i].split === 'true' ? true : undefined
+            split: itemControls[i].split === 'true',
+            checked: itemControls[i].checked === 'true',
         };
         if (itemControls[i].icon) {
             item.iconProps = {
@@ -86,6 +87,9 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
                 rootExpandedHovered: {
                     background: darkerBkg,
                     color: whiteColor
+                },
+                rootChecked: {
+                    backgroundColor: getThemeColor(theme, "white") + "!important"
                 },
     
                 icon: {
