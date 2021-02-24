@@ -24,6 +24,7 @@ import { Icon } from './Icon'
 import { Message } from './Message'
 import { MyDialog } from './Dialog'
 import { MyPanel } from './Panel'
+import { MyCallout } from './Callout'
 import { IFrame } from './IFrame'
 import { MyVerticalBarChart } from './VerticalBarChart'
 import { MyHorizontalBarChart } from './HorizontalBarChart'
@@ -56,6 +57,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'message': Message,
         'dialog': MyDialog,
         'panel': MyPanel,
+        'callout': MyCallout,
         'iframe': IFrame,
         'verticalbarchart': MyVerticalBarChart,
         'barchart': MyHorizontalBarChart,

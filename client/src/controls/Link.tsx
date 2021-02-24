@@ -4,7 +4,7 @@ import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -17,6 +17,7 @@ export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) =>
   }
 
   const linkProps: ILinkProps = {
+    id: getId(control.i),
     href: control.url ? control.url : undefined,
     target: control.newwindow === 'true' ? '_blank' : undefined,
     title: control.title ? control.title : undefined,

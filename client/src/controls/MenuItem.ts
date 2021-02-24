@@ -1,6 +1,6 @@
 import { ICommandBarItemProps, ContextualMenuItemType, Theme} from '@fluentui/react';
 import { IWebSocket } from '../WebSocket';
-import { getThemeColor } from './Utils'
+import { getThemeColor, getId } from './Utils'
 
 export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket, theme: Theme, inverted: boolean): any {
     const childControls = parent.children !== undefined ? parent.children
@@ -29,6 +29,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             disabled: disabled,
             split: itemControls[i].split === 'true',
             checked: itemControls[i].checked === 'true',
+            className: getId(itemControls[i].i)
         };
         if (itemControls[i].icon) {
             item.iconProps = {

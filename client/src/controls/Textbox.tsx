@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField, ITextFieldProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -36,6 +36,7 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
   }
 
   const textFieldProps: ITextFieldProps = {
+    id: getId(control.i),
     value: control.value ? control.value : "",
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,

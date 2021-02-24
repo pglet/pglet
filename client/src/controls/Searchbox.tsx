@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SearchBox, ISearchBoxProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, getId } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -51,6 +51,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color
 
   const props: ISearchBoxProps = {
+    id: getId(control.i),
     value: control.value ? control.value : "",
     placeholder: control.placeholder ? control.placeholder : null,
     underlined: control.underlined === 'true',

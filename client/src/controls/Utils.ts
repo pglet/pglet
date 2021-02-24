@@ -48,3 +48,7 @@ export function getWindowHash() {
 export function isTrue(value:any) {
     return value !== undefined && value != null && value.toString().toLowerCase() === "true";
 }
+
+export function getId(value:any) {
+  return value.toString().replace(/:/g, "_");
+}

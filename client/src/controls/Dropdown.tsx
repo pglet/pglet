@@ -4,7 +4,7 @@ import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Dropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -37,6 +37,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
   }
 
   const dropdownProps: IDropdownProps = {
+    id: getId(control.i),
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
     errorMessage: control.errormessage ? control.errormessage : null,

@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Checkbox, ICheckboxProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -38,6 +38,7 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
   }
 
   const checkboxProps: ICheckboxProps = {
+    id: getId(control.i),
     checked: control.value === "true",
     label: control.label ? control.label : null,
     boxSide: control.boxside ? control.boxside : 'start',
