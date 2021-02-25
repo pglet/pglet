@@ -91,9 +91,9 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
   if (data.length > 0) {
     const ys = data.map((d:any) => d.data.map((p:any) => p.y))
       .reduce((acc: any, items: any) => ([...acc, ...items]));
-    if (chartProps.yMinValue === undefined) {
-      chartProps.yMinValue = Math.min(...ys)
-    }
+    // if (chartProps.yMinValue === undefined) {
+    //   chartProps.yMinValue = Math.min(...ys)
+    // }
     if (chartProps.yMaxValue === undefined) {
       chartProps.yMaxValue = Math.max(...ys)
     }    

@@ -25,7 +25,7 @@ export function parseNumber(n: any): number {
 export function getThemeColor(theme: Theme, color: any): string {
   function getPropValue(obj: any, propName: any) {
     const vals = Object.getOwnPropertyNames(obj).filter(
-      (p) => p.toLowerCase() === propName.toLowerCase()
+      (p) => propName && p.toLowerCase() === propName.toLowerCase()
     );
     if (vals.length > 0) {
       return obj[vals[0]] ? obj[vals[0]].toString() : "";
