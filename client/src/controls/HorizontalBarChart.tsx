@@ -1,6 +1,6 @@
 import React from 'react';
 import { shallowEqual, useSelector } from 'react-redux'
-import { HorizontalBarChart, IHorizontalBarChartProps } from '@fluentui/react-charting';
+import { HorizontalBarChart, IHorizontalBarChartProps, ChartDataMode } from '@fluentui/react-charting';
 import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels, parseNumber, isTrue } from './Utils'
 import { useTheme, mergeStyles } from '@fluentui/react';
@@ -75,11 +75,17 @@ export const MyHorizontalBarChart = React.memo<IControlProps>(({control, parentD
     margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined       
   });
 
+  let datamode: ChartDataMode = 'default';
+  switch (control.datamode ? control.datamode.toLowerCase() : '') {
+    case 'fraction': datamode = 'fraction'; break;
+    case 'percentage': datamode = 'percentage'; break;
+  }    
+
   const chartProps: IHorizontalBarChartProps = {
     hideTooltip: control.tooltips !== 'true',
     //barHeight: control.barheight !== undefined ? parseNumber(control.barheight) : undefined,
     //hideRatio: control.ratio !== 'true',
-    chartDataMode: control.datamode !== undefined ? control.datamode : 'default',
+    chartDataMode: datamode,
     width: dimensions.width ? dimensions.width : containerRef.current?.offsetWidth,
   };
 

@@ -14,7 +14,8 @@ export const IFrame = React.memo<IControlProps>(({control}) => {
   const props: React.DetailedHTMLProps<React.IframeHTMLAttributes<HTMLIFrameElement>, HTMLIFrameElement> = {
     src: control.src ? control.src : undefined,
     title: control.title ? control.title : control.i,
-    width: control.width !== undefined ? defaultPixels(control.width) : undefined,    height: control.height !== undefined ? defaultPixels(control.height) : undefined,
+    width: control.width !== undefined ? defaultPixels(control.width) : undefined,
+    height: control.height !== undefined ? defaultPixels(control.height) : undefined,
   };
 
   return <iframe title={title} {...props} className={frameClass} />;
