@@ -21,6 +21,7 @@ const (
 	limitSessionSizeBytes      = "LIMIT_SESSION_SIZE_BYTES"
 	checkReservedPages         = "CHECK_RESERVED_PAGES"
 	allowRemoteHostClients     = "ALLOW_REMOTE_HOST_CLIENTS"
+	hostClientsAuthToken       = "HOST_CLIENTS_AUTH_TOKEN"
 
 	// redis
 	defaultRedisMaxIdle   = 5
@@ -43,6 +44,10 @@ func AllowRemoteHostClients() bool {
 		return n
 	}
 	return false
+}
+
+func HostClientsAuthToken() string {
+	return os.Getenv(hostClientsAuthToken)
 }
 
 func RedisAddr() string {

@@ -223,6 +223,9 @@ func (c *Client) registerHostClient(message *Message) {
 	if !config.AllowRemoteHostClients() && c.clientIP != "" {
 		err = fmt.Errorf("Remote host clients are not allowed")
 		goto response
+	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != payload.AuthToken {
+		err = fmt.Errorf("Invalid auth token")
+		goto response
 	}
 
 	// assign client role
