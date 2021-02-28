@@ -248,7 +248,7 @@ func (c *Client) registerHostClient(message *Message) {
 		}
 
 		// filter page name
-		if config.CheckReservedPages() && pageName.IsReserved() {
+		if pageName.IsReserved() {
 			err = fmt.Errorf("Account or page name is reserved")
 			goto response
 		}

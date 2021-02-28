@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/utils"
 )
 
@@ -70,10 +71,10 @@ func ParsePageName(pageName string) (*PageName, error) {
 }
 
 func (pn *PageName) IsReserved() bool {
-	if utils.ContainsString(reservedAccountNames, pn.Account) {
+	if utils.ContainsString(config.ReservedAccountNames(), pn.Account) {
 		return true
 	}
-	if utils.ContainsString(reservedPageNames, pn.String()) {
+	if utils.ContainsString(config.ReservedPageNames(), pn.String()) {
 		return true
 	}
 	return false

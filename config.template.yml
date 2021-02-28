@@ -1,0 +1,36 @@
+# force redirecting to HTTPS protocol
+force_ssl: false
+
+# shared page lifetime since the last time it was updated
+page_lifetime_minutes: 1440
+
+# app page lifetime since the last time any app session was updated
+app_lifetime_minutes: 60
+
+# allow connections from remote scripts/programs
+allow_remote_host_clients: false
+
+# ensure unath client has access to the page created from its IP
+check_page_ip: false
+
+# reserved account names, e.g. ["pglet", "admin", "administrator", "cp"]
+reserved_account_names: []
+
+# reserved page names e.g. ["public/index"]
+reserved_page_names: []
+
+# all connecting scripts/programs must present this token
+host_clients_auth_token:
+
+# limits for unauthenticated clients, 0 - no limits
+limit_pages_per_hour: 0
+limit_sessions_per_hour: 0
+limit_session_size_bytes: 0
+
+# Configure redis to enable persistent pages and sessions
+redis:
+  # Redis IP:port
+  addr:
+  password:
+  max_idle: 5
+  max_active: 10
