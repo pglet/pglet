@@ -1,8 +1,8 @@
 import React from 'react'
-import { shallowEqual, useSelector } from 'react-redux'
+import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
 import {
   BaseSlots,
   ThemeGenerator,
@@ -11,11 +11,14 @@ import {
 import { isDark } from '@fluentui/react/lib/Color';
 import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
-import { defaultPixels } from './Utils'
+import { changeProps } from '../slices/pageSlice'
+import { defaultPixels, getWindowHash } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const ws = React.useContext(WebSocketContext);
+  const dispatch = useDispatch();
+
 
   // page title
   let title = `${pageName} - pglet`;
@@ -27,7 +30,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   // theme
   const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
   const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'  
+  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
 
   //console.log("themeBackgroundColor:", themeBackgroundColor);  
 
@@ -74,14 +77,51 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
+  const data = {
+    fireUpdateHashEvent: true
+  }
+
+  function updateHash(hash: string) {
+    if (data.fireUpdateHashEvent) {
+      const payload: any = {
+        i: "page",
+        hash: hash
+      }
+  
+      dispatch(changeProps([payload]));
+      ws.updateControlProps([payload]);
+      ws.pageEventFromWeb("page", 'hash', hash);
+    }
+
+    data.fireUpdateHashEvent = true;
+  }
+
   React.useEffect(() => {
-    // https://danburzo.github.io/react-recipes/recipes/use-effect.html
-    // https://codedaily.io/tutorials/72/Creating-a-Reusable-Window-Event-Listener-Hook-with-useEffect-and-useCallback
+
+    const hash = getWindowHash();
+    const pageHash = control.hash !== undefined ? control.hash : "";
+
+    if (pageHash !== hash) {
+      window.location.hash = pageHash ? "#" + pageHash : "";
+      data.fireUpdateHashEvent = false;
+    }
+
     const handleWindowClose = (e: any) => {
       ws.pageEventFromWeb(control.i, 'close', control.data);
     }
+
+    const handleHashChange = (e: any) => {
+      updateHash(getWindowHash());
+    }
+
     window.addEventListener("beforeunload", handleWindowClose);
-    return () => window.removeEventListener("beforeunload", handleWindowClose);
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleWindowClose);
+      window.removeEventListener("hashchange", handleHashChange);
+    }
+    // eslint-disable-next-line
   }, [control, ws]);
 
   const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
@@ -94,7 +134,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // stack props
   const stackProps: IStackProps = {
-    verticalFill: control.verticalfill ? control.verticalfill : true,
+    verticalFill: control.verticalfill ? control.verticalfill === "true" : true,
     horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
@@ -107,13 +147,17 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     },
   };
 
+  document.documentElement.style.background = themeBackgroundColor;
+
   const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
 
-  document.documentElement.style.background = themeBackgroundColor
+  const className = mergeStyles({
+    height: '100vh'
+  });
 
-  return <ThemeProvider theme={theme}>
+  return <ThemeProvider theme={theme} className={className}>
     <Stack tokens={stackTokens} {...stackProps}>
       <ControlsList controls={childControls} parentDisabled={disabled} />
     </Stack>

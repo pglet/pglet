@@ -19,7 +19,7 @@ const cookies = new Cookies();
 
 export interface IWebSocket {
     socket: ReconnectingWebSocket;
-    registerWebClient(pageName: string): void;
+    registerWebClient(pageName: string, pageHash: string): void;
     pageEventFromWeb(eventTarget: string, eventName: string, eventData: string): void;
     updateControlProps(props: any): void;
 }
@@ -31,6 +31,7 @@ export { WebSocketContext }
 export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
     let socket : ReconnectingWebSocket | null = null;
     let _registeredPageName : string = "";
+    let _registeredPageHash : string = "";
     let _subscribed: boolean = false;
 
     const dispatch = useDispatch();
@@ -42,7 +43,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
         socket.onopen = function () {
             console.log("WebSocket connection opened");
             if (!_subscribed && _registeredPageName !== "") {
-                registerWebClient(_registeredPageName);
+                registerWebClient(_registeredPageName, _registeredPageHash);
             }
         };
         socket.onclose = function () {
@@ -61,6 +62,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 } else {
                     dispatch(registerWebClientSuccess({
                         pageName: _registeredPageName,
+                        pageHash: _registeredPageHash,
                         session: data.payload.session
                     }));
                 }
@@ -88,17 +90,19 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
         };
     }
 
-    const registerWebClient = (pageName: string) => {
+    const registerWebClient = (pageName: string, pageHash: string) => {
 
         console.log("ws.registerWebClient()")
         _registeredPageName = pageName;
+        _registeredPageHash = pageHash;
         _subscribed = true;
 
         var msg = {
             action: "registerWebClient",
             payload: {
                 pageName: pageName,
-                sessionID: cookies.get(`sid-${pageName}`)
+                pageHash: pageHash,
+                sessionID: cookies.get(`sid-${pageName}#${pageHash}`)
             }
         }
 

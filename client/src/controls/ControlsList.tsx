@@ -24,7 +24,12 @@ import { Icon } from './Icon'
 import { Message } from './Message'
 import { MyDialog } from './Dialog'
 import { MyPanel } from './Panel'
+import { MyCallout } from './Callout'
+import { IFrame } from './IFrame'
 import { MyVerticalBarChart } from './VerticalBarChart'
+import { MyHorizontalBarChart } from './HorizontalBarChart'
+import { MyPieChart } from './PieChart'
+import { MyLineChart } from './LineChart'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -52,7 +57,12 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'message': Message,
         'dialog': MyDialog,
         'panel': MyPanel,
+        'callout': MyCallout,
+        'iframe': IFrame,
         'verticalbarchart': MyVerticalBarChart,
+        'barchart': MyHorizontalBarChart,
+        'piechart': MyPieChart,
+        'linechart': MyLineChart,
     }
 
     const renderChild = (control: any) => {

@@ -12,7 +12,7 @@ import {
   IButtonProps,
   IContextualMenuProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, getId } from './Utils'
 import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -41,9 +41,10 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   }
 
   const menuProps = useSelector<any, IContextualMenuProps | undefined>((state: any) =>
-    getMenuProps(state, control, disabled, ws, theme), shallowEqual)
+    getMenuProps(state, control, disabled, ws, theme, false), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
+    id: getId(control.i),
     text: control.text ? control.text : control.i,
     href: control.url ? control.url : undefined,
     title: control.title ? control.title : undefined,

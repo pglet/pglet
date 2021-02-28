@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Toggle, IToggleProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -38,6 +38,7 @@ export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) =>
   }
 
   const toggleProps: IToggleProps = {
+    id: getId(control.i),
     checked: control.value === "true",
     inlineLabel: control.inline === "true",
     label: control.label ? control.label : undefined,

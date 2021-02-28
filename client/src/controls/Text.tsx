@@ -61,7 +61,8 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
       '& pre': {
         backgroundColor: theme.palette.neutralLighter,
         borderRadius: "2px",
-        padding: "7px"
+        padding: "7px",
+        overflowX: "auto"
       },
       '& a': {
         color: theme.palette.themePrimary,
@@ -71,7 +72,6 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
 
   const textProps: ITextProps = {
     variant: variant,
-    className: className,
     nowrap: control.nowrap !== undefined ? control.nowrap : undefined,
     block: control.block !== undefined ? control.block : undefined,
     styles: {
@@ -97,7 +97,6 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
-        overflowY: "auto"
       }
     }
   };

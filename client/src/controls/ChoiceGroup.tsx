@@ -4,7 +4,7 @@ import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, getId } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -38,6 +38,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
   }
 
   const choiceProps: IChoiceGroupProps = {
+    id: getId(control.i),
     label: control.label ? control.label : null,
     options: [],
     disabled: disabled,

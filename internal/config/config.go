@@ -1,8 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"os"
-	"strconv"
+	"path/filepath"
+	"runtime"
+	"strings"
+
+	"github.com/spf13/viper"
 )
 
 const (
@@ -19,99 +24,107 @@ const (
 	limitPagesPerHour          = "LIMIT_PAGES_PER_HOUR"
 	limitSessionsPerHour       = "LIMIT_SESSIONS_PER_HOUR"
 	limitSessionSizeBytes      = "LIMIT_SESSION_SIZE_BYTES"
-	checkReservedPages         = "CHECK_RESERVED_PAGES"
+	reservedAccountNames       = "RESERVED_ACCOUNT_NAMES"
+	reservedPageNames          = "RESERVED_PAGE_NAMES"
 	allowRemoteHostClients     = "ALLOW_REMOTE_HOST_CLIENTS"
+	hostClientsAuthToken       = "HOST_CLIENTS_AUTH_TOKEN"
 
 	// redis
 	defaultRedisMaxIdle   = 5
 	defaultRedisMaxActive = 10
-	redisAddr             = "REDIS_ADDR"
-	redisPassword         = "REDIS_PASSWORD"
-	redisMaxIdle          = "REDIS_MAX_IDLE"
-	redisMaxActive        = "REDIS_MAX_ACTIVE"
+	redisAddr             = "REDIS.ADDR"
+	redisPassword         = "REDIS.PASSWORD"
+	redisMaxIdle          = "REDIS.MAX_IDLE"
+	redisMaxActive        = "REDIS.MAX_ACTIVE"
 )
 
-func ForceSSL() bool {
-	if n, err := strconv.ParseBool(os.Getenv(forceSSL)); err == nil {
-		return n
+func init() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+
+	if runtime.GOOS == "windows" {
+		viper.AddConfigPath(filepath.Join(os.Getenv("ProgramData"), "pglet"))
+		viper.AddConfigPath(filepath.Join(os.Getenv("USERPROFILE"), ".pglet"))
+	} else {
+		viper.AddConfigPath("/etc/pglet")
+		viper.AddConfigPath("$HOME/.config/pglet")
 	}
-	return false
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			panic(fmt.Errorf("error reading config file: %s", err))
+		}
+	}
+	viper.SetEnvPrefix("pglet")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	// pages/sessions
+	viper.SetDefault(pageLifetimeMinutes, defaultPageLifetimeMinutes)
+	viper.SetDefault(appLifetimeMinutes, defaultAppLifetimeMinutes)
+
+	// redis
+	viper.SetDefault(redisMaxIdle, defaultRedisMaxIdle)
+	viper.SetDefault(redisMaxActive, defaultRedisMaxActive)
+}
+
+func ForceSSL() bool {
+	return viper.GetBool(forceSSL)
 }
 
 func AllowRemoteHostClients() bool {
-	if n, err := strconv.ParseBool(os.Getenv(allowRemoteHostClients)); err == nil {
-		return n
-	}
-	return false
+	return viper.GetBool(allowRemoteHostClients)
+}
+
+func HostClientsAuthToken() string {
+	return viper.GetString(hostClientsAuthToken)
 }
 
 func RedisAddr() string {
-	return os.Getenv(redisAddr)
+	return viper.GetString(redisAddr)
 }
 
 func RedisPassword() string {
-	return os.Getenv(redisPassword)
+	return viper.GetString(redisPassword)
 }
 
 func RedisMaxIdle() int {
-	if n, err := strconv.Atoi(os.Getenv(redisMaxIdle)); err == nil {
-		return n
-	}
-	return defaultRedisMaxIdle
+	return viper.GetInt(redisMaxIdle)
 }
 
 func RedisMaxActive() int {
-	if n, err := strconv.Atoi(os.Getenv(redisMaxActive)); err == nil {
-		return n
-	}
-	return defaultRedisMaxActive
+	return viper.GetInt(redisMaxActive)
 }
 
 func PageLifetimeMinutes() int {
-	if n, err := strconv.Atoi(os.Getenv(pageLifetimeMinutes)); err == nil {
-		return n
-	}
-	return defaultPageLifetimeMinutes
+	return viper.GetInt(pageLifetimeMinutes)
 }
 
 func AppLifetimeMinutes() int {
-	if n, err := strconv.Atoi(os.Getenv(appLifetimeMinutes)); err == nil {
-		return n
-	}
-	return defaultAppLifetimeMinutes
+	return viper.GetInt(appLifetimeMinutes)
 }
 
 func CheckPageIP() bool {
-	if n, err := strconv.ParseBool(os.Getenv(checkPageIP)); err == nil {
-		return n
-	}
-	return false
+	return viper.GetBool(checkPageIP)
 }
 
-func CheckReservedPages() bool {
-	if n, err := strconv.ParseBool(os.Getenv(checkReservedPages)); err == nil {
-		return n
-	}
-	return false
+func ReservedAccountNames() []string {
+	return viper.GetStringSlice(reservedAccountNames)
+}
+
+func ReservedPageNames() []string {
+	return viper.GetStringSlice(reservedPageNames)
 }
 
 func LimitPagesPerHour() int {
-	if n, err := strconv.Atoi(os.Getenv(limitPagesPerHour)); err == nil {
-		return n
-	}
-	return 0
+	return viper.GetInt(limitPagesPerHour)
 }
 
 func LimitSessionsPerHour() int {
-	if n, err := strconv.Atoi(os.Getenv(limitSessionsPerHour)); err == nil {
-		return n
-	}
-	return 0
+	return viper.GetInt(limitSessionsPerHour)
 }
 
 func LimitSessionSizeBytes() int {
-	if n, err := strconv.Atoi(os.Getenv(limitSessionSizeBytes)); err == nil {
-		return n
-	}
-	return 0
+	return viper.GetInt(limitSessionSizeBytes)
 }

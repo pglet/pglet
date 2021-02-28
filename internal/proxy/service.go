@@ -88,8 +88,9 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 
 	// call server
 	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
-		PageName: pageName,
-		IsApp:    false,
+		PageName:  pageName,
+		IsApp:     false,
+		AuthToken: args.Token,
 	})
 
 	// parse response
@@ -145,8 +146,9 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 
 	// call server
 	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
-		PageName: pageName,
-		IsApp:    true,
+		PageName:  pageName,
+		IsApp:     true,
+		AuthToken: args.Token,
 	})
 
 	// parse response

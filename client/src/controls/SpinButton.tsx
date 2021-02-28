@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SpinButton, ISpinButtonProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -38,6 +38,7 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
   const props: ISpinButtonProps = {
+    id: getId(control.i),
     defaultValue: control.value ? control.value : undefined,
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,

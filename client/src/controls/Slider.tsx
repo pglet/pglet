@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Slider, ISliderProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, getId } from './Utils'
 
 export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -46,6 +46,7 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
   const sliderProps: ISliderProps = {
+    id: getId(control.i),
     value: control.value ? parseInt(control.value) : undefined,
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,
