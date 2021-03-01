@@ -1,3 +1,6 @@
+# listening port
+server_port: 8080
+
 # force redirecting to HTTPS protocol
 force_ssl: false
 

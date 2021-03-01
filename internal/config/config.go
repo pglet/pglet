@@ -13,7 +13,9 @@ import (
 const (
 
 	// general settings
-	forceSSL = "FORCE_SSL"
+	defaultServerPort = 5000
+	serverPort        = "SERVER_PORT"
+	forceSSL          = "FORCE_SSL"
 
 	// pages/sessions
 	defaultPageLifetimeMinutes = 1440
@@ -60,6 +62,9 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
+	// general
+	viper.SetDefault(serverPort, defaultServerPort)
+
 	// pages/sessions
 	viper.SetDefault(pageLifetimeMinutes, defaultPageLifetimeMinutes)
 	viper.SetDefault(appLifetimeMinutes, defaultAppLifetimeMinutes)
@@ -67,6 +72,10 @@ func init() {
 	// redis
 	viper.SetDefault(redisMaxIdle, defaultRedisMaxIdle)
 	viper.SetDefault(redisMaxActive, defaultRedisMaxActive)
+}
+
+func ServerPort() int {
+	return viper.GetInt(serverPort)
 }
 
 func ForceSSL() bool {

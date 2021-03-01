@@ -1,11 +1,10 @@
 package commands
 
 import (
-	"os"
-	"strconv"
 	"sync"
 
 	"github.com/pglet/pglet/internal/cache"
+	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/proxy"
 	"github.com/pglet/pglet/internal/server"
 	"github.com/spf13/cobra"
@@ -18,11 +17,6 @@ var (
 func newServerCommand() *cobra.Command {
 
 	var serverPort int
-
-	envPort, err := strconv.Atoi(os.Getenv("PGLET_SERVER_PORT"))
-	if err == nil {
-		defaultPort = envPort
-	}
 
 	var cmd = &cobra.Command{
 		Use:   "server",
@@ -43,7 +37,7 @@ func newServerCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&serverPort, "port", "p", defaultPort, "port on which the server will listen")
+	cmd.Flags().IntVarP(&serverPort, "port", "p", config.ServerPort(), "port on which the server will listen")
 
 	return cmd
 }
