@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react": "8.0.0-beta.55",
+    "@fluentui/react": "8.1.2",
     "@fluentui/react-charting": "5.0.0-beta.0",
     "@reduxjs/toolkit": "^1.4.0",
     "@types/http-proxy-middleware": "^0.19.3",
