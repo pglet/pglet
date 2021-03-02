@@ -61,9 +61,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
         text: oc.text ? oc.text : oc.key
       })), shallowEqual);  
 
-  if (control.value) {
-    dropdownProps.defaultSelectedKey = control.value;
-  }
+  dropdownProps.selectedKey = control.value !== undefined ? control.value : "";
 
   return <Dropdown {...dropdownProps} onChange={handleChange} />;
 })

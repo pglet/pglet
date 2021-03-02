@@ -76,9 +76,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
       return option;
     }), shallowEqual);
 
-  if (control.value) {
-    choiceProps.defaultSelectedKey = control.value;
-  }
+  choiceProps.selectedKey = control.value !== undefined ? control.value : "";
 
   return <ChoiceGroup {...choiceProps} onChange={handleChange} />;
 })

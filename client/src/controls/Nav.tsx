@@ -111,9 +111,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     ws.pageEventFromWeb(control.i, 'change', selectedKey)
   }
 
-  if (control.value) {
-    navProps.selectedKey = control.value;
-  }
+  navProps.selectedKey = control.value !== undefined ? control.value : "";
 
   return <Nav {...navProps} onLinkClick={handleLinkClick} onLinkExpandClick={handleExpandLink} />;
 })
