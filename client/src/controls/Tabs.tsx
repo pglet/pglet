@@ -67,9 +67,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
           }));
   }, shallowEqual)
 
-  if (control.value) {
-    pivotProps.selectedKey = control.value;
-  }
+  pivotProps.selectedKey = control.value !== undefined ? control.value : "";
 
   return <Pivot {...pivotProps} onLinkClick={handleChange}>
     {tabControls.map((tab: any) =>
