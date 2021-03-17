@@ -23,6 +23,8 @@ const (
 	Cleanf          = "cleanf"
 	Remove          = "remove"
 	Removef         = "removef"
+	Begin           = "begin"
+	End             = "end"
 	Quit            = "quit"
 )
 
@@ -41,6 +43,8 @@ var (
 		Cleanf:   {Name: Cleanf, ShouldReturn: false},
 		Remove:   {Name: Remove, ShouldReturn: true},
 		Removef:  {Name: Removef, ShouldReturn: false},
+		Begin:    {Name: Begin, ShouldReturn: false},
+		End:      {Name: End, ShouldReturn: true},
 		Quit:     {Name: Quit, ShouldReturn: false},
 	}
 )

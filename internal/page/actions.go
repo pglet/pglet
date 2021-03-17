@@ -13,6 +13,9 @@ const (
 	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
 	PageCommandFromHostAction = "pageCommandFromHost"
 
+	// PageCommandFromHostAction adds, sets, gets, disconnects or performs other page-related command from host
+	PageCommandsBatchFromHostAction = "pageCommandsBatchFromHost"
+
 	// PageEventFromWebAction receives click, change, expand/collapse and other events from browser
 	PageEventFromWebAction = "pageEventFromWeb"
 
@@ -30,4 +33,6 @@ const (
 	RemoveControlAction = "removeControl"
 
 	CleanControlAction = "cleanControl"
+
+	PageControlsBatchAction = "pageControlsBatch"
 )

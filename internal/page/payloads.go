@@ -59,14 +59,25 @@ type SessionCreatedPayload struct {
 }
 
 type PageCommandRequestPayload struct {
-	PageName  string          `json:"pageName"`
-	SessionID string          `json:"sessionID"`
-	Command   command.Command `json:"command"`
+	PageName  string           `json:"pageName"`
+	SessionID string           `json:"sessionID"`
+	Command   *command.Command `json:"command"`
 }
 
 type PageCommandResponsePayload struct {
 	Result string `json:"result"`
 	Error  string `json:"error"`
+}
+
+type PageCommandsBatchRequestPayload struct {
+	PageName  string             `json:"pageName"`
+	SessionID string             `json:"sessionID"`
+	Commands  []*command.Command `json:"commands"`
+}
+
+type PageCommandsBatchResponsePayload struct {
+	Results []string `json:"results"`
+	Error   string   `json:"error"`
 }
 
 type PageEventPayload struct {

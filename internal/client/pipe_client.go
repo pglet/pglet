@@ -16,12 +16,13 @@ import (
 )
 
 type PipeClient struct {
-	id         string
-	pageName   string
-	sessionID  string
-	pipe       pipe
-	hostClient *HostClient
-	done       chan bool
+	id           string
+	pageName     string
+	sessionID    string
+	pipe         pipe
+	hostClient   *HostClient
+	done         chan bool
+	commandBatch []*command.Command
 }
 
 func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, tickerDuration int) (*PipeClient, error) {
@@ -98,43 +99,86 @@ func (pc *PipeClient) commandLoop() {
 		log.Debugf("Send command: %+v", cmd)
 
 		if cmd.Name == command.Quit {
+			log.Debugln("Quit command")
 			pc.close()
 			return
-		}
-
-		if cmd.ShouldReturn() {
-			// call and wait for result
-			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-				PageName:  pc.pageName,
-				SessionID: pc.sessionID,
-				Command:   *cmd,
-			})
+		} else if cmd.Name == command.Begin {
+			// start new batch
+			log.Debugln("Start new batch")
+			pc.commandBatch = make([]*command.Command, 0)
+		} else if cmd.Name != command.End && pc.commandBatch != nil {
+			// add command to batch
+			log.Debugln("Add command to the batch")
+			pc.commandBatch = append(pc.commandBatch, cmd)
+		} else if cmd.Name == command.End && pc.commandBatch != nil {
+			// run batch
+			log.Debugln("Run batch")
+			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandsBatchFromHostAction,
+				&page.PageCommandsBatchRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Commands:  pc.commandBatch,
+				})
 
 			// parse response
-			payload := &page.PageCommandResponsePayload{}
+			payload := &page.PageCommandsBatchResponsePayload{}
 			err = json.Unmarshal(*rawResult, payload)
 
 			if err != nil {
-				log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+				log.Fatalln("Error parsing response from PageCommandsBatchFromHostAction:", err)
 			}
 
 			// save command results
 			if payload.Error != "" {
 				pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
 			} else {
-				linesCount := utils.CountRune(payload.Result, '\n')
-				pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, payload.Result))
+				for n, result := range payload.Results {
+					if pc.commandBatch[n].ShouldReturn() {
+						pc.writeResult(result)
+					}
+				}
 			}
-
+			pc.commandBatch = nil
 		} else {
-			// fire and forget
-			pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-				PageName:  pc.pageName,
-				SessionID: pc.sessionID,
-				Command:   *cmd,
-			})
+			// run single command
+			if cmd.ShouldReturn() {
+				// call and wait for result
+				rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Command:   cmd,
+				})
+
+				// parse response
+				payload := &page.PageCommandResponsePayload{}
+				err = json.Unmarshal(*rawResult, payload)
+
+				if err != nil {
+					log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+				}
+
+				// save command results
+				if payload.Error != "" {
+					pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
+				} else {
+					pc.writeResult(payload.Result)
+				}
+
+			} else {
+				// fire and forget
+				pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Command:   cmd,
+				})
+			}
 		}
 	}
+}
+
+func (pc *PipeClient) writeResult(result string) {
+	linesCount := utils.CountRune(result, '\n')
+	pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, result))
 }
 
 func (pc *PipeClient) emitEvent(evt string) {

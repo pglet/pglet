@@ -95,6 +95,9 @@ func (c *Client) readHandler(message []byte) error {
 	case PageCommandFromHostAction:
 		c.executeCommandFromHostClient(msg)
 
+	case PageCommandsBatchFromHostAction:
+		c.executeCommandsBatchFromHostClient(msg)
+
 	case PageEventFromWebAction:
 		c.processPageEventFromWebClient(msg)
 
@@ -311,7 +314,7 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 		if session != nil {
 			// process command
 			handler := newSessionHandler(session)
-			result, err := handler.execute(&payload.Command)
+			result, err := handler.execute(payload.Command)
 			responsePayload.Result = result
 			if err != nil {
 				handler.extendExpiration()
@@ -335,6 +338,50 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 
 		c.send(response)
 	}
+}
+
+func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
+	log.Println("Page commands batch from host client")
+
+	payload := new(PageCommandsBatchRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	responsePayload := &PageCommandsBatchResponsePayload{
+		Results: make([]string, 0),
+		Error:   "",
+	}
+
+	// retrieve page and session
+	page := store.GetPageByName(payload.PageName)
+	if page != nil {
+		session := store.GetSession(page, payload.SessionID)
+		if session != nil {
+			// process command
+			handler := newSessionHandler(session)
+			results, err := handler.executeBatch(payload.Commands)
+			responsePayload.Results = results
+			if err != nil {
+				handler.extendExpiration()
+				responsePayload.Error = fmt.Sprint(err)
+			}
+		} else {
+			responsePayload.Error = "Session not found or access denied"
+		}
+	} else {
+		responsePayload.Error = "Page not found or access denied"
+	}
+
+	// send response
+	responsePayloadRaw, _ := json.Marshal(responsePayload)
+
+	response, _ := json.Marshal(&Message{
+		ID:      message.ID,
+		Payload: responsePayloadRaw,
+	})
+
+	c.send(response)
+
+	log.Debugln("After sending batch response")
 }
 
 func (c *Client) processPageEventFromWebClient(message *Message) {
