@@ -48,15 +48,29 @@ const pageSlice = createSlice({
         replacePageControlsError(state, action) {
             state.error = action.payload;
         },
-        changeProps(state, action) {
+        pageControlsBatchSuccess(state, action) {
+            action.payload.forEach(message => {
+                
+                console.log(message);
 
-            action.payload.forEach(props => {
-                const ctrl = state.controls[props.i];
-                if (ctrl) {
-                    Object.assign(ctrl, props)
+                if (message.action === 'addPageControls') {
+                    const { controls, trimIDs } = message.payload
+                    addControls(state, controls);
+                    removeControls(state, trimIDs);
+                } else if (message.action === 'updateControlProps') {
+                    changePropsInternal(state, message.payload.props)
+                } else if (message.action === 'cleanControl') {
+                    cleanControls(state, message.payload.ids)
+                } else if (message.action === 'removeControl') {
+                    removeControls(state, message.payload.ids)
                 }
             })
-            //console.log(current(state))
+        },        
+        pageControlsBatchError(state, action) {
+            state.error = action.payload;
+        },        
+        changeProps(state, action) {
+            changePropsInternal(state, action.payload)
         },
         appendProps(state, action) {
 
@@ -87,6 +101,15 @@ const pageSlice = createSlice({
         }
     }
 })
+
+const changePropsInternal = (state, allProps) => {
+    allProps.forEach(props => {
+        const ctrl = state.controls[props.i];
+        if (ctrl) {
+            Object.assign(ctrl, props)
+        }
+    })    
+}
 
 const addControls = (state, controls) => {
     let firstParentId = null;
@@ -156,7 +179,9 @@ export const {
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,
-    replacePageControlsError,    
+    replacePageControlsError,
+    pageControlsBatchSuccess,
+    pageControlsBatchError,
     changeProps,
     appendProps,
     cleanControl,

@@ -148,7 +148,7 @@ func (h *sessionHandler) executeBatch(commands []*command.Command) (results []st
 	// broadcast all message to clients
 	h.broadcastCommandToWebClients(NewMessage(PageControlsBatchAction, messages))
 
-	return nil, nil
+	return results, nil
 }
 
 func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {

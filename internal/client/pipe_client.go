@@ -128,15 +128,13 @@ func (pc *PipeClient) commandLoop() {
 				log.Fatalln("Error parsing response from PageCommandsBatchFromHostAction:", err)
 			}
 
+			log.Debugln("Response from PageCommandsBatchFromHostAction", payload.Results)
+
 			// save command results
 			if payload.Error != "" {
 				pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
 			} else {
-				for n, result := range payload.Results {
-					if pc.commandBatch[n].ShouldReturn() {
-						pc.writeResult(result)
-					}
-				}
+				pc.writeResult(strings.Join(payload.Results, "\n"))
 			}
 			pc.commandBatch = nil
 		} else {

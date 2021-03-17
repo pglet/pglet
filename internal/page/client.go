@@ -380,8 +380,6 @@ func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
 	})
 
 	c.send(response)
-
-	log.Debugln("After sending batch response")
 }
 
 func (c *Client) processPageEventFromWebClient(message *Message) {
