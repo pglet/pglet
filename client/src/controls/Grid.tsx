@@ -4,7 +4,7 @@ import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ShimmeredDetailsList, IShimmeredDetailsListProps, IColumn, ColumnActionsMode, SelectionMode, Selection } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, isFalse, isTrue } from './Utils'
 import { ControlsList } from './ControlsList'
 
 export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -12,8 +12,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
-
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   let columns: IColumn[] = [];
   let items: any = null;
@@ -25,7 +24,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
       return
     }
 
-    if ((column as any).isSortable === undefined || (column as any).isSortable === 'false') {
+    if ((column as any).isSortable === undefined || isFalse((column as any).isSortable)) {
       return;
     }
 
@@ -98,19 +97,19 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
             key: cc.i,
             name: cc.name,
             iconName: cc.icon,
-            isIconOnly: cc.icononly === 'true',
+            isIconOnly: isTrue(cc.icononly),
             fieldName: cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
             sortField: cc.sortfield ? cc.sortfield.toLowerCase() : cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
-            isResizable: cc.resizable === 'true',
+            isResizable: isTrue(cc.resizable),
             isSortable: cc.sortable,
-            isSorted: cc.sorted === 'true' || cc.sorted === 'asc' || cc.sorted === 'desc',
+            isSorted: isTrue(cc.sorted) || cc.sorted === 'asc' || cc.sorted === 'desc',
             isSortedDescending: cc.sorted === 'desc',
             //isPadded: true,
             minWidth: cc.minwidth ? parseInt(cc.minwidth) : undefined,
             maxWidth: cc.maxwidth ? parseInt(cc.maxwidth) : undefined,
-            onClick: cc.onclick === 'true',
+            onClick: isTrue(cc.onclick),
             onColumnClick: _onColumnClick,
-            columnActionsMode: cc.onclick === 'true' ||
+            columnActionsMode: isTrue(cc.onclick) ||
               (cc.sortable !== undefined && cc.sortable !== 'false') ? ColumnActionsMode.clickable : ColumnActionsMode.disabled,
             template: template,
             onRender: template.length > 0 ? _columnOnRender : undefined
@@ -147,8 +146,8 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     enableShimmer: items.length === 0 && shimmerLines > 0,
     shimmerLines: shimmerLines,
     setKey: "set",
-    compact: control.compact === 'true',
-    isHeaderVisible: control.headervisible === 'false' ? false : true,
+    compact: isTrue(control.compact),
+    isHeaderVisible: isFalse(control.headervisible) ? false : true,
     onItemInvoked: _onItemInvoked,
     styles: {
       root: {
@@ -174,7 +173,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   if (control.selection === 'single' || control.selection === 'multiple') {
     gridProps.selectionMode = control.selection === 'single' ? SelectionMode.single : SelectionMode.multiple;
     gridProps.selection = _selection;
-    gridProps.selectionPreservedOnEmptyClick = control.preserveselection === 'true';
+    gridProps.selectionPreservedOnEmptyClick = isTrue(control.preserveselection);
   }
 
   // <div style={{width: control.width !== undefined ? control.width : 'auto'}}>

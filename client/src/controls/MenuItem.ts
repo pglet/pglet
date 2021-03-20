@@ -1,6 +1,6 @@
 import { ICommandBarItemProps, ContextualMenuItemType, Theme} from '@fluentui/react';
 import { IWebSocket } from '../WebSocket';
-import { getThemeColor, getId } from './Utils'
+import { getThemeColor, getId, isTrue } from './Utils'
 
 export function getMenuProps(state: any, parent: any, parentDisabled: boolean, ws: IWebSocket, theme: Theme, inverted: boolean): any {
     const childControls = parent.children !== undefined ? parent.children
@@ -17,7 +17,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
     };
 
     for (let i = 0; i < itemControls.length; i++) {
-        let disabled = (itemControls[i].disabled === 'true') || parentDisabled;
+        let disabled = isTrue(itemControls[i].disabled) || parentDisabled;
 
         let item: ICommandBarItemProps = {
             key: itemControls[i].i,
@@ -25,17 +25,17 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
             secondaryText: itemControls[i].secondarytext ? itemControls[i].secondarytext : undefined,
             href: itemControls[i].url ? itemControls[i].url : undefined,
             title: itemControls[i].title ? itemControls[i].title : undefined,
-            target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
+            target: isTrue(itemControls[i].newwindow) ? '_blank' : undefined,
             disabled: disabled,
-            split: itemControls[i].split === 'true',
-            checked: itemControls[i].checked === 'true',
+            split: isTrue(itemControls[i].split),
+            checked: isTrue(itemControls[i].checked),
             className: getId(itemControls[i].i)
         };
         if (itemControls[i].icon) {
             item.iconProps = {
                 iconName: itemControls[i].icon
             }
-            item.iconOnly = itemControls[i].icononly === 'true' ? true : false;
+            item.iconOnly = isTrue(itemControls[i].icononly);
 
             if (itemControls[i].iconcolor !== undefined) {
                 item.iconProps!.styles = {
@@ -57,7 +57,7 @@ export function getMenuProps(state: any, parent: any, parentDisabled: boolean, w
                 }
             }
         }
-        if (itemControls[i].divider === 'true') {
+        if (isTrue(itemControls[i].divider)) {
             item.itemType = ContextualMenuItemType.Divider;
             item.key = "divider_" + itemControls[i].i;
         }

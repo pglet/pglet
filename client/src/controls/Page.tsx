@@ -12,7 +12,7 @@ import { isDark } from '@fluentui/react/lib/Color';
 import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
-import { defaultPixels, getWindowHash } from './Utils'
+import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
@@ -126,15 +126,15 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
 
-  if (control.visible === "false") {
+  if (isFalse(control.visible)) {
     return null;
   }
 
-  let disabled = (control.disabled === "true")
+  let disabled = isTrue(control.disabled)
 
   // stack props
   const stackProps: IStackProps = {
-    verticalFill: control.verticalfill ? control.verticalfill === "true" : true,
+    verticalFill: control.verticalfill ? isTrue(control.verticalfill) : true,
     horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {

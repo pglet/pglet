@@ -64,7 +64,7 @@ export const MyPieChart = React.memo<IControlProps>(({control, parentDisabled}) 
         points: data.c.map((childId: any) => {
           const p = state.page.controls[childId];
           return {
-            legend: p.legend,
+            legend: p.legend !== undefined ? p.legend : '',
             data: p.value,
             color: p.color !== undefined ? getThemeColor(theme, p.color) : colors[colorIdx++ % colors.length],
             xAxisCalloutData: p.tooltip,

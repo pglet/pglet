@@ -5,18 +5,18 @@ import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { Dialog, DialogFooter, IDialogProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, isTrue } from './Utils'
 
 export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) => {
 
     const ws = React.useContext(WebSocketContext);
     const dispatch = useDispatch();
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
+    let disabled = isTrue(control.disabled) || parentDisabled;
   
     const handleDismiss = (ev?: React.MouseEvent<HTMLButtonElement>) => {
   
-        const autoDismiss = !control.autodismiss || control.autodismiss === 'true';
+        const autoDismiss = !control.autodismiss || isTrue(control.autodismiss);
 
         if (autoDismiss) {
             const val = "false"
@@ -64,11 +64,11 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
             layerProps: {
                 onLayerWillUnmount: () => cleanupLayers()
             },
-            topOffsetFixed: control.fixedtop === 'true',
-            isBlocking: control.blocking === 'true',
+            topOffsetFixed: isTrue(control.fixedtop),
+            isBlocking: isTrue(control.blocking),
         },
         dialogContentProps: {
-            type: control.largeheader === 'true' ? 1 : control.close === 'true' ? 2 : 0,
+            type: isTrue(control.largeheader) ? 1 : isTrue(control.close) ? 2 : 0,
             title: control.title ? control.title : undefined,
             subText: control.subtext ? control.subtext : undefined,          
         },

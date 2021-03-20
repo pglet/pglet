@@ -4,14 +4,14 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SpinButton, ISpinButtonProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (event: React.SyntheticEvent<HTMLElement>, newValue?: string) => {
     //console.log(newValue);

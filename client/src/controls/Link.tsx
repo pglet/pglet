@@ -4,13 +4,13 @@ import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleClick = () => {
     ws.pageEventFromWeb(control.i, 'click', control.data)
@@ -19,15 +19,15 @@ export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) =>
   const linkProps: ILinkProps = {
     id: getId(control.i),
     href: control.url ? control.url : undefined,
-    target: control.newwindow === 'true' ? '_blank' : undefined,
+    target: isTrue(control.newwindow) ? '_blank' : undefined,
     title: control.title ? control.title : undefined,
     onClick: handleClick,
     disabled: disabled,
     styles: {
       root: {
         fontSize: control.size ? defaultPixels(control.size) : '14px',
-        fontWeight: control.bold === 'true' ? 'bold' : undefined,
-        fontStyle: control.italic === 'true' ? 'italic' : undefined,
+        fontWeight: isTrue(control.bold) ? 'bold' : undefined,
+        fontStyle: isTrue(control.italic) ? 'italic' : undefined,
         textAlign: control.align !== undefined ? control.align : undefined,
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
@@ -43,5 +43,5 @@ export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) =>
 
   return <Link {...linkProps}>{childControls.length > 0 ?
     <ControlsList controls={childControls} parentDisabled={disabled} />
-    : control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Link>;
+    : isTrue(control.pre) ? <pre>{control.value}</pre> : control.value}</Link>;
 })

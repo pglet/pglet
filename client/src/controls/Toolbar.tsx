@@ -3,7 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { shallowEqual, useSelector } from 'react-redux'
 import { CommandBar, ICommandBarProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getThemeColor } from './Utils'
+import { defaultPixels, getThemeColor, isTrue } from './Utils'
 import { getMenuProps } from './MenuItem'
 
 export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -11,8 +11,8 @@ export const Toolbar = React.memo<IControlProps>(({control, parentDisabled}) => 
   const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
 
-  const disabled = (control.disabled === 'true') || parentDisabled;
-  const inverted = control.inverted === "true";
+  const disabled = isTrue(control.disabled) || parentDisabled;
+  const inverted = isTrue(control.inverted);
 
   const barItems = useSelector<any, any>((state: any) =>
     getMenuProps(state, control, disabled, ws, theme, inverted), shallowEqual)

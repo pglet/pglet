@@ -3,13 +3,13 @@ import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
 
     const theme = useTheme();
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
+    let disabled = isTrue(control.disabled) || parentDisabled;
 
     // stack props
     const stackProps: IStackProps = {
@@ -17,7 +17,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         verticalFill: control.verticalfill ? control.verticalfill : false,
         // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
-        wrap: control.wrap === "true",
+        wrap: isTrue(control.wrap),
         styles: {
             root: {
                 width: control.width ? defaultPixels(control.width) : undefined,
@@ -35,8 +35,8 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
                 borderRight: control.borderright ? control.borderright : undefined,
                 borderTop: control.bordertop ? control.bordertop : undefined,
                 borderBottom: control.borderbottom ? control.borderbottom : undefined,
-                overflowX: control.scrollx === "true" ? "auto" : undefined,
-                overflowY: control.scrolly === "true" ? "auto" : undefined,
+                overflowX: isTrue(control.scrollx) ? "auto" : undefined,
+                overflowY: isTrue(control.scrolly) ? "auto" : undefined,
             }
         },
     };

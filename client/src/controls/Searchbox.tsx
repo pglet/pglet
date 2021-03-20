@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SearchBox, ISearchBoxProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, getId } from './Utils'
+import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -12,7 +12,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
 
@@ -31,7 +31,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
 
-    if (control.onchange === 'true') {
+    if (isTrue(control.onchange)) {
       ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
   }
@@ -54,7 +54,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     id: getId(control.i),
     value: control.value ? control.value : "",
     placeholder: control.placeholder ? control.placeholder : null,
-    underlined: control.underlined === 'true',
+    underlined: isTrue(control.underlined),
     disabled: disabled,
     styles: {
       icon: {

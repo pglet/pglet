@@ -4,7 +4,7 @@ import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { MessageBar, MessageBarType, IMessageBarProps, MessageBarButton, IButtonProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
 export const Message = React.memo<IControlProps>(({ control }) => {
 
@@ -53,8 +53,8 @@ export const Message = React.memo<IControlProps>(({ control }) => {
 
   const props: IMessageBarProps = {
     messageBarType: barType,
-    isMultiline: control.multiline === 'true',
-    truncated: control.truncated === 'true',
+    isMultiline: isTrue(control.multiline),
+    truncated: isTrue(control.truncated),
     styles: {
       root: {
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,

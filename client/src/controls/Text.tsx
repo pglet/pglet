@@ -1,7 +1,7 @@
 import React from 'react'
 import { Text, ITextProps, IFontStyles, mergeStyles, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
 // Markdown support
 import ReactMarkdown from 'react-markdown'
@@ -91,8 +91,8 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
         borderRight: control.borderright ? control.borderright : undefined,
         borderTop: control.bordertop ? control.bordertop : undefined,
         borderBottom: control.borderbottom ? control.borderbottom : undefined,
-        fontWeight: control.bold === 'true' ? 'bold' : undefined,
-        fontStyle: control.italic === 'true' ? 'italic' : undefined,
+        fontWeight: isTrue(control.bold) ? 'bold' : undefined,
+        fontStyle: isTrue(control.italic) ? 'italic' : undefined,
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
@@ -101,9 +101,9 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
     }
   };
 
-  if (control.markdown === 'true') {
+  if (isTrue(control.markdown)) {
     return <Text className={className}><ReactMarkdown plugins={[gfm]} children={control.value} /></Text>;
   } else {
-    return <Text {...textProps}>{control.pre === "true" ? <pre>{control.value}</pre> : control.value}</Text>;
+    return <Text {...textProps}>{ isTrue(control.pre) ? <pre>{control.value}</pre> : control.value }</Text>;
   }
 })

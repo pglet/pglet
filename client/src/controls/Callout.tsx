@@ -5,13 +5,13 @@ import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId, parseNumber } from './Utils'
+import { defaultPixels, getId, isFalse, isTrue, parseNumber } from './Utils'
 
 export const MyCallout = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
   const dispatch = useDispatch();
 
   const handleDismiss = () => {
@@ -57,9 +57,9 @@ export const MyCallout = React.memo<IControlProps>(({ control, parentDisabled })
     gapSpace: control.gap !== undefined ? parseNumber(control.gap) : undefined,
     beakWidth: control.beakwidth !== undefined ? parseNumber(control.beakwidth) : undefined,
     minPagePadding: control.pagepadding !== undefined ? parseNumber(control.pagepadding) : undefined,
-    setInitialFocus: control.focus === "true",
-    coverTarget: control.cover === "true",
-    isBeakVisible: control.beak === "false" ? false : true,
+    setInitialFocus: isTrue(control.focus),
+    coverTarget: isTrue(control.cover),
+    isBeakVisible: isFalse(control.beak) ? false : true,
     directionalHint: position,
     onDismiss: handleDismiss,
     styles: {

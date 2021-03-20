@@ -4,14 +4,14 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Checkbox, ICheckboxProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (event?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
 
@@ -39,7 +39,7 @@ export const MyCheckbox = React.memo<IControlProps>(({control, parentDisabled}) 
 
   const checkboxProps: ICheckboxProps = {
     id: getId(control.i),
-    checked: control.value === "true",
+    checked: isTrue(control.value),
     label: control.label ? control.label : null,
     boxSide: control.boxside ? control.boxside : 'start',
     disabled: disabled,

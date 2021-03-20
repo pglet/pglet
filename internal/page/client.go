@@ -434,7 +434,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	log.Println("Update control props from web browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID, "Props:", payload.Props)
 
-	log.Printf("%+v", payload.Props)
+	//log.Printf("%+v", payload.Props)
 
 	// update control tree
 	handler := newSessionHandler(session)
@@ -444,6 +444,27 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		return err
 	}
 	handler.extendExpiration()
+
+	// re-send events to all connected host clients
+	go func() {
+		data, _ := json.Marshal(payload.Props)
+		payload, _ := json.Marshal(PageEventPayload{
+			PageName:    session.Page.Name,
+			SessionID:   session.ID,
+			EventTarget: "page",
+			EventName:   "change",
+			EventData:   string(data),
+		})
+
+		msg, _ := json.Marshal(&Message{
+			Action:  PageEventToHostAction,
+			Payload: payload,
+		})
+
+		for _, clientID := range store.GetSessionHostClients(session) {
+			pubsub.Send(clientChannelName(clientID), msg)
+		}
+	}()
 
 	// re-send the message to all connected web clients
 	go func() {

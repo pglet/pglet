@@ -30,6 +30,7 @@ import { MyVerticalBarChart } from './VerticalBarChart'
 import { MyHorizontalBarChart } from './HorizontalBarChart'
 import { MyPieChart } from './PieChart'
 import { MyLineChart } from './LineChart'
+import { isFalse } from './Utils'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -66,7 +67,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
     }
 
     const renderChild = (control: any) => {
-        if (control.visible === "false") {
+        if (isFalse(control.visible)) {
             return null;
         }
         const ControlType = controlTypes[control.t];

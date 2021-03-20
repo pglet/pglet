@@ -4,14 +4,14 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField, ITextFieldProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
   
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 
@@ -30,7 +30,7 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
 
-    if (control.onchange === 'true') {
+    if (isTrue(control.onchange)) {
       ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
   }
@@ -42,10 +42,10 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     placeholder: control.placeholder ? control.placeholder : null,
     errorMessage: control.errormessage ? control.errormessage : null,
     description: control.description ? control.description : null,
-    multiline: control.multiline ? true : false,
-    type: control.password ? "password" : undefined,
-    canRevealPassword: control.password ? true : undefined,
-    required: control.required ? true : undefined,
+    multiline: isTrue(control.multiline),
+    type: isTrue(control.password) ? "password" : undefined,
+    canRevealPassword: isTrue(control.password),
+    required: isTrue(control.required),
     disabled: disabled,
     styles: {
       root: {

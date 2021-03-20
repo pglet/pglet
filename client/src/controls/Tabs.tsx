@@ -5,14 +5,14 @@ import { changeProps } from '../slices/pageSlice'
 import { Pivot, PivotItem, IPivotProps, mergeStyles } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { ControlsList } from './ControlsList'
-import { defaultPixels } from './Utils'
+import { defaultPixels, isTrue } from './Utils'
 
 export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
   
   const handleChange = (item?: PivotItem, ev?: React.MouseEvent<HTMLElement>) => {
 
@@ -44,7 +44,7 @@ export const Tabs = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const pivotProps: IPivotProps = {
     className: pivotClassName,
-    linkFormat: control.solid === 'true' ? 'tabs' : undefined,
+    linkFormat: isTrue(control.solid) ? 'tabs' : undefined,
     styles: {
       root: {
         marginBottom: control.margin ? defaultPixels(control.margin) : undefined,
