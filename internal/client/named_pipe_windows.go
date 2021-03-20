@@ -38,7 +38,7 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
 		commands:        make(chan string),
-		events:          make(chan string),
+		events:          make(chan string, 1),
 	}
 
 	var err error
