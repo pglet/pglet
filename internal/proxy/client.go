@@ -28,6 +28,7 @@ type ConnectPageArgs struct {
 	Server         string
 	Token          string
 	Uds            bool
+	EmitAllEvents  bool
 	TickerDuration int
 }
 

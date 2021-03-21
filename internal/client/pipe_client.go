@@ -16,16 +16,17 @@ import (
 )
 
 type PipeClient struct {
-	id           string
-	pageName     string
-	sessionID    string
-	pipe         pipe
-	hostClient   *HostClient
-	done         chan bool
-	commandBatch []*command.Command
+	id            string
+	pageName      string
+	sessionID     string
+	pipe          pipe
+	hostClient    *HostClient
+	emitAllEvents bool
+	done          chan bool
+	commandBatch  []*command.Command
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, tickerDuration int) (*PipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, emitAllEvents bool, tickerDuration int) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
 	var err error
@@ -41,12 +42,13 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 	}
 
 	pc := &PipeClient{
-		id:         id,
-		pageName:   pageName,
-		sessionID:  sessionID,
-		pipe:       p,
-		hostClient: hc,
-		done:       make(chan bool),
+		id:            id,
+		pageName:      pageName,
+		sessionID:     sessionID,
+		pipe:          p,
+		hostClient:    hc,
+		emitAllEvents: emitAllEvents,
+		done:          make(chan bool),
 	}
 
 	if tickerDuration > 0 {
@@ -180,6 +182,10 @@ func (pc *PipeClient) writeResult(result string) {
 }
 
 func (pc *PipeClient) emitEvent(evt string) {
+
+	if strings.HasPrefix(evt, "page change ") && !pc.emitAllEvents {
+		return
+	}
 	pc.pipe.emitEvent(evt)
 }
 

@@ -111,7 +111,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	results.PageURL = getPageURL(serverURL, payload.PageName)
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds, args.TickerDuration)
+	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds, args.EmitAllEvents, args.TickerDuration)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 	}
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds, args.TickerDuration)
+	pc, err := client.NewPipeClient(pageName, sessionID, hc, args.Uds, args.EmitAllEvents, args.TickerDuration)
 	if err != nil {
 		return err
 	}

@@ -151,9 +151,9 @@ func (pc *namedPipe) emitEvent(evt string) {
 
 	select {
 	case pc.events <- evt:
-		log.Debugln("Event sent to queue:", evt)
+		//log.Debugln("Event sent to queue:", evt)
 	default:
-		log.Debugln("No event listeners:", evt)
+		//log.Debugln("No event listeners:", evt)
 	}
 }
 
