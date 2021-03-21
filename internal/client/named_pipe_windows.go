@@ -8,7 +8,6 @@ import (
 	"io"
 	"net"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -38,7 +37,7 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
 		commands:        make(chan string),
-		events:          make(chan string, 1),
+		events:          make(chan string, 2),
 	}
 
 	var err error
@@ -147,11 +146,14 @@ func (pc *namedPipe) writeResult(result string) {
 }
 
 func (pc *namedPipe) emitEvent(evt string) {
+
+	//log.Debugln("Emit event:", evt)
+
 	select {
 	case pc.events <- evt:
-		// Event sent to queue
+		log.Debugln("Event sent to queue:", evt)
 	default:
-		// No event listeners
+		log.Debugln("No event listeners:", evt)
 	}
 }
 
@@ -174,7 +176,7 @@ func (pc *namedPipe) eventLoop() {
 
 			for {
 				select {
-				case evt, more := <-pc.events:
+				case evt := <-pc.events:
 
 					w := bufio.NewWriter(conn)
 
@@ -184,25 +186,25 @@ func (pc *namedPipe) eventLoop() {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("write error:", err)
+						log.Println("write error:", err)
 						return
 					}
 
-					conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+					//conn.SetWriteDeadline(time.Now().Add(100 * time.Millisecond))
 					err = w.Flush()
 					if err != nil {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("flush error:", err)
+						log.Println("flush error:", err)
 						return
 					}
 
 					log.Println("event written:", evt)
 
-					if !more {
-						return
-					}
+					// if !more {
+					// 	return
+					// }
 				}
 			}
 
