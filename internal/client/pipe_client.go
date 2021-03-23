@@ -108,10 +108,12 @@ func (pc *PipeClient) commandLoop() {
 			// start new batch
 			log.Debugln("Start new batch")
 			pc.commandBatch = make([]*command.Command, 0)
+			pc.writeResult("")
 		} else if cmd.Name != command.End && pc.commandBatch != nil {
 			// add command to batch
 			log.Debugln("Add command to the batch")
 			pc.commandBatch = append(pc.commandBatch, cmd)
+			pc.writeResult("")
 		} else if cmd.Name == command.End && pc.commandBatch != nil {
 			// run batch
 			log.Debugln("Run batch")
