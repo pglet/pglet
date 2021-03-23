@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,7 +35,7 @@ func newUnixDomainSocket(id string) (*unixDomainSocket, error) {
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
 		commands:        make(chan string),
-		events:          make(chan string),
+		events:          make(chan string, 2),
 	}
 
 	go pc.commandLoop()
@@ -140,11 +139,13 @@ func (pc *unixDomainSocket) writeResult(result string) {
 }
 
 func (pc *unixDomainSocket) emitEvent(evt string) {
+	//log.Debugln("Emit event:", evt)
+
 	select {
 	case pc.events <- evt:
-		// Event sent to queue
+		log.Debugln("Event sent to queue:", evt)
 	default:
-		// No event listeners
+		log.Debugln("No event listeners:", evt)
 	}
 }
 
@@ -188,7 +189,7 @@ func (pc *unixDomainSocket) eventLoop() {
 						return
 					}
 
-					conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+					//conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
 					err = w.Flush()
 					if err != nil {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {

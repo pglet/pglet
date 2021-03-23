@@ -464,12 +464,7 @@ func (c *memoryCache) send(channel string, message []byte) {
 	}
 
 	for ch := range subscribers {
-		select {
-		case ch <- message:
-			// Message sent to subscriber
-		default:
-			// No listeners
-		}
+		ch <- message
 	}
 }
 

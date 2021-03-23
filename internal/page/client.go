@@ -446,25 +446,25 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	handler.extendExpiration()
 
 	// re-send events to all connected host clients
-	go func() {
-		data, _ := json.Marshal(payload.Props)
-		payload, _ := json.Marshal(PageEventPayload{
-			PageName:    session.Page.Name,
-			SessionID:   session.ID,
-			EventTarget: "page",
-			EventName:   "change",
-			EventData:   string(data),
-		})
+	//go func() {
+	data, _ := json.Marshal(payload.Props)
+	p, _ := json.Marshal(PageEventPayload{
+		PageName:    session.Page.Name,
+		SessionID:   session.ID,
+		EventTarget: "page",
+		EventName:   "change",
+		EventData:   string(data),
+	})
 
-		msg, _ := json.Marshal(&Message{
-			Action:  PageEventToHostAction,
-			Payload: payload,
-		})
+	msg, _ := json.Marshal(&Message{
+		Action:  PageEventToHostAction,
+		Payload: p,
+	})
 
-		for _, clientID := range store.GetSessionHostClients(session) {
-			pubsub.Send(clientChannelName(clientID), msg)
-		}
-	}()
+	for _, clientID := range store.GetSessionHostClients(session) {
+		pubsub.Send(clientChannelName(clientID), msg)
+	}
+	//}()
 
 	// re-send the message to all connected web clients
 	go func() {
