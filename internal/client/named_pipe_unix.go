@@ -32,7 +32,7 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
-		events:          make(chan string, 1),
+		events:          make(chan string, 2),
 	}
 
 	return pc, pc.start()
