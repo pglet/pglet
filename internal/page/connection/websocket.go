@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/pglet/pglet/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,9 +17,6 @@ const (
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 16384
 )
 
 type WebSocket struct {
@@ -52,7 +50,7 @@ func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 		c.done <- true
 		c.conn.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadLimit(int64(config.MaxWebSocketMessageSize()))
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
 		log.Traceln("received pong")

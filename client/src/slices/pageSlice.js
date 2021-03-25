@@ -51,7 +51,7 @@ const pageSlice = createSlice({
         pageControlsBatchSuccess(state, action) {
             action.payload.forEach(message => {
                 
-                console.log(message);
+                //console.log(message);
 
                 if (message.action === 'addPageControls') {
                     const { controls, trimIDs } = message.payload

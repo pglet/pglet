@@ -13,9 +13,11 @@ import (
 const (
 
 	// general settings
-	defaultServerPort = 5000
-	serverPort        = "SERVER_PORT"
-	forceSSL          = "FORCE_SSL"
+	defaultServerPort              = 5000
+	serverPort                     = "SERVER_PORT"
+	forceSSL                       = "FORCE_SSL"
+	defaultWebSocketMaxMessageSize = 65535
+	wsMaxMessageSize               = "WS_MAX_MESSAGE_SIZE"
 
 	// pages/sessions
 	defaultPageLifetimeMinutes = 1440
@@ -64,6 +66,7 @@ func init() {
 
 	// general
 	viper.SetDefault(serverPort, defaultServerPort)
+	viper.SetDefault(wsMaxMessageSize, defaultWebSocketMaxMessageSize)
 
 	// pages/sessions
 	viper.SetDefault(pageLifetimeMinutes, defaultPageLifetimeMinutes)
@@ -76,6 +79,10 @@ func init() {
 
 func ServerPort() int {
 	return viper.GetInt(serverPort)
+}
+
+func MaxWebSocketMessageSize() int {
+	return viper.GetInt(wsMaxMessageSize)
 }
 
 func ForceSSL() bool {
