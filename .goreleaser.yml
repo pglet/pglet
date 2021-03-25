@@ -27,7 +27,7 @@ dockers:
     goarch: amd64
     goarm: ''
 
-    builds:
+    ids:
     - pglet
 
     image_templates:
