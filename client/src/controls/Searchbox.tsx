@@ -8,13 +8,25 @@ import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
+  //console.log("Render Searchbox", control.i);
+
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
 
   let disabled = isTrue(control.disabled) || parentDisabled;
 
+  let _lastChangeValue: string | undefined;
+
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
+
+    if (newValue === _lastChangeValue) {
+      _lastChangeValue = undefined;
+      return;
+    }
+    _lastChangeValue = newValue;
+
+    //console.log("Searchbox handleChange:", newValue);
 
     let payload: any = {}
     if (control.f) {

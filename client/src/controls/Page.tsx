@@ -2,7 +2,7 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
 import {
   BaseSlots,
   ThemeGenerator,
@@ -18,7 +18,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-
+  const [theme, setTheme] = React.useState<PartialTheme | undefined>();
 
   // page title
   let title = `${pageName} - pglet`;
@@ -27,55 +27,39 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   }
   useTitle(title)
 
-  // theme
-  const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
-  const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
+  function buildTheme() {
+    // theme
+    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
+    const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
+    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
 
-  //console.log("themeBackgroundColor:", themeBackgroundColor);  
-
-  // theme
-  let themeRules = themeRulesStandardCreator();
-  function changeColor(baseSlot: BaseSlots, newColor: any) {
-    const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
-    ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
-    if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
-      // isInverted got swapped, so need to refresh slots with new shading rules
-      ThemeGenerator.insureSlots(themeRules, currentIsDark);
+    // theme
+    let themeRules = themeRulesStandardCreator();
+    function changeColor(baseSlot: BaseSlots, newColor: any) {
+      const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
+      ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
+      if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
+        // isInverted got swapped, so need to refresh slots with new shading rules
+        ThemeGenerator.insureSlots(themeRules, currentIsDark);
+      }
     }
+
+    changeColor(BaseSlots.primaryColor, themePrimaryColor);
+    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
+    changeColor(BaseSlots.foregroundColor, themeTextColor);
+    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
+
+    const themeAsJson: {
+      [key: string]: string;
+    } = ThemeGenerator.getThemeAsJson(themeRules);
+
+    setTheme(createTheme({
+      ...{ palette: themeAsJson },
+      isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
+    }));
+
+    document.documentElement.style.background = themeBackgroundColor;
   }
-
-  changeColor(BaseSlots.primaryColor, themePrimaryColor);
-  changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-  changeColor(BaseSlots.foregroundColor, themeTextColor);
-  changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-
-  const themeAsJson: {
-    [key: string]: string;
-  } = ThemeGenerator.getThemeAsJson(themeRules);
-
-  const theme = createTheme({
-    ...{ palette: themeAsJson },
-    isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
-  });
-
-  // strip out the unnecessary shade slots from the final output theme
-  // const abridgedTheme: IThemeRules = {};
-  // for (const ruleName in themeRules) {
-  //   if (themeRules.hasOwnProperty(ruleName)) {
-  //     if (
-  //       ruleName.indexOf('ColorShade') === -1 &&
-  //       ruleName !== 'primaryColor' &&
-  //       ruleName !== 'backgroundColor' &&
-  //       ruleName !== 'foregroundColor' &&
-  //       ruleName.indexOf('body') === -1
-  //     ) {
-  //       abridgedTheme[ruleName] = themeRules[ruleName];
-  //     }
-  //   }
-  // }
-
-  // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
   const data = {
     fireUpdateHashEvent: true
@@ -97,6 +81,8 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   }
 
   React.useEffect(() => {
+
+    buildTheme();
 
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";
@@ -147,8 +133,6 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     },
   };
 
-  document.documentElement.style.background = themeBackgroundColor;
-
   const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
@@ -158,8 +142,8 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   });
 
   return <ThemeProvider theme={theme} className={className}>
-    <Stack tokens={stackTokens} {...stackProps}>
-      <ControlsList controls={childControls} parentDisabled={disabled} />
-    </Stack>
-  </ThemeProvider>
+      <Stack tokens={stackTokens} {...stackProps}>
+        <ControlsList controls={childControls} parentDisabled={disabled} />
+      </Stack>
+    </ThemeProvider>
 })

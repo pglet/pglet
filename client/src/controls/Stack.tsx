@@ -7,6 +7,8 @@ import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
 
+    //console.log("Render stack", control.i);
+
     const theme = useTheme();
 
     let disabled = isTrue(control.disabled) || parentDisabled;
