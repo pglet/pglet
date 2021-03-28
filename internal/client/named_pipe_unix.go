@@ -32,7 +32,7 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
-		events:          make(chan string, 2),
+		events:          make(chan string, 1),
 	}
 
 	return pc, pc.start()
@@ -104,9 +104,9 @@ func (pc *namedPipe) writeResult(result string) {
 func (pc *namedPipe) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
-		// Event sent to queue
+		log.Debugln("Event sent to queue:", evt)
 	default:
-		// No event listeners
+		log.Debugln("No event listeners:", evt)
 	}
 }
 
@@ -123,13 +123,9 @@ func (pc *namedPipe) eventLoop() {
 		}
 
 		select {
-		case evt, more := <-pc.events:
+		case evt := <-pc.events:
 			output.WriteString(evt + "\n")
 			output.Close()
-
-			if !more {
-				return
-			}
 		}
 	}
 }
