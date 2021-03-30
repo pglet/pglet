@@ -1,17 +1,27 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
+import { WebSocketContext } from '../WebSocket';
 import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
-export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
     //console.log("Render stack", control.i);
 
     const theme = useTheme();
 
     let disabled = isTrue(control.disabled) || parentDisabled;
+
+    const ws = React.useContext(WebSocketContext);
+
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (event.code === "Enter" && (event.target as any).tagName === "INPUT") {
+            ws.pageEventFromWeb(control.i, 'submit', control.data);
+            event.stopPropagation();
+        }
+    }
 
     // stack props
     const stackProps: IStackProps = {
@@ -49,7 +59,11 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
 
     if (control.verticalalign) {
         stackProps.verticalAlign = control.verticalalign;
-    }    
+    }
+
+    if (isTrue(control.onsubmit)) {
+        stackProps.onKeyPress = handleKeyPress;
+    }
 
     const stackTokens: IStackTokens = {
         childrenGap: control.gap ? control.gap : 10
