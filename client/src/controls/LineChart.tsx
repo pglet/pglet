@@ -49,7 +49,7 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
           const p = state.page.controls[childId];
           const y = parseNumber(p.y)
           return {
-            x: xtype === "date" ? new Date(p.x) : parseNumber(p.x),
+            x: xtype && xtype.toLowerCase() === "date" ? new Date(p.x) : parseNumber(p.x),
             y: y,
             tick: p.tick && p.tick.length > 0 ? xtype === "date" ? new Date(p.tick) : parseNumber(p.tick) : undefined,
             legend: p.legend,
