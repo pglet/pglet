@@ -37,7 +37,7 @@ export const MyDropdown = React.memo<IControlProps>(({control, parentDisabled}) 
   }
 
   const dropdownProps: IDropdownProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
     errorMessage: control.errormessage ? control.errormessage : null,

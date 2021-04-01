@@ -78,7 +78,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
             return <MessageBar key={control.i} messageBarType={MessageBarType.error} messageBarIconProps={ { iconName: 'WebComponents'} }
                 isMultiline><b>Unknown control:</b> {`${control.t} ${props}`}</MessageBar>
         }
-        return <ControlType key={control.i} control={control} parentDisabled={parentDisabled} />
+        return <ControlType key={control.f ? control.f : control.i} control={control} parentDisabled={parentDisabled} />
     }
 
     return controls.map(renderChild);

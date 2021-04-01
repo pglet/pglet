@@ -38,7 +38,7 @@ export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) =>
   }
 
   const toggleProps: IToggleProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     checked: isTrue(control.value),
     inlineLabel: isTrue(control.inline),
     label: control.label ? control.label : undefined,

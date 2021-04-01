@@ -17,7 +17,7 @@ export const MyLink = React.memo<IControlProps>(({ control, parentDisabled }) =>
   }
 
   const linkProps: ILinkProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     href: control.url ? control.url : undefined,
     target: isTrue(control.newwindow) ? '_blank' : undefined,
     title: control.title ? control.title : undefined,

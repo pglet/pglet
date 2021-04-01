@@ -38,7 +38,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
   }
 
   const choiceProps: IChoiceGroupProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     label: control.label ? control.label : null,
     options: [],
     disabled: disabled,

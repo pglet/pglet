@@ -44,7 +44,7 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     getMenuProps(state, control, disabled, ws, theme, false), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     text: control.text ? control.text : control.i,
     href: control.url ? control.url : undefined,
     title: control.title ? control.title : undefined,

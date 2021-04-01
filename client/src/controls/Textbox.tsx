@@ -36,7 +36,7 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
   }
 
   const textFieldProps: ITextFieldProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     value: control.value ? control.value : "",
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,

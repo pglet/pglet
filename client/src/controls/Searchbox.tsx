@@ -63,7 +63,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color
 
   const props: ISearchBoxProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     value: control.value ? control.value : "",
     placeholder: control.placeholder ? control.placeholder : null,
     underlined: isTrue(control.underlined),

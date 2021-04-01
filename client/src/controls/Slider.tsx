@@ -46,7 +46,7 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
   const sliderProps: ISliderProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     value: control.value ? parseInt(control.value) : undefined,
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,
