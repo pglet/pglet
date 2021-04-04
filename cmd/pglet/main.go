@@ -11,7 +11,7 @@ import (
 func main() {
 
 	interruptCh := make(chan os.Signal, 1)
-	signal.Notify(interruptCh, os.Interrupt)
+	signal.Notify(interruptCh, os.Interrupt, os.Kill)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
