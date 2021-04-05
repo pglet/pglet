@@ -274,7 +274,16 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		log.Fatalf("Proxy service shutdown failed:%+s", err)
 	}
 
+	proxySvc.close()
+
 	log.Println("Proxy service exited")
+}
+
+func (ps *Service) close() {
+	// close all host clients
+	for _, hc := range ps.hostClients {
+		hc.Close()
+	}
 }
 
 func buildWSEndPointURL(serverURL string) string {

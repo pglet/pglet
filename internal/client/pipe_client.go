@@ -194,7 +194,11 @@ func (pc *PipeClient) emitEvent(evt string) {
 func (pc *PipeClient) close() {
 	log.Println("Closing pipe client...")
 
-	pc.done <- true
+	select {
+	case pc.done <- true:
+	default:
+	}
+
 	pc.pipe.close()
 
 	pc.hostClient.UnregisterPipeClient(pc)
