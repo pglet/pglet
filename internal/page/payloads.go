@@ -80,6 +80,10 @@ type PageCommandsBatchResponsePayload struct {
 	Error   string   `json:"error"`
 }
 
+type InactiveAppRequestPayload struct {
+	PageName string `json:"pageName"`
+}
+
 type PageEventPayload struct {
 	PageName    string `json:"pageName"`
 	SessionID   string `json:"sessionID"`
@@ -113,4 +117,8 @@ type RemoveControlPayload struct {
 
 type CleanControlPayload struct {
 	IDs []string `json:"ids"`
+}
+
+type AppBecomeInactivePayload struct {
+	Message string `json:"message"`
 }

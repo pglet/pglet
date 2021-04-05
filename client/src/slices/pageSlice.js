@@ -24,6 +24,10 @@ const pageSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         },
+        appBecomeInactive(state, action) {
+            state.error = action.payload.message;
+            cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
+        },
         addPageControlsSuccess(state, action) {
             const { controls, trimIDs } = action.payload
             addControls(state, controls);
@@ -176,6 +180,7 @@ const getAllDescendantIds = (controls, nodeId) => {
 export const {
     registerWebClientSuccess,
     registerWebClientError,
+    appBecomeInactive,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,

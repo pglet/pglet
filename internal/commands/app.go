@@ -62,6 +62,9 @@ func newAppCommand() *cobra.Command {
 				results, err := client.WaitAppSession(cmd.Context(), connectArgs)
 				if err != nil {
 					log.Fatalln("Error waiting for a new session:", err)
+				} else if results.PageName == "" {
+					// timeout - wait again
+					continue
 				}
 				fmt.Println(results.PipeName)
 			}

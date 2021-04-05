@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import {
     registerWebClientSuccess,
     registerWebClientError,
+    appBecomeInactive,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,
@@ -68,6 +69,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                         session: data.payload.session
                     }));
                 }
+            } else if (data.action === "appBecomeInactive") {
+                dispatch(appBecomeInactive(data.payload));
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
                     dispatch(addPageControlsError(data.payload.error));

@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	pgletIoURL = "https://app.pglet.io"
+	pgletIoURL            = "https://app.pglet.io"
+	waitAppTimeoutSeconds = 5
 )
 
 var (
@@ -41,11 +42,15 @@ func init() {
 type Service struct {
 	hcMutex     sync.RWMutex
 	hostClients map[string]*client.HostClient
+
+	appTimerMutex sync.RWMutex
+	appTimers     map[string]*time.Timer
 }
 
 func newService() *Service {
 	ps := &Service{}
 	ps.hostClients = make(map[string]*client.HostClient)
+	ps.appTimers = make(map[string]*time.Timer)
 	return ps
 }
 
@@ -178,6 +183,8 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 	pageName := args.PageName
 	serverURL, err := getServerURL(args.Web, args.Server)
 
+	ps.handleAppTimeout(pageName, serverURL)
+
 	if err != nil {
 		return err
 	}
@@ -188,14 +195,20 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 		return err
 	}
 
-	log.Println("Waiting for a new app session:", pageName)
+	log.Debugln("Waiting for a new app session:", pageName)
+
+	timer := time.NewTimer(waitAppTimeoutSeconds * time.Second)
 
 	var sessionID string
 
 	// wait for new session
 	select {
 	case sessionID = <-hc.PageNewSessions(pageName):
+		timer.Stop()
 		break
+	case <-timer.C:
+		//log.Debugln("Wait app session timeout elapsed")
+		return nil
 	case <-ctx.Done():
 		return errors.New("abort waiting for new session")
 	}
@@ -216,6 +229,45 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 	results.PipeName = pc.CommandPipeName()
 
 	return nil
+}
+
+func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
+	ps.appTimerMutex.Lock()
+	defer ps.appTimerMutex.Unlock()
+
+	key := pageName + serverURL
+	timer, ok := ps.appTimers[key]
+	if ok {
+		timer.Stop()
+	}
+
+	timer = time.NewTimer((waitAppTimeoutSeconds + 1) * time.Second)
+	ps.appTimers[key] = timer
+
+	go func() {
+		<-timer.C
+		log.Debugln("App page has become inactive:", pageName)
+		delete(ps.appTimers, key)
+		ps.handleInactiveApp(pageName, serverURL)
+	}()
+}
+
+func (ps *Service) handleInactiveApp(pageName string, serverURL string) {
+	log.Debugln("Handling inactive app page:", pageName)
+
+	hc, err := ps.getHostClient(serverURL)
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+
+	// notify Pglet server that app is inactive
+	hc.CallAndForget(page.InactiveAppFromHostAction, &page.InactiveAppRequestPayload{
+		PageName: pageName,
+	})
+
+	// close stale pipe clients
+	hc.CloseAppClients(pageName)
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup) {

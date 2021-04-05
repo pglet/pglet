@@ -166,6 +166,12 @@ func (hc *HostClient) UnregisterPipeClient(pc *PipeClient) {
 		if ok {
 			delete(sessionClients, pc)
 		}
+		if len(sessionClients) == 0 {
+			delete(pageSessions, pc.sessionID)
+		}
+	}
+	if len(pageSessions) == 0 {
+		delete(hc.pageSessionClients, pc.pageName)
 	}
 }
 
@@ -220,6 +226,19 @@ func (hc *HostClient) PageNewSessions(pageName string) chan string {
 		hc.newSessions[pageName] = ns
 	}
 	return ns
+}
+
+func (hc *HostClient) CloseAppClients(pageName string) {
+	log.Debugln("Closing inactive app clients", pageName)
+
+	pageSessions, ok := hc.pageSessionClients[pageName]
+	if ok {
+		for _, clients := range pageSessions {
+			for client := range clients {
+				client.close()
+			}
+		}
+	}
 }
 
 func (hc *HostClient) Close() {

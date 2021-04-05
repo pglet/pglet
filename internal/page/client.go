@@ -20,9 +20,11 @@ import (
 type ClientRole string
 
 const (
-	None       ClientRole = "None"
-	WebClient             = "Web"
-	HostClient            = "Host"
+	None                ClientRole = "None"
+	WebClient                      = "Web"
+	HostClient                     = "Host"
+	pageNotFoundMessage            = "Page not found or access denied."
+	inactiveAppMessage             = "Application is inactive. Please try refreshing this page later."
 )
 
 type Client struct {
@@ -32,7 +34,7 @@ type Client struct {
 	clientIP     string
 	subscription chan []byte
 	sessions     map[*model.Session]bool
-	pages        map[*model.Page]bool
+	pages        map[string]*model.Page
 }
 
 func autoID() string {
@@ -45,7 +47,7 @@ func NewClient(conn connection.Conn, clientIP string) *Client {
 		conn:     conn,
 		clientIP: clientIP,
 		sessions: make(map[*model.Session]bool),
-		pages:    make(map[*model.Page]bool),
+		pages:    make(map[string]*model.Page),
 	}
 
 	log.Println("Client IP:", clientIP)
@@ -103,6 +105,9 @@ func (c *Client) readHandler(message []byte) error {
 
 	case UpdateControlPropsAction:
 		c.updateControlPropsFromWebClient(msg)
+
+	case InactiveAppFromHostAction:
+		c.handleInactiveAppFromHostClient(msg)
 	}
 
 	return nil
@@ -128,7 +133,9 @@ func (c *Client) registerWebClient(message *Message) {
 	}
 
 	if page == nil {
-		response.Error = "Page not found or access denied"
+		response.Error = pageNotFoundMessage
+	} else if len(store.GetPageHostClients(page)) == 0 {
+		response.Error = inactiveAppMessage
 	} else {
 		var session *model.Session
 
@@ -479,12 +486,66 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	return nil
 }
 
+func (c *Client) handleInactiveAppFromHostClient(message *Message) {
+	payload := new(InactiveAppRequestPayload)
+	json.Unmarshal(message.Payload, payload)
+
+	log.Println("Handle inactive app from host client", payload.PageName)
+
+	page, ok := c.pages[payload.PageName]
+	if ok {
+		c.unregisterPage(page)
+	}
+}
+
 func (c *Client) registerPage(page *model.Page) {
 
 	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
 
 	store.AddPageHostClient(page, c.id)
-	c.pages[page] = true
+	c.pages[page.Name] = page
+}
+
+func (c *Client) unregisterPage(page *model.Page) {
+	log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
+
+	store.RemovePageHostClient(page, c.id)
+
+	// delete app sessions
+	if page.IsApp {
+		clients := make([]string, 0)
+		for _, sessionID := range store.GetPageSessions(page.ID) {
+			sessionClients := store.GetSessionWebClients(&model.Session{
+				Page: page,
+				ID:   sessionID,
+			})
+
+			for _, clientID := range sessionClients {
+				clients = append(clients, clientID)
+			}
+
+			log.Debugln("Delete inactive app session:", page.ID, sessionID)
+			store.DeleteSession(page.ID, sessionID)
+		}
+
+		store.DeletePage(page.ID)
+
+		go func() {
+			for _, clientID := range clients {
+				log.Debugln("Notify client which app become inactive:", clientID)
+
+				p, _ := json.Marshal(AppBecomeInactivePayload{
+					Message: inactiveAppMessage,
+				})
+
+				msg, _ := json.Marshal(&Message{
+					Action:  AppBecomeInactiveAction,
+					Payload: p,
+				})
+				pubsub.Send(clientChannelName(clientID), msg)
+			}
+		}()
+	}
 }
 
 func (c *Client) registerSession(session *model.Session) {
@@ -521,9 +582,8 @@ func (c *Client) unregister() {
 	}
 
 	// unregister from all pages
-	for page := range c.pages {
-		log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
-		store.RemovePageHostClient(page, c.id)
+	for _, page := range c.pages {
+		c.unregisterPage(page)
 	}
 }
 
