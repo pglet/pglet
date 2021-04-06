@@ -13,6 +13,7 @@ import (
 func RunBackgroundTasks(ctx context.Context) {
 	log.Println("Starting background tasks...")
 	go CleanupPagesAndSessions()
+	go CleanupExpiredClients()
 }
 
 func CleanupPagesAndSessions() {
@@ -35,6 +36,21 @@ func CleanupPagesAndSessions() {
 					store.DeletePage(pageID)
 				}
 			}
+		}
+	}
+}
+
+func CleanupExpiredClients() {
+	log.Println("Start background task to cleanup expired clients")
+
+	ticker := time.NewTicker(20 * time.Second)
+	for {
+		<-ticker.C
+
+		clients := store.GetExpiredClients()
+		for _, clientID := range clients {
+			log.Debugln("Delete expired client:", clientID)
+			store.DeleteExpiredClient(clientID)
 		}
 	}
 }

@@ -29,7 +29,7 @@ func NewWebSocket(conn *websocket.Conn) *WebSocket {
 	cws := &WebSocket{
 		conn: conn,
 		send: make(chan []byte, 10),
-		done: make(chan bool),
+		done: make(chan bool, 1),
 	}
 	return cws
 }

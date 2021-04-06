@@ -20,11 +20,12 @@ import (
 type ClientRole string
 
 const (
-	None                ClientRole = "None"
-	WebClient                      = "Web"
-	HostClient                     = "Host"
-	pageNotFoundMessage            = "Page not found or access denied."
-	inactiveAppMessage             = "Application is inactive. Please try refreshing this page later."
+	None                    ClientRole = "None"
+	WebClient                          = "Web"
+	HostClient                         = "Host"
+	pageNotFoundMessage                = "Page not found or access denied."
+	inactiveAppMessage                 = "Application is inactive. Please try refreshing this page later."
+	clientExpirationSeconds            = 20
 )
 
 type Client struct {
@@ -33,8 +34,9 @@ type Client struct {
 	conn         connection.Conn
 	clientIP     string
 	subscription chan []byte
-	sessions     map[*model.Session]bool
+	sessions     map[string]*model.Session
 	pages        map[string]*model.Page
+	done         chan bool
 }
 
 func autoID() string {
@@ -46,16 +48,19 @@ func NewClient(conn connection.Conn, clientIP string) *Client {
 		id:       autoID(),
 		conn:     conn,
 		clientIP: clientIP,
-		sessions: make(map[*model.Session]bool),
+		sessions: make(map[string]*model.Session),
 		pages:    make(map[string]*model.Page),
+		done:     make(chan bool, 1),
 	}
 
 	log.Println("Client IP:", clientIP)
 
 	go c.subscribe()
+	go c.extendExpiration()
 
 	go func() {
 		conn.Start(c.readHandler)
+		c.done <- true
 		c.unregister()
 	}()
 
@@ -73,6 +78,20 @@ func (c *Client) subscribe() {
 				return
 			}
 			c.send(msg)
+		}
+	}
+}
+
+func (c *Client) extendExpiration() {
+	ticker := time.NewTicker(time.Duration(clientExpirationSeconds-2) * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
+		case <-c.done:
+			return
 		}
 	}
 }
@@ -393,7 +412,7 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 
 	// web client can have only one session assigned
 	var session *model.Session
-	for s := range c.sessions {
+	for _, s := range c.sessions {
 		session = s
 		break
 	}
@@ -430,7 +449,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 
 	// web client can have only one session assigned
 	var session *model.Session
-	for s := range c.sessions {
+	for _, s := range c.sessions {
 		session = s
 		break
 	}
@@ -510,27 +529,38 @@ func (c *Client) unregisterPage(page *model.Page) {
 	log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
 
 	store.RemovePageHostClient(page, c.id)
+	delete(c.pages, page.Name)
 
 	// delete app sessions
 	if page.IsApp {
-		clients := make([]string, 0)
-		for _, sessionID := range store.GetPageSessions(page.ID) {
-			sessionClients := store.GetSessionWebClients(&model.Session{
-				Page: page,
-				ID:   sessionID,
-			})
+		go func() {
+			clients := make([]string, 0)
+			for _, sessionID := range store.GetPageHostClientSessions(page.ID, c.id) {
+				session := &model.Session{
+					Page: page,
+					ID:   sessionID,
+				}
+				store.RemoveSessionHostClient(session, c.id)
 
-			for _, clientID := range sessionClients {
-				clients = append(clients, clientID)
+				sessionClients := store.GetSessionWebClients(session)
+				for _, clientID := range sessionClients {
+					clients = append(clients, clientID)
+					store.RemoveSessionWebClient(session, clientID)
+				}
+
+				log.Debugln("Delete inactive app session:", page.ID, sessionID)
+				store.DeleteSession(page.ID, sessionID)
+				if _, ok := c.sessions[sessionID]; ok {
+					delete(c.sessions, sessionID)
+				}
 			}
 
-			log.Debugln("Delete inactive app session:", page.ID, sessionID)
-			store.DeleteSession(page.ID, sessionID)
-		}
+			store.RemovePageHostClientSessions(page.ID, c.id)
 
-		store.DeletePage(page.ID)
+			if len(store.GetPageHostClients(page)) == 0 {
+				store.DeletePage(page.ID)
+			}
 
-		go func() {
 			for _, clientID := range clients {
 				log.Debugln("Notify client which app become inactive:", clientID)
 
@@ -546,6 +576,7 @@ func (c *Client) unregisterPage(page *model.Page) {
 			}
 		}()
 	}
+
 }
 
 func (c *Client) registerSession(session *model.Session) {
@@ -557,7 +588,7 @@ func (c *Client) registerSession(session *model.Session) {
 	} else {
 		store.AddSessionHostClient(session, c.id)
 	}
-	c.sessions[session] = true
+	c.sessions[session.ID] = session
 
 	h := newSessionHandler(session)
 	h.extendExpiration()
@@ -571,7 +602,7 @@ func (c *Client) unregister() {
 	pubsub.Unsubscribe(c.subscription)
 
 	// unregister from all sessions
-	for session := range c.sessions {
+	for _, session := range c.sessions {
 		log.Printf("Unregistering %v client %s from session %s:%s", c.role, c.id, session.Page.Name, session.ID)
 
 		if c.role == WebClient {

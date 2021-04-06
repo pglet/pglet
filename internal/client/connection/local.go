@@ -9,14 +9,12 @@ import (
 type Local struct {
 	readCh  chan []byte
 	writeCh chan []byte
-	done    chan bool
 }
 
 func NewLocal() *Local {
 	cws := &Local{
 		readCh:  make(chan []byte),
 		writeCh: make(chan []byte, 10),
-		done:    make(chan bool),
 	}
 	return cws
 }

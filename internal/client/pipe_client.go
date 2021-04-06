@@ -48,7 +48,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 		pipe:          p,
 		hostClient:    hc,
 		emitAllEvents: emitAllEvents,
-		done:          make(chan bool),
+		done:          make(chan bool, 1),
 	}
 
 	if tickerDuration > 0 {
@@ -61,6 +61,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 func (pc *PipeClient) timerTicker(tickerDuration int) {
 	ticker := time.NewTicker(time.Duration(tickerDuration) * time.Millisecond)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-pc.done:

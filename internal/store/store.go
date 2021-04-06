@@ -15,17 +15,20 @@ import (
 
 const (
 	sessionIDKey              = "%d:%s"
-	pageNextIDKey             = "page_next_id"               // Inc integer with the next page ID
-	pagesKey                  = "pages"                      // pages hash with pageName:pageID
-	pageKey                   = "page:%d"                    // page data
-	pageHostClientsKey        = "page_host_clients:%d"       // a Set with client IDs
-	pageSessionsKey           = "page_sessions:%d"           // a Set with session IDs
-	sessionKey                = "session:%d:%s"              // session data
-	sessionsExpiredKey        = "sessions_expired"           // set of page:session IDs sorted by Unix timestamp of their expiration date
-	sessionNextControlIDField = "nextControlID"              // Inc integer with the next control ID for a given session
-	sessionControlsKey        = "session_controls:%d:%s"     // session controls, value is JSON data
-	sessionHostClientsKey     = "session_host_clients:%d:%s" // a Set with client IDs
-	sessionWebClientsKey      = "session_web_clients:%d:%s"  // a Set with client IDs
+	pageNextIDKey             = "page_next_id"                    // Inc integer with the next page ID
+	pagesKey                  = "pages"                           // pages hash with pageName:pageID
+	pageKey                   = "page:%d"                         // page data
+	pageHostClientsKey        = "page_host_clients:%d"            // a Set with client IDs
+	pageHostClientSessionsKey = "page_host_client_sessions:%d:%s" // a Set with sessionIDs
+	pageSessionsKey           = "page_sessions:%d"                // a Set with session IDs
+	clientSessionsKey         = "client_sessions:%s"              // a Set with session IDs
+	sessionKey                = "session:%d:%s"                   // session data
+	sessionsExpiredKey        = "sessions_expired"                // set of page:session IDs sorted by Unix timestamp of their expiration date
+	clientsExpiredKey         = "clients_expired"                 // set of client IDs sorted by Unix timestamp of their expiration date
+	sessionNextControlIDField = "nextControlID"                   // Inc integer with the next control ID for a given session
+	sessionControlsKey        = "session_controls:%d:%s"          // session controls, value is JSON data
+	sessionHostClientsKey     = "session_host_clients:%d:%s"      // a Set with client IDs
+	sessionWebClientsKey      = "session_web_clients:%d:%s"       // a Set with client IDs
 )
 
 //
@@ -97,6 +100,22 @@ func AddPageHostClient(page *model.Page, clientID string) {
 
 func RemovePageHostClient(page *model.Page, clientID string) {
 	cache.SetRemove(fmt.Sprintf(pageHostClientsKey, page.ID), clientID)
+}
+
+//
+// Clients
+// ==============================
+
+func SetClientExpiration(clientID string, expires time.Time) {
+	cache.SortedSetAdd(clientsExpiredKey, clientID, expires.Unix())
+}
+
+func GetExpiredClients() []string {
+	return cache.SortedSetPopRange(clientsExpiredKey, 0, time.Now().Unix())
+}
+
+func DeleteExpiredClient(clientID string) {
+	cache.SortedSetRemove(clientsExpiredKey, clientID)
 }
 
 //
@@ -192,12 +211,24 @@ func GetSessionHostClients(session *model.Session) []string {
 	return cache.SetGet(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID))
 }
 
+func GetPageHostClientSessions(pageID int, clientID string) []string {
+	return cache.SetGet(fmt.Sprintf(pageHostClientSessionsKey, pageID, clientID))
+}
+
 func AddSessionHostClient(session *model.Session, clientID string) {
 	cache.SetAdd(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID), clientID)
+	cache.SetAdd(fmt.Sprintf(pageHostClientSessionsKey, session.Page.ID, clientID), session.ID)
+	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
 }
 
 func RemoveSessionHostClient(session *model.Session, clientID string) {
 	cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID), clientID)
+	cache.SetRemove(fmt.Sprintf(pageHostClientSessionsKey, session.Page.ID, clientID), session.ID)
+	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
+}
+
+func RemovePageHostClientSessions(pageID int, clientID string) {
+	cache.Remove(fmt.Sprintf(pageHostClientSessionsKey, pageID, clientID))
 }
 
 //
@@ -210,8 +241,10 @@ func GetSessionWebClients(session *model.Session) []string {
 
 func AddSessionWebClient(session *model.Session, clientID string) {
 	cache.SetAdd(fmt.Sprintf(sessionWebClientsKey, session.Page.ID, session.ID), clientID)
+	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
 }
 
 func RemoveSessionWebClient(session *model.Session, clientID string) {
 	cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, session.Page.ID, session.ID), clientID)
+	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
 }
