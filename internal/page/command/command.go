@@ -25,7 +25,7 @@ const (
 	Removef         = "removef"
 	Begin           = "begin"
 	End             = "end"
-	Quit            = "quit"
+	Close           = "close"
 )
 
 var (
@@ -45,7 +45,7 @@ var (
 		Removef:  {Name: Removef, ShouldReturn: false},
 		Begin:    {Name: Begin, ShouldReturn: false},
 		End:      {Name: End, ShouldReturn: true},
-		Quit:     {Name: Quit, ShouldReturn: false},
+		Close:    {Name: Close, ShouldReturn: false},
 	}
 )
 

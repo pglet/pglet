@@ -518,11 +518,12 @@ func (c *Client) unregisterPage(page *model.Page) {
 					store.RemoveSessionWebClient(session, clientID)
 				}
 
-				log.Debugln("Delete inactive app session:", page.ID, sessionID)
-				store.DeleteSession(page.ID, sessionID)
 				if _, ok := c.sessions[sessionID]; ok {
 					delete(c.sessions, sessionID)
 				}
+
+				log.Debugln("Delete inactive app session:", page.ID, sessionID)
+				store.DeleteSession(page.ID, sessionID)
 			}
 
 			store.RemovePageHostClientSessions(page.ID, c.id)

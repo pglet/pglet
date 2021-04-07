@@ -101,8 +101,8 @@ func (pc *PipeClient) commandLoop() {
 
 		log.Debugf("Send command: %+v", cmd)
 
-		if cmd.Name == command.Quit {
-			log.Debugln("Quit command")
+		if cmd.Name == command.Close {
+			log.Debugln("Close command")
 			pc.close()
 			return
 		} else if cmd.Name == command.Begin {
@@ -194,12 +194,7 @@ func (pc *PipeClient) emitEvent(evt string) {
 
 func (pc *PipeClient) close() {
 	log.Println("Closing pipe client...")
-
-	select {
-	case pc.done <- true:
-	default:
-	}
-
+	pc.done <- true
 	pc.pipe.close()
 
 	pc.hostClient.UnregisterPipeClient(pc)
