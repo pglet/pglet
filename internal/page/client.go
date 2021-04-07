@@ -206,7 +206,7 @@ func (c *Client) registerWebClient(message *Message) {
 				// pick first host client for now
 				// in the future we will implement load distribution algorithm
 				for _, clientID := range store.GetPageHostClients(page) {
-					store.AddSessionHostClient(session, clientID)
+					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
 					pubsub.Send(clientChannelName(clientID), msg)
 					break
 				}
@@ -415,7 +415,7 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 	msg := NewMessageData("", PageEventToHostAction, payload)
 
 	// re-send events to all connected host clients
-	for _, clientID := range store.GetSessionHostClients(session) {
+	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
 		pubsub.Send(clientChannelName(clientID), msg)
 	}
 }
@@ -457,7 +457,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		EventData:   string(data),
 	})
 
-	for _, clientID := range store.GetSessionHostClients(session) {
+	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
 		pubsub.Send(clientChannelName(clientID), msg)
 	}
 	//}()
@@ -466,7 +466,7 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	go func() {
 		msg, _ := json.Marshal(message)
 
-		for _, clientID := range store.GetSessionWebClients(session) {
+		for _, clientID := range store.GetSessionWebClients(session.Page.ID, session.ID) {
 			if clientID != c.id {
 				pubsub.Send(clientChannelName(clientID), msg)
 			}
@@ -510,12 +510,12 @@ func (c *Client) unregisterPage(page *model.Page) {
 					Page: page,
 					ID:   sessionID,
 				}
-				store.RemoveSessionHostClient(session, c.id)
+				store.RemoveSessionHostClient(session.Page.ID, session.ID, c.id)
 
-				sessionClients := store.GetSessionWebClients(session)
+				sessionClients := store.GetSessionWebClients(session.Page.ID, session.ID)
 				for _, clientID := range sessionClients {
 					clients = append(clients, clientID)
-					store.RemoveSessionWebClient(session, clientID)
+					store.RemoveSessionWebClient(session.Page.ID, session.ID, clientID)
 				}
 
 				if _, ok := c.sessions[sessionID]; ok {
@@ -550,9 +550,9 @@ func (c *Client) registerSession(session *model.Session) {
 	log.Printf("Registering %v client %s to session %s:%s", c.role, c.id, session.Page.Name, session.ID)
 
 	if c.role == WebClient {
-		store.AddSessionWebClient(session, c.id)
+		store.AddSessionWebClient(session.Page.ID, session.ID, c.id)
 	} else {
-		store.AddSessionHostClient(session, c.id)
+		store.AddSessionHostClient(session.Page.ID, session.ID, c.id)
 	}
 	c.sessions[session.ID] = session
 
@@ -572,9 +572,9 @@ func (c *Client) unregister() {
 		log.Printf("Unregistering %v client %s from session %s:%s", c.role, c.id, session.Page.Name, session.ID)
 
 		if c.role == WebClient {
-			store.RemoveSessionWebClient(session, c.id)
+			store.RemoveSessionWebClient(session.Page.ID, session.ID, c.id)
 		} else {
-			store.RemoveSessionHostClient(session, c.id)
+			store.RemoveSessionHostClient(session.Page.ID, session.ID, c.id)
 		}
 	}
 

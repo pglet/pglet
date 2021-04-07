@@ -166,6 +166,7 @@ func DeleteSession(pageID int, sessionID string) {
 	cache.Remove(fmt.Sprintf(sessionControlsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID))
+
 }
 
 //
@@ -219,24 +220,24 @@ func DeleteSessionControl(session *model.Session, ctrlID string) {
 // Session Host Clients
 // ==============================
 
-func GetSessionHostClients(session *model.Session) []string {
-	return cache.SetGet(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID))
+func GetSessionHostClients(pageID int, sessionID string) []string {
+	return cache.SetGet(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID))
 }
 
 func GetPageHostClientSessions(pageID int, clientID string) []string {
 	return cache.SetGet(fmt.Sprintf(pageHostClientSessionsKey, pageID, clientID))
 }
 
-func AddSessionHostClient(session *model.Session, clientID string) {
-	cache.SetAdd(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID), clientID)
-	cache.SetAdd(fmt.Sprintf(pageHostClientSessionsKey, session.Page.ID, clientID), session.ID)
-	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
+func AddSessionHostClient(pageID int, sessionID string, clientID string) {
+	cache.SetAdd(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
+	cache.SetAdd(fmt.Sprintf(pageHostClientSessionsKey, pageID, clientID), sessionID)
+	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
 }
 
-func RemoveSessionHostClient(session *model.Session, clientID string) {
-	cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, session.Page.ID, session.ID), clientID)
-	cache.SetRemove(fmt.Sprintf(pageHostClientSessionsKey, session.Page.ID, clientID), session.ID)
-	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
+func RemoveSessionHostClient(pageID int, sessionID string, clientID string) {
+	cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
+	cache.SetRemove(fmt.Sprintf(pageHostClientSessionsKey, pageID, clientID), sessionID)
+	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
 }
 
 func RemovePageHostClientSessions(pageID int, clientID string) {
@@ -247,16 +248,16 @@ func RemovePageHostClientSessions(pageID int, clientID string) {
 // Session Web Clients
 // ==============================
 
-func GetSessionWebClients(session *model.Session) []string {
-	return cache.SetGet(fmt.Sprintf(sessionWebClientsKey, session.Page.ID, session.ID))
+func GetSessionWebClients(pageID int, sessionID string) []string {
+	return cache.SetGet(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID))
 }
 
-func AddSessionWebClient(session *model.Session, clientID string) {
-	cache.SetAdd(fmt.Sprintf(sessionWebClientsKey, session.Page.ID, session.ID), clientID)
-	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
+func AddSessionWebClient(pageID int, sessionID string, clientID string) {
+	cache.SetAdd(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
+	cache.SetAdd(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
 }
 
-func RemoveSessionWebClient(session *model.Session, clientID string) {
-	cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, session.Page.ID, session.ID), clientID)
-	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, session.Page.ID, session.ID))
+func RemoveSessionWebClient(pageID int, sessionID string, clientID string) {
+	cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
+	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
 }

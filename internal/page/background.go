@@ -30,26 +30,28 @@ func CleanupPagesAndSessions() {
 			log.Println("Deleting old sessions:", len(sessions))
 			for _, fullSessionID := range sessions {
 				pageID, sessionID := model.ParseSessionID(fullSessionID)
-				store.DeleteSession(pageID, sessionID)
+
+				page := store.GetPageByID(pageID)
+				if page == nil {
+					continue
+				}
 
 				// notify host client about expired session
-				page := store.GetPageByID(pageID)
 				msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
 					PageName:    page.Name,
 					SessionID:   sessionID,
-					EventTarget: "session",
+					EventTarget: "page",
 					EventName:   "close",
 				})
 
-				for _, clientID := range store.GetSessionHostClients(&model.Session{
-					Page: page,
-					ID:   sessionID,
-				}) {
+				for _, clientID := range store.GetSessionHostClients(pageID, sessionID) {
 					pubsub.Send(clientChannelName(clientID), msg)
 				}
 
+				store.DeleteSession(pageID, sessionID)
+
 				// delete page if no more sessions
-				if len(store.GetPageSessions(pageID)) == 0 {
+				if !page.IsApp && len(store.GetPageSessions(pageID)) == 0 {
 					store.DeletePage(pageID)
 				}
 			}

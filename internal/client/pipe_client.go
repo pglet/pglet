@@ -189,7 +189,12 @@ func (pc *PipeClient) emitEvent(evt string) {
 	if strings.HasPrefix(evt, "page change ") && !pc.emitAllEvents {
 		return
 	}
+
 	pc.pipe.emitEvent(evt)
+
+	if evt == "page close " {
+		pc.close()
+	}
 }
 
 func (pc *PipeClient) close() {

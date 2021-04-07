@@ -810,7 +810,7 @@ func (h *sessionHandler) broadcastCommandToWebClients(msg *Message) {
 
 	serializedMsg, _ := json.Marshal(msg)
 
-	for _, clientID := range store.GetSessionWebClients(h.session) {
+	for _, clientID := range store.GetSessionWebClients(h.session.Page.ID, h.session.ID) {
 		pubsub.Send(clientChannelName(clientID), serializedMsg)
 	}
 }

@@ -92,19 +92,13 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
       data.fireUpdateHashEvent = false;
     }
 
-    const handleWindowClose = (e: any) => {
-      ws.pageEventFromWeb(control.i, 'close', control.data);
-    }
-
     const handleHashChange = (e: any) => {
       updateHash(getWindowHash());
     }
 
-    window.addEventListener("beforeunload", handleWindowClose);
     window.addEventListener("hashchange", handleHashChange);
 
     return () => {
-      window.removeEventListener("beforeunload", handleWindowClose);
       window.removeEventListener("hashchange", handleHashChange);
     }
     // eslint-disable-next-line
