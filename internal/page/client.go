@@ -89,7 +89,16 @@ func (c *Client) extendExpiration() {
 	for {
 		select {
 		case <-ticker.C:
+			// extend client expiration
 			store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
+
+			// extend app session expiration
+			if c.role == WebClient {
+				for _, session := range c.sessions {
+					h := newSessionHandler(session)
+					h.extendExpiration()
+				}
+			}
 		case <-c.done:
 			return
 		}
@@ -469,7 +478,6 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		log.Errorln(err)
 		return err
 	}
-	handler.extendExpiration()
 
 	// re-send events to all connected host clients
 	//go func() {
