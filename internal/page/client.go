@@ -162,13 +162,16 @@ func (c *Client) registerWebClient(message *Message) {
 
 	if page == nil {
 		response.Error = pageNotFoundMessage
-	} else if len(store.GetPageHostClients(page)) == 0 {
-		response.Error = inactiveAppMessage
 	} else {
 		var session *model.Session
 
 		if page.IsApp {
 			// app page
+
+			if len(store.GetPageHostClients(page)) == 0 {
+				response.Error = inactiveAppMessage
+				goto response
+			}
 
 			var sessionCreated bool
 			if payload.SessionID != "" {
@@ -192,15 +195,11 @@ func (c *Client) registerWebClient(message *Message) {
 			c.registerSession(session)
 
 			if sessionCreated {
+
 				// pick connected host client from page pool and notify about new session created
-				sessionCreatedPayloadRaw, _ := json.Marshal(&SessionCreatedPayload{
+				msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
 					PageName:  page.Name,
 					SessionID: session.ID,
-				})
-
-				msg, _ := json.Marshal(&Message{
-					Action:  SessionCreatedAction,
-					Payload: sessionCreatedPayloadRaw,
 				})
 
 				// TODO
@@ -232,14 +231,7 @@ func (c *Client) registerWebClient(message *Message) {
 
 response:
 
-	responsePayload, _ := json.Marshal(response)
-
-	responseMsg, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Action:  RegisterWebClientAction,
-		Payload: responsePayload,
-	})
-
+	responseMsg := NewMessageData(message.ID, RegisterWebClientAction, response)
 	c.send(responseMsg)
 }
 
@@ -321,14 +313,7 @@ response:
 		responsePayload.Error = err.Error()
 	}
 
-	responsePayloadRaw, _ := json.Marshal(responsePayload)
-
-	response, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Payload: responsePayloadRaw,
-	})
-
-	c.send(response)
+	c.send(NewMessageData(message.ID, "", responsePayload))
 }
 
 func (c *Client) executeCommandFromHostClient(message *Message) {
@@ -363,15 +348,9 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 	}
 
 	if payload.Command.ShouldReturn() {
+
 		// send response
-		responsePayloadRaw, _ := json.Marshal(responsePayload)
-
-		response, _ := json.Marshal(&Message{
-			ID:      message.ID,
-			Payload: responsePayloadRaw,
-		})
-
-		c.send(response)
+		c.send(NewMessageData(message.ID, "", responsePayload))
 	}
 }
 
@@ -407,14 +386,7 @@ func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
 	}
 
 	// send response
-	responsePayloadRaw, _ := json.Marshal(responsePayload)
-
-	response, _ := json.Marshal(&Message{
-		ID:      message.ID,
-		Payload: responsePayloadRaw,
-	})
-
-	c.send(response)
+	c.send(NewMessageData(message.ID, "", responsePayload))
 }
 
 func (c *Client) processPageEventFromWebClient(message *Message) {
@@ -440,13 +412,7 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 	payload.PageName = session.Page.Name
 	payload.SessionID = session.ID
 
-	// message to host clients
-	msgPayload, _ := json.Marshal(&payload)
-
-	msg, _ := json.Marshal(&Message{
-		Action:  PageEventToHostAction,
-		Payload: msgPayload,
-	})
+	msg := NewMessageData("", PageEventToHostAction, payload)
 
 	// re-send events to all connected host clients
 	for _, clientID := range store.GetSessionHostClients(session) {
@@ -481,18 +447,14 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 
 	// re-send events to all connected host clients
 	//go func() {
+
 	data, _ := json.Marshal(payload.Props)
-	p, _ := json.Marshal(PageEventPayload{
+	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
 		PageName:    session.Page.Name,
 		SessionID:   session.ID,
 		EventTarget: "page",
 		EventName:   "change",
 		EventData:   string(data),
-	})
-
-	msg, _ := json.Marshal(&Message{
-		Action:  PageEventToHostAction,
-		Payload: p,
 	})
 
 	for _, clientID := range store.GetSessionHostClients(session) {
@@ -572,13 +534,8 @@ func (c *Client) unregisterPage(page *model.Page) {
 			for _, clientID := range clients {
 				log.Debugln("Notify client which app become inactive:", clientID)
 
-				p, _ := json.Marshal(AppBecomeInactivePayload{
+				msg := NewMessageData("", AppBecomeInactiveAction, &AppBecomeInactivePayload{
 					Message: inactiveAppMessage,
-				})
-
-				msg, _ := json.Marshal(&Message{
-					Action:  AppBecomeInactiveAction,
-					Payload: p,
 				})
 				pubsub.Send(clientChannelName(clientID), msg)
 			}

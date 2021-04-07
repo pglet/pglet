@@ -13,8 +13,15 @@ type Message struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-func NewMessage(action string, payload interface{}) *Message {
+func NewMessageData(id string, action string, payload interface{}) []byte {
+	msg := NewMessage(id, action, payload)
+	result, _ := json.Marshal(msg)
+	return result
+}
+
+func NewMessage(id string, action string, payload interface{}) *Message {
 	msg := &Message{
+		ID:     id,
 		Action: action,
 	}
 

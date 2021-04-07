@@ -120,7 +120,7 @@ func (h *sessionHandler) executeBatch(commands []*command.Command) (results []st
 				return nil, err
 			}
 			results = append(results, strings.Join(ids, " "))
-			messages = append(messages, NewMessage(AddPageControlsAction, &AddPageControlsPayload{
+			messages = append(messages, NewMessage("", AddPageControlsAction, &AddPageControlsPayload{
 				Controls: controls,
 				TrimIDs:  trimIDs,
 			}))
@@ -129,24 +129,24 @@ func (h *sessionHandler) executeBatch(commands []*command.Command) (results []st
 			if err != nil {
 				return nil, err
 			}
-			messages = append(messages, NewMessage(UpdateControlPropsAction, payload))
+			messages = append(messages, NewMessage("", UpdateControlPropsAction, payload))
 		} else if cmdName == command.Clean {
 			payload, err := h.cleanWithMessage(cmd)
 			if err != nil {
 				return nil, err
 			}
-			messages = append(messages, NewMessage(CleanControlAction, payload))
+			messages = append(messages, NewMessage("", CleanControlAction, payload))
 		} else if cmdName == command.Remove {
 			payload, err := h.removeWithMessage(cmd)
 			if err != nil {
 				return nil, err
 			}
-			messages = append(messages, NewMessage(RemoveControlAction, payload))
+			messages = append(messages, NewMessage("", RemoveControlAction, payload))
 		}
 	}
 
 	// broadcast all message to clients
-	h.broadcastCommandToWebClients(NewMessage(PageControlsBatchAction, messages))
+	h.broadcastCommandToWebClients(NewMessage("", PageControlsBatchAction, messages))
 
 	return results, nil
 }
@@ -158,7 +158,7 @@ func (h *sessionHandler) add(cmd *command.Command) (result string, err error) {
 	}
 
 	// broadcast new controls to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(AddPageControlsAction, &AddPageControlsPayload{
+	h.broadcastCommandToWebClients(NewMessage("", AddPageControlsAction, &AddPageControlsPayload{
 		Controls: controls,
 		TrimIDs:  trimIDs,
 	}))
@@ -345,7 +345,7 @@ func (h *sessionHandler) replace(cmd *command.Command) (result string, err error
 	}
 
 	// broadcast new controls to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(ReplacePageControlsAction, &ReplacePageControlsPayload{
+	h.broadcastCommandToWebClients(NewMessage("", ReplacePageControlsAction, &ReplacePageControlsPayload{
 		IDs:      allIDs,
 		Remove:   at != -1,
 		Controls: controls,
@@ -388,7 +388,7 @@ func (h *sessionHandler) set(cmd *command.Command) (result string, err error) {
 	}
 
 	// broadcast control updates to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(UpdateControlPropsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage("", UpdateControlPropsAction, payload))
 	return "", nil
 }
 
@@ -470,7 +470,7 @@ func (h *sessionHandler) appendHandler(cmd *command.Command) (result string, err
 	}
 
 	// broadcast control updates to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(AppendControlPropsAction, payload))
+	h.broadcastCommandToWebClients(NewMessage("", AppendControlPropsAction, payload))
 	return "", nil
 }
 
@@ -546,7 +546,7 @@ func (h *sessionHandler) clean(cmd *command.Command) (result string, err error) 
 	}
 
 	// broadcast command to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(CleanControlAction, payload))
+	h.broadcastCommandToWebClients(NewMessage("", CleanControlAction, payload))
 	return "", nil
 }
 
@@ -618,7 +618,7 @@ func (h *sessionHandler) remove(cmd *command.Command) (result string, err error)
 	}
 
 	// broadcast command to all connected web clients
-	h.broadcastCommandToWebClients(NewMessage(RemoveControlAction, payload))
+	h.broadcastCommandToWebClients(NewMessage("", RemoveControlAction, payload))
 	return "", nil
 }
 
