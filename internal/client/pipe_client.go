@@ -15,6 +15,11 @@ import (
 	"github.com/pglet/pglet/internal/utils"
 )
 
+const (
+	pageChangeEvent = "page change"
+	pageCloseEvent  = "page close"
+)
+
 type PipeClient struct {
 	id            string
 	pageName      string
@@ -103,7 +108,7 @@ func (pc *PipeClient) commandLoop() {
 
 		if cmd.Name == command.Close {
 			log.Debugln("Close command")
-			pc.close()
+			pc.emitEvent(pageCloseEvent)
 			return
 		} else if cmd.Name == command.Begin {
 			// start new batch
@@ -186,13 +191,13 @@ func (pc *PipeClient) writeResult(result string) {
 
 func (pc *PipeClient) emitEvent(evt string) {
 
-	if strings.HasPrefix(evt, "page change ") && !pc.emitAllEvents {
+	if strings.HasPrefix(evt, pageChangeEvent) && !pc.emitAllEvents {
 		return
 	}
 
 	pc.pipe.emitEvent(evt)
 
-	if evt == "page close " {
+	if strings.HasPrefix(evt, pageCloseEvent) {
 		pc.close()
 	}
 }

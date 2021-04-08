@@ -74,7 +74,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   
       dispatch(changeProps([payload]));
       ws.updateControlProps([payload]);
-      ws.pageEventFromWeb("page", 'hash', hash);
+      ws.pageEventFromWeb("page", 'hashChange', hash);
     }
 
     data.fireUpdateHashEvent = true;
