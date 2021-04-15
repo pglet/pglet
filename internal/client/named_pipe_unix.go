@@ -80,8 +80,6 @@ func (pc *namedPipe) read() string {
 			if err == io.EOF {
 				break
 			}
-
-			//log.Printf("read: %d\n", bytesRead)
 		}
 		input.Close()
 		return string(result)
@@ -90,12 +88,12 @@ func (pc *namedPipe) read() string {
 }
 
 func (pc *namedPipe) writeResult(result string) {
-	log.Println("Waiting for result to consume...")
+	log.Debugln("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Write result:", result)
+	log.Debugln("Write result:", result)
 
 	output.WriteString(fmt.Sprintf("%s\n", result))
 	output.Close()

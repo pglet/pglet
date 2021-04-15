@@ -24,10 +24,9 @@ func CleanupPagesAndSessions() {
 	for {
 		<-ticker.C
 
-		//log.Println("Cleanup pages and sessions!")
 		sessions := store.GetExpiredSessions()
 		if len(sessions) > 0 {
-			log.Println("Deleting old sessions:", len(sessions))
+			log.Debugln("Deleting old sessions:", len(sessions))
 			for _, fullSessionID := range sessions {
 				pageID, sessionID := model.ParseSessionID(fullSessionID)
 

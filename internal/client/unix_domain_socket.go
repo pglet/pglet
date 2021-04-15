@@ -98,8 +98,6 @@ func (pc *unixDomainSocket) read() string {
 
 	r := bufio.NewReader(pc.conn)
 
-	log.Println("Before read")
-
 	for {
 		var result []byte
 
@@ -108,18 +106,12 @@ func (pc *unixDomainSocket) read() string {
 			bytesRead, err = r.Read(buf)
 
 			if err == io.EOF {
-				//log.Println("EOF")
 				return ""
 			}
 
 			result = append(result, buf[0:bytesRead]...)
 
-			//log.Println(string(result))
-
-			//log.Printf("read: %d\n", bytesRead)
-
 			if bytesRead < readsize {
-				//log.Println("less bytes read")
 				break
 			}
 		}
@@ -128,11 +120,11 @@ func (pc *unixDomainSocket) read() string {
 }
 
 func (pc *unixDomainSocket) writeResult(result string) {
-	log.Println("Waiting for result to consume...")
+	log.Debugln("Waiting for result to consume...")
 
 	w := bufio.NewWriter(pc.conn)
 
-	log.Println("Write result:", result)
+	log.Debugln("Write result:", result)
 
 	w.WriteString(fmt.Sprintf("%s\n", result))
 	w.Flush()
@@ -179,13 +171,11 @@ func (pc *unixDomainSocket) eventLoop() {
 
 					w := bufio.NewWriter(conn)
 
-					//log.Println("before event written:", evt)
 					_, err = w.WriteString(evt + "\n")
 					if err != nil {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("write error:", err)
 						return
 					}
 
@@ -195,11 +185,10 @@ func (pc *unixDomainSocket) eventLoop() {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("flush error:", err)
 						return
 					}
 
-					log.Println("event written:", evt)
+					log.Debugln("event written:", evt)
 
 					if !more {
 						return

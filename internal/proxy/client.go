@@ -42,16 +42,12 @@ func (proxy *Client) Start() {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
-		//log.Printf("Connecting to Proxy service (attempt %d of %d)\n", i, connectAttempts)
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
-			//log.Println("Error connecting to Proxy service:", err)
-
 			// start Proxy service
 			startProxyService()
 			time.Sleep(200 * time.Millisecond)
 		} else {
-			//log.Println("Connected to Proxy service")
 			return
 		}
 	}

@@ -64,7 +64,7 @@ func NewClient(conn connection.Conn, clientIP string) *Client {
 		c.unregister()
 	}()
 
-	log.Printf("New Client %s is connected, total: %d\n", c.id, 0)
+	log.Debugf("New Client %s is connected, total: %d\n", c.id, 0)
 
 	return c
 }
@@ -189,7 +189,7 @@ func (c *Client) registerWebClient(message *Message) {
 				session = newSession(page, uuid.New().String(), c.clientIP, payload.PageHash)
 				sessionCreated = true
 			} else {
-				log.Printf("Existing session %s found for %s page\n", session.ID, page.Name)
+				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
 			}
 
 			c.registerSession(session)
@@ -211,7 +211,7 @@ func (c *Client) registerWebClient(message *Message) {
 					break
 				}
 
-				log.Printf("New session %s started for %s page\n", session.ID, page.Name)
+				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
 			}
 
 		} else {
@@ -220,7 +220,7 @@ func (c *Client) registerWebClient(message *Message) {
 			session = store.GetSession(page, ZeroSession)
 			c.registerSession(session)
 
-			log.Printf("Connected to zero session of %s page\n", page.Name)
+			log.Debugf("Connected to zero session of %s page\n", page.Name)
 		}
 
 		response.Session = &SessionPayload{
@@ -317,7 +317,7 @@ response:
 }
 
 func (c *Client) executeCommandFromHostClient(message *Message) {
-	log.Println("Page command from host client")
+	log.Debugln("Page command from host client")
 
 	payload := new(PageCommandRequestPayload)
 	json.Unmarshal(message.Payload, payload)
@@ -355,7 +355,7 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 }
 
 func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
-	log.Println("Page commands batch from host client")
+	log.Debugln("Page commands batch from host client")
 
 	payload := new(PageCommandsBatchRequestPayload)
 	json.Unmarshal(message.Payload, payload)
@@ -402,7 +402,7 @@ func (c *Client) processPageEventFromWebClient(message *Message) {
 		return
 	}
 
-	log.Println("Page event from browser:", string(message.Payload),
+	log.Debugln("Page event from browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID)
 
 	payload := new(PageEventPayload)
@@ -432,10 +432,8 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	payload := new(UpdateControlPropsPayload)
 	json.Unmarshal(message.Payload, payload)
 
-	log.Println("Update control props from web browser:", string(message.Payload),
+	log.Debugln("Update control props from web browser:", string(message.Payload),
 		"PageName:", session.Page.Name, "SessionID:", session.ID, "Props:", payload.Props)
-
-	//log.Printf("%+v", payload.Props)
 
 	// update control tree
 	handler := newSessionHandler(session)

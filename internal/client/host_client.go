@@ -68,8 +68,6 @@ func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
 	err = json.Unmarshal(bytesMessage, message)
 	if err == nil {
 
-		//log.Println("Message to host client:", message)
-
 		if message.ID != "" {
 			// this is callback message
 			result, ok := hc.calls[message.ID]
@@ -85,7 +83,7 @@ func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
 			hc.notifySession(&message.Payload)
 		}
 	} else {
-		log.Printf("Unsupported message received: %s", bytesMessage)
+		log.Errorf("Unsupported message received: %s", bytesMessage)
 	}
 	return
 }

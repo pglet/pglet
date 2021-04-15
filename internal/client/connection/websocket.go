@@ -42,7 +42,7 @@ func (hc *WebSocket) readLoop(handler ReadMessageHandler) {
 	for {
 		_, bytesMessage, err := hc.conn.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Errorln("read error:", err)
 			return
 		}
 

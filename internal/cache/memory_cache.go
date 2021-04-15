@@ -1,8 +1,6 @@
 package cache
 
 import (
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -51,22 +49,6 @@ func newMemoryCache() cacher {
 	return mc
 }
 
-func (c *memoryCache) dumpData() {
-	dataPath := filepath.Join(os.TempDir(), "pglet-memory-cache")
-	log.Println("Memory cache dump:", dataPath)
-
-	ticker := time.NewTicker(5 * time.Second)
-	for {
-		<-ticker.C
-
-		log.Println("MEMORY STATE DUMP")
-		log.Println("channel subscribers:")
-		for k, v := range c.channelSubscribers {
-			log.Println("channel:", k, "subscribers:", len(v))
-		}
-	}
-}
-
 func (c *memoryCache) cleanExpiredEntries() {
 	ticker := time.NewTicker(10 * time.Second)
 	for {
@@ -74,7 +56,7 @@ func (c *memoryCache) cleanExpiredEntries() {
 
 		c.Lock()
 		entries := c.expireEntries.GetByScoreRange(0, sortedset.SCORE(time.Now().Unix()), &sortedset.GetByScoreRangeOptions{})
-		//log.Println("Expired entries:", len(entries))
+		log.Debugln("Expired entries:", len(entries))
 		for _, entry := range entries {
 			c.deleteEntry(entry.Key())
 			c.expireEntries.Remove(entry.Key())
@@ -494,8 +476,6 @@ func (c *memoryCache) lock(key string) Unlocker {
 func (me *lockEntry) Unlock() {
 
 	m := me.m
-
-	//log.Println("LOCK ENTRIES:", len(me.m.lockEntries))
 
 	// decrement and if needed remove entry atomically
 	m.ml.Lock()

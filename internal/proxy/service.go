@@ -282,8 +282,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	err = m.TryLock()
 	if err != nil {
-		log.Println("Another Proxy service process has started")
-		os.Exit(1)
+		log.Fatalln("Another Proxy service process has started")
 	}
 
 	defer m.Unlock()
@@ -307,7 +306,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
 		if err := srv.Serve(l); err != nil && err != http.ErrServerClosed {
-			log.Println("Serve error:", err)
+			log.Errorln("Serve error:", err)
 		}
 	}()
 

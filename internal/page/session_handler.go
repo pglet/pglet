@@ -184,8 +184,6 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimID
 		topParentID = ReservedPageID
 	}
 
-	//log.Println("COMMAND:", utils.ToJSON(cmd))
-
 	// "Add" commands to process
 	batch := make([]*addCommandBatchItem, 0)
 

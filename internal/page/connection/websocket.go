@@ -61,14 +61,14 @@ func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) || err == websocket.ErrReadLimit {
-				log.Printf("error: %v", err)
+				log.Errorf("error: %v", err)
 			}
 			break
 		}
 
 		err = readHandler(message)
 		if err != nil {
-			log.Printf("error processing message: %v", err)
+			log.Errorf("error processing message: %v", err)
 			break
 		}
 	}
