@@ -95,7 +95,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
 
           return {
             key: cc.i,
-            name: cc.name,
+            name: cc.name ? cc.name : (cc.fieldname ? cc.fieldname : undefined),
             iconName: cc.icon,
             isIconOnly: isTrue(cc.icononly),
             fieldName: cc.fieldname ? cc.fieldname.toLowerCase() : undefined,
