@@ -4,17 +4,29 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SearchBox, ISearchBoxProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, getId } from './Utils'
+import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
 export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
+
+  //console.log("Render Searchbox", control.i);
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
+
+  let _lastChangeValue: string | undefined;
 
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
+
+    if (newValue === _lastChangeValue) {
+      _lastChangeValue = undefined;
+      return;
+    }
+    _lastChangeValue = newValue;
+
+    //console.log("Searchbox handleChange:", newValue);
 
     let payload: any = {}
     if (control.f) {
@@ -31,7 +43,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
 
-    if (control.onchange === 'true') {
+    if (isTrue(control.onchange)) {
       ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
   }
@@ -51,10 +63,10 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color
 
   const props: ISearchBoxProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     value: control.value ? control.value : "",
     placeholder: control.placeholder ? control.placeholder : null,
-    underlined: control.underlined === 'true',
+    underlined: isTrue(control.underlined),
     disabled: disabled,
     styles: {
       icon: {

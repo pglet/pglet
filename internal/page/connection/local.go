@@ -28,7 +28,7 @@ func (c *Local) readLoop(readHandler ReadMessageHandler) {
 		message := <-c.readCh
 		err := readHandler(message)
 		if err != nil {
-			log.Printf("error processing message: %v", err)
+			log.Errorf("error processing message: %v", err)
 			break
 		}
 	}

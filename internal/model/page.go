@@ -21,25 +21,3 @@ func NewPage(name string, isApp bool, clientIP string) *Page {
 	// p.clients = make(map[*Client]bool)
 	return p
 }
-
-// func (p *Page) registerClient(client *Client) {
-// 	p.clientsMutex.Lock()
-// 	defer p.clientsMutex.Unlock()
-
-// 	if _, ok := p.clients[client]; !ok {
-// 		log.Printf("Registering %v client %s to %s",
-// 			client.role, client.id, p.Name)
-
-// 		p.clients[client] = true
-// 	}
-// }
-
-// func (p *Page) unregisterClient(client *Client) {
-// 	p.clientsMutex.Lock()
-// 	defer p.clientsMutex.Unlock()
-
-// 	log.Printf("Unregistering %v client %s from page %s",
-// 		client.role, client.id, p.Name)
-
-// 	delete(p.clients, client)
-// }

@@ -32,7 +32,7 @@ func newNamedPipe(id string) (*namedPipe, error) {
 		id:              id,
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
-		events:          make(chan string),
+		events:          make(chan string, 1),
 	}
 
 	return pc, pc.start()
@@ -80,8 +80,6 @@ func (pc *namedPipe) read() string {
 			if err == io.EOF {
 				break
 			}
-
-			//log.Printf("read: %d\n", bytesRead)
 		}
 		input.Close()
 		return string(result)
@@ -90,12 +88,12 @@ func (pc *namedPipe) read() string {
 }
 
 func (pc *namedPipe) writeResult(result string) {
-	log.Println("Waiting for result to consume...")
+	log.Debugln("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Write result:", result)
+	log.Debugln("Write result:", result)
 
 	output.WriteString(fmt.Sprintf("%s\n", result))
 	output.Close()
@@ -104,9 +102,9 @@ func (pc *namedPipe) writeResult(result string) {
 func (pc *namedPipe) emitEvent(evt string) {
 	select {
 	case pc.events <- evt:
-		// Event sent to queue
+		log.Debugln("Event sent to queue:", evt)
 	default:
-		// No event listeners
+		log.Debugln("No event listeners:", evt)
 	}
 }
 
@@ -123,13 +121,9 @@ func (pc *namedPipe) eventLoop() {
 		}
 
 		select {
-		case evt, more := <-pc.events:
+		case evt := <-pc.events:
 			output.WriteString(evt + "\n")
 			output.Close()
-
-			if !more {
-				return
-			}
 		}
 	}
 }

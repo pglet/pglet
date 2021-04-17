@@ -4,14 +4,14 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { SpinButton, ISpinButtonProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (event: React.SyntheticEvent<HTMLElement>, newValue?: string) => {
     //console.log(newValue);
@@ -38,7 +38,7 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
   const props: ISpinButtonProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     defaultValue: control.value ? control.value : undefined,
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,

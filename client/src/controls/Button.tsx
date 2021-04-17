@@ -12,7 +12,7 @@ import {
   IButtonProps,
   IContextualMenuProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, getId } from './Utils'
+import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 import { getMenuProps } from './MenuItem'
 
 export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -20,23 +20,23 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
   const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   let ButtonType = DefaultButton;
-  if (control.compound === 'true') {
+  if (isTrue(control.compound)) {
     ButtonType = CompoundButton
-  } else if (control.toolbar === 'true') {
+  } else if (isTrue(control.toolbar)) {
     ButtonType = CommandBarButton
-  } else if (control.primary === 'true') {
+  } else if (isTrue(control.primary)) {
     ButtonType = PrimaryButton
-  } else if (control.action === 'true') {
+  } else if (isTrue(control.action)) {
     ButtonType = ActionButton
   } else if (control.icon && control.text === undefined) {
     ButtonType = IconButton
   }
 
   let height = control.height !== undefined ? control.height : undefined;
-  if (control.toolbar === 'true' && control.height === undefined) {
+  if (isTrue(control.toolbar) && control.height === undefined) {
     height = 40;
   }
 
@@ -44,15 +44,15 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     getMenuProps(state, control, disabled, ws, theme, false), shallowEqual)
 
   let buttonProps: Partial<IButtonProps> = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     text: control.text ? control.text : control.i,
     href: control.url ? control.url : undefined,
     title: control.title ? control.title : undefined,
-    target: control.newwindow === 'true' ? '_blank' : undefined,
+    target: isTrue(control.newwindow) ? '_blank' : undefined,
     secondaryText: control.secondarytext ? control.secondarytext : undefined,
     disabled: disabled,
-    primary: control.compound === 'true' && control.primary === 'true' ? true : undefined,
-    split: control.split === 'true' ? true : undefined,
+    primary: isTrue(control.compound) && isTrue(control.primary) ? true : undefined,
+    split: isTrue(control.split) ? true : undefined,
     menuProps: menuProps,
     styles: {    
       root: {

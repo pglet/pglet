@@ -5,14 +5,14 @@ import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
 import { Panel, IPanelProps, PanelType } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, isTrue } from './Utils'
 
 export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
     const ws = React.useContext(WebSocketContext);
     const dispatch = useDispatch();
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
+    let disabled = isTrue(control.disabled) || parentDisabled;
 
     const cleanupLayers = () => {
         const layers = document.body.getElementsByClassName("ms-Layer--fixed")
@@ -26,7 +26,7 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     const handleDismiss = (ev?: React.SyntheticEvent<HTMLElement> | KeyboardEvent) => {
 
-        const autoDismiss = !control.autodismiss || control.autodismiss === 'true';
+        const autoDismiss = !control.autodismiss || isTrue(control.autodismiss);
 
         if (autoDismiss) {
             const val = "false"
@@ -57,8 +57,8 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     // dialog props
     const props: IPanelProps = {
-        isOpen: control.open === 'true',
-        isLightDismiss: control.lightdismiss === 'true',
+        isOpen: isTrue(control.open),
+        isLightDismiss: isTrue(control.lightdismiss),
         isBlocking: control.blocking !== 'false',
         headerText: control.title ? control.title : undefined,
         layerProps: {

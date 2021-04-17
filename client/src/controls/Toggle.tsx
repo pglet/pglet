@@ -4,14 +4,14 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Toggle, IToggleProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (event?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
 
@@ -38,9 +38,9 @@ export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) =>
   }
 
   const toggleProps: IToggleProps = {
-    id: getId(control.i),
-    checked: control.value === "true",
-    inlineLabel: control.inline === "true",
+    id: getId(control.f ? control.f : control.i),
+    checked: isTrue(control.value),
+    inlineLabel: isTrue(control.inline),
     label: control.label ? control.label : undefined,
     onText: control.ontext ? control.ontext : undefined,
     offText: control.offtext ? control.offtext : undefined,

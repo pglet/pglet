@@ -20,6 +20,11 @@ builds:
       - arm64
     goarm:
       - 7
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 
 dockers:
   -
@@ -27,7 +32,7 @@ dockers:
     goarch: amd64
     goarm: ''
 
-    builds:
+    ids:
     - pglet
 
     image_templates:

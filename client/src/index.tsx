@@ -5,7 +5,7 @@ import { mergeStyles, initializeIcons  } from '@fluentui/react';
 import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import rootReducer from './rootReducer'
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit'
 import { WebSocketProvider } from './WebSocket';
 
 initializeIcons();
@@ -22,7 +22,8 @@ mergeStyles({
 });
 
 const store = configureStore({
-  reducer: rootReducer
+  reducer: rootReducer,
+  middleware: [...getDefaultMiddleware({immutableCheck: false, serializableCheck: false })]
 });
 
 ReactDOM.render(

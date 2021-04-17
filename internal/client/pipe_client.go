@@ -15,16 +15,23 @@ import (
 	"github.com/pglet/pglet/internal/utils"
 )
 
+const (
+	pageChangeEvent = "page change"
+	pageCloseEvent  = "page close"
+)
+
 type PipeClient struct {
-	id         string
-	pageName   string
-	sessionID  string
-	pipe       pipe
-	hostClient *HostClient
-	done       chan bool
+	id            string
+	pageName      string
+	sessionID     string
+	pipe          pipe
+	hostClient    *HostClient
+	emitAllEvents bool
+	done          chan bool
+	commandBatch  []*command.Command
 }
 
-func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, tickerDuration int) (*PipeClient, error) {
+func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, emitAllEvents bool, tickerDuration int) (*PipeClient, error) {
 	id, _ := utils.GenerateRandomString(10)
 
 	var err error
@@ -40,12 +47,13 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 	}
 
 	pc := &PipeClient{
-		id:         id,
-		pageName:   pageName,
-		sessionID:  sessionID,
-		pipe:       p,
-		hostClient: hc,
-		done:       make(chan bool),
+		id:            id,
+		pageName:      pageName,
+		sessionID:     sessionID,
+		pipe:          p,
+		hostClient:    hc,
+		emitAllEvents: emitAllEvents,
+		done:          make(chan bool, 1),
 	}
 
 	if tickerDuration > 0 {
@@ -58,6 +66,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 func (pc *PipeClient) timerTicker(tickerDuration int) {
 	ticker := time.NewTicker(time.Duration(tickerDuration) * time.Millisecond)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-pc.done:
@@ -97,53 +106,104 @@ func (pc *PipeClient) commandLoop() {
 
 		log.Debugf("Send command: %+v", cmd)
 
-		if cmd.Name == command.Quit {
-			pc.close()
+		if cmd.Name == command.Close {
+			log.Debugln("Close command")
+			pc.emitEvent(pageCloseEvent)
 			return
-		}
-
-		if cmd.ShouldReturn() {
-			// call and wait for result
-			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-				PageName:  pc.pageName,
-				SessionID: pc.sessionID,
-				Command:   *cmd,
-			})
+		} else if cmd.Name == command.Begin {
+			// start new batch
+			log.Debugln("Start new batch")
+			pc.commandBatch = make([]*command.Command, 0)
+			pc.writeResult("")
+		} else if cmd.Name != command.End && pc.commandBatch != nil {
+			// add command to batch
+			log.Debugln("Add command to the batch")
+			pc.commandBatch = append(pc.commandBatch, cmd)
+			pc.writeResult("")
+		} else if cmd.Name == command.End && pc.commandBatch != nil {
+			// run batch
+			log.Debugln("Run batch")
+			rawResult := pc.hostClient.Call(context.Background(), page.PageCommandsBatchFromHostAction,
+				&page.PageCommandsBatchRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Commands:  pc.commandBatch,
+				})
 
 			// parse response
-			payload := &page.PageCommandResponsePayload{}
+			payload := &page.PageCommandsBatchResponsePayload{}
 			err = json.Unmarshal(*rawResult, payload)
 
 			if err != nil {
-				log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+				log.Fatalln("Error parsing response from PageCommandsBatchFromHostAction:", err)
 			}
+
+			log.Debugln("Response from PageCommandsBatchFromHostAction", payload.Results)
 
 			// save command results
 			if payload.Error != "" {
 				pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
 			} else {
-				linesCount := utils.CountRune(payload.Result, '\n')
-				pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, payload.Result))
+				pc.writeResult(strings.Join(payload.Results, "\n"))
 			}
-
+			pc.commandBatch = nil
 		} else {
-			// fire and forget
-			pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
-				PageName:  pc.pageName,
-				SessionID: pc.sessionID,
-				Command:   *cmd,
-			})
+			// run single command
+			if cmd.ShouldReturn() {
+				// call and wait for result
+				rawResult := pc.hostClient.Call(context.Background(), page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Command:   cmd,
+				})
+
+				// parse response
+				payload := &page.PageCommandResponsePayload{}
+				err = json.Unmarshal(*rawResult, payload)
+
+				if err != nil {
+					log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+				}
+
+				// save command results
+				if payload.Error != "" {
+					pc.pipe.writeResult(fmt.Sprintf("error %s", payload.Error))
+				} else {
+					pc.writeResult(payload.Result)
+				}
+
+			} else {
+				// fire and forget
+				pc.hostClient.CallAndForget(page.PageCommandFromHostAction, &page.PageCommandRequestPayload{
+					PageName:  pc.pageName,
+					SessionID: pc.sessionID,
+					Command:   cmd,
+				})
+			}
 		}
 	}
 }
 
+func (pc *PipeClient) writeResult(result string) {
+	linesCount := utils.CountRune(result, '\n')
+	pc.pipe.writeResult(fmt.Sprintf("%d %s", linesCount, result))
+}
+
 func (pc *PipeClient) emitEvent(evt string) {
+
+	if strings.HasPrefix(evt, pageChangeEvent) && !pc.emitAllEvents {
+		return
+	}
+
 	pc.pipe.emitEvent(evt)
+
+	if strings.HasPrefix(evt, pageCloseEvent) {
+		pc.close()
+	}
 }
 
 func (pc *PipeClient) close() {
 	log.Println("Closing pipe client...")
-
 	pc.done <- true
 	pc.pipe.close()
 

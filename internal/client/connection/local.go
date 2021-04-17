@@ -9,14 +9,12 @@ import (
 type Local struct {
 	readCh  chan []byte
 	writeCh chan []byte
-	done    chan bool
 }
 
 func NewLocal() *Local {
 	cws := &Local{
 		readCh:  make(chan []byte),
 		writeCh: make(chan []byte, 10),
-		done:    make(chan bool),
 	}
 	return cws
 }
@@ -40,7 +38,7 @@ func (c *Local) readLoop(readHandler ReadMessageHandler) {
 		message := <-c.readCh
 		err := readHandler(message)
 		if err != nil {
-			log.Printf("error processing message: %v", err)
+			log.Errorf("error processing message: %v", err)
 			break
 		}
 	}

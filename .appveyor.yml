@@ -1,7 +1,7 @@
 skip_branch_with_pr: true
 
 environment:
-  GO_VERSION: 1.16
+  GO_VERSION: 1.16.3
   GO_TAGS: --tags release
   GITHUB_TOKEN:
     secure: eiUu4bDjW+iunm/q1LsDOIBF3EOAZBRynjMztjPDwFOTDivVlYlSPvfjlQY3+Qd9

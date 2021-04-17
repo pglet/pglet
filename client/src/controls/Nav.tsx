@@ -4,7 +4,7 @@ import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { Nav, INavProps, INavLink, mergeStyles, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor } from './Utils'
+import { getThemeColor, isFalse, isTrue } from './Utils'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -24,7 +24,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
       let items = [];
 
       for (let i = 0; i < itemControls.length; i++) {
-        let disabled = (itemControls[i].disabled === 'true') || parentDisabled;
+        let disabled = isTrue(itemControls[i].disabled) || parentDisabled;
 
         let item: any = {
           id: itemControls[i].i,
@@ -32,10 +32,10 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           name: itemControls[i].text ? itemControls[i].text : itemControls[i].key,
           url: itemControls[i].url ? itemControls[i].url : undefined,
           title: itemControls[i].title ? itemControls[i].title : undefined,
-          target: itemControls[i].newwindow === 'true' ? '_blank' : undefined,
+          target: isTrue(itemControls[i].newwindow) ? '_blank' : undefined,
           disabled: disabled,
-          isExpanded: itemControls[i].expanded === "true",
-          collapseByDefault: itemControls[i].expanded === 'false', // groups only
+          isExpanded: isTrue(itemControls[i].expanded),
+          collapseByDefault: isFalse(itemControls[i].expanded), // groups only
         };
 
         item.links = getNavLinks(itemControls[i]);

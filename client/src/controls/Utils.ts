@@ -41,12 +41,16 @@ export function getThemeColor(theme: Theme, color: any): string {
 }
 
 export function getWindowHash() {
-  let hash = window.location.hash;
+  let hash = decodeURIComponent(window.location.hash);
   return hash.length > 0 ? hash.substring(1) : hash;
 }
 
 export function isTrue(value:any) {
     return value !== undefined && value != null && value.toString().toLowerCase() === "true";
+}
+
+export function isFalse(value:any) {
+  return value !== undefined && value != null && value.toString().toLowerCase() === "false";
 }
 
 export function getId(value:any) {

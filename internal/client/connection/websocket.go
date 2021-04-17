@@ -9,14 +9,12 @@ type WebSocket struct {
 	wsURL string
 	conn  *websocket.Conn
 	send  chan []byte
-	done  chan bool
 }
 
 func NewWebSocket(wsURL string) *WebSocket {
 	cws := &WebSocket{
 		wsURL: wsURL,
 		send:  make(chan []byte),
-		done:  make(chan bool),
 	}
 	return cws
 }
@@ -41,12 +39,10 @@ func (c *WebSocket) Send(message []byte) {
 }
 
 func (hc *WebSocket) readLoop(handler ReadMessageHandler) {
-	defer close(hc.done)
-
 	for {
 		_, bytesMessage, err := hc.conn.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Errorln("read error:", err)
 			return
 		}
 

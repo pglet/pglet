@@ -1,7 +1,7 @@
 import React from 'react'
 import { Image, IImageProps, ImageFit } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels } from './Utils'
+import { defaultPixels, isTrue } from './Utils'
 
 export const MyImage = React.memo<IControlProps>(({control}) => {
 
@@ -22,7 +22,7 @@ export const MyImage = React.memo<IControlProps>(({control}) => {
     width: control.width !== undefined ? defaultPixels(control.width) : undefined,
     height: control.height !== undefined ? defaultPixels(control.height) : undefined,
     imageFit: fit,
-    maximizeFrame: control.maximizeframe === "true"
+    maximizeFrame: isTrue(control.maximizeframe)
   };
 
   return <Image {...imgProps} />;

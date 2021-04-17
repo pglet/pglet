@@ -4,7 +4,7 @@ import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, getId } from './Utils'
+import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
 export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -12,7 +12,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
 
@@ -38,7 +38,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
   }
 
   const choiceProps: IChoiceGroupProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     label: control.label ? control.label : null,
     options: [],
     disabled: disabled,

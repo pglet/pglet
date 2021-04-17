@@ -2,7 +2,7 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
 import {
   BaseSlots,
   ThemeGenerator,
@@ -12,13 +12,13 @@ import { isDark } from '@fluentui/react/lib/Color';
 import { IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
-import { defaultPixels, getWindowHash } from './Utils'
+import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-
+  const [theme, setTheme] = React.useState<PartialTheme | undefined>();
 
   // page title
   let title = `${pageName} - pglet`;
@@ -27,55 +27,39 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   }
   useTitle(title)
 
-  // theme
-  const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
-  const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-  const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
+  function buildTheme() {
+    // theme
+    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
+    const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
+    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
 
-  //console.log("themeBackgroundColor:", themeBackgroundColor);  
-
-  // theme
-  let themeRules = themeRulesStandardCreator();
-  function changeColor(baseSlot: BaseSlots, newColor: any) {
-    const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
-    ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
-    if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
-      // isInverted got swapped, so need to refresh slots with new shading rules
-      ThemeGenerator.insureSlots(themeRules, currentIsDark);
+    // theme
+    let themeRules = themeRulesStandardCreator();
+    function changeColor(baseSlot: BaseSlots, newColor: any) {
+      const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
+      ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
+      if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
+        // isInverted got swapped, so need to refresh slots with new shading rules
+        ThemeGenerator.insureSlots(themeRules, currentIsDark);
+      }
     }
+
+    changeColor(BaseSlots.primaryColor, themePrimaryColor);
+    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
+    changeColor(BaseSlots.foregroundColor, themeTextColor);
+    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
+
+    const themeAsJson: {
+      [key: string]: string;
+    } = ThemeGenerator.getThemeAsJson(themeRules);
+
+    setTheme(createTheme({
+      ...{ palette: themeAsJson },
+      isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
+    }));
+
+    document.documentElement.style.background = themeBackgroundColor;
   }
-
-  changeColor(BaseSlots.primaryColor, themePrimaryColor);
-  changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-  changeColor(BaseSlots.foregroundColor, themeTextColor);
-  changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-
-  const themeAsJson: {
-    [key: string]: string;
-  } = ThemeGenerator.getThemeAsJson(themeRules);
-
-  const theme = createTheme({
-    ...{ palette: themeAsJson },
-    isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
-  });
-
-  // strip out the unnecessary shade slots from the final output theme
-  // const abridgedTheme: IThemeRules = {};
-  // for (const ruleName in themeRules) {
-  //   if (themeRules.hasOwnProperty(ruleName)) {
-  //     if (
-  //       ruleName.indexOf('ColorShade') === -1 &&
-  //       ruleName !== 'primaryColor' &&
-  //       ruleName !== 'backgroundColor' &&
-  //       ruleName !== 'foregroundColor' &&
-  //       ruleName.indexOf('body') === -1
-  //     ) {
-  //       abridgedTheme[ruleName] = themeRules[ruleName];
-  //     }
-  //   }
-  // }
-
-  // const jsonTheme = JSON.stringify(ThemeGenerator.getThemeAsJson(abridgedTheme), undefined, 2)
 
   const data = {
     fireUpdateHashEvent: true
@@ -90,13 +74,15 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   
       dispatch(changeProps([payload]));
       ws.updateControlProps([payload]);
-      ws.pageEventFromWeb("page", 'hash', hash);
+      ws.pageEventFromWeb("page", 'hashChange', hash);
     }
 
     data.fireUpdateHashEvent = true;
   }
 
   React.useEffect(() => {
+
+    buildTheme();
 
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";
@@ -106,19 +92,13 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
       data.fireUpdateHashEvent = false;
     }
 
-    const handleWindowClose = (e: any) => {
-      ws.pageEventFromWeb(control.i, 'close', control.data);
-    }
-
     const handleHashChange = (e: any) => {
       updateHash(getWindowHash());
     }
 
-    window.addEventListener("beforeunload", handleWindowClose);
     window.addEventListener("hashchange", handleHashChange);
 
     return () => {
-      window.removeEventListener("beforeunload", handleWindowClose);
       window.removeEventListener("hashchange", handleHashChange);
     }
     // eslint-disable-next-line
@@ -126,15 +106,15 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   const childControls = useSelector((state: any) => control.c.map((childId: string) => state.page.controls[childId]), shallowEqual);
 
-  if (control.visible === "false") {
+  if (isFalse(control.visible)) {
     return null;
   }
 
-  let disabled = (control.disabled === "true")
+  let disabled = isTrue(control.disabled)
 
   // stack props
   const stackProps: IStackProps = {
-    verticalFill: control.verticalfill ? control.verticalfill === "true" : true,
+    verticalFill: control.verticalfill ? isTrue(control.verticalfill) : true,
     horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
@@ -147,8 +127,6 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     },
   };
 
-  document.documentElement.style.background = themeBackgroundColor;
-
   const stackTokens: IStackTokens = {
     childrenGap: control.gap ? control.gap : 10
   }
@@ -158,8 +136,8 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   });
 
   return <ThemeProvider theme={theme} className={className}>
-    <Stack tokens={stackTokens} {...stackProps}>
-      <ControlsList controls={childControls} parentDisabled={disabled} />
-    </Stack>
-  </ThemeProvider>
+      <Stack tokens={stackTokens} {...stackProps}>
+        <ControlsList controls={childControls} parentDisabled={disabled} />
+      </Stack>
+    </ThemeProvider>
 })

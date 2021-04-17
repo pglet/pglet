@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,7 +35,7 @@ func newUnixDomainSocket(id string) (*unixDomainSocket, error) {
 		commandPipeName: pipeName,
 		eventPipeName:   pipeName + ".events",
 		commands:        make(chan string),
-		events:          make(chan string),
+		events:          make(chan string, 2),
 	}
 
 	go pc.commandLoop()
@@ -99,8 +98,6 @@ func (pc *unixDomainSocket) read() string {
 
 	r := bufio.NewReader(pc.conn)
 
-	log.Println("Before read")
-
 	for {
 		var result []byte
 
@@ -109,18 +106,12 @@ func (pc *unixDomainSocket) read() string {
 			bytesRead, err = r.Read(buf)
 
 			if err == io.EOF {
-				//log.Println("EOF")
 				return ""
 			}
 
 			result = append(result, buf[0:bytesRead]...)
 
-			//log.Println(string(result))
-
-			//log.Printf("read: %d\n", bytesRead)
-
 			if bytesRead < readsize {
-				//log.Println("less bytes read")
 				break
 			}
 		}
@@ -129,22 +120,24 @@ func (pc *unixDomainSocket) read() string {
 }
 
 func (pc *unixDomainSocket) writeResult(result string) {
-	log.Println("Waiting for result to consume...")
+	log.Debugln("Waiting for result to consume...")
 
 	w := bufio.NewWriter(pc.conn)
 
-	log.Println("Write result:", result)
+	log.Debugln("Write result:", result)
 
 	w.WriteString(fmt.Sprintf("%s\n", result))
 	w.Flush()
 }
 
 func (pc *unixDomainSocket) emitEvent(evt string) {
+	//log.Debugln("Emit event:", evt)
+
 	select {
 	case pc.events <- evt:
-		// Event sent to queue
+		log.Debugln("Event sent to queue:", evt)
 	default:
-		// No event listeners
+		log.Debugln("No event listeners:", evt)
 	}
 }
 
@@ -178,27 +171,24 @@ func (pc *unixDomainSocket) eventLoop() {
 
 					w := bufio.NewWriter(conn)
 
-					//log.Println("before event written:", evt)
 					_, err = w.WriteString(evt + "\n")
 					if err != nil {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("write error:", err)
 						return
 					}
 
-					conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+					//conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
 					err = w.Flush()
 					if err != nil {
 						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
 							continue
 						}
-						//log.Println("flush error:", err)
 						return
 					}
 
-					log.Println("event written:", evt)
+					log.Debugln("event written:", evt)
 
 					if !more {
 						return

@@ -168,7 +168,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Errorln("Error upgrading WebSocket connection:", err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func pageHandler(c *gin.Context) {
 	accountName := c.Param("accountName")
 	pageName := c.Param("pageName")
 	sessionID := c.Query("sessionID")
-	log.Println("sessionID:", sessionID)
+	log.Debugln("sessionID:", sessionID)
 
 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
 	page := store.GetPageByName(fullPageName)

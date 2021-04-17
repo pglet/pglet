@@ -1,15 +1,27 @@
 import React from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
+import { WebSocketContext } from '../WebSocket';
 import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels } from './Utils'
+import { getThemeColor, defaultPixels, isTrue } from './Utils'
 
-export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
+
+    //console.log("Render stack", control.i);
 
     const theme = useTheme();
 
-    let disabled = (control.disabled === 'true') || parentDisabled;
+    let disabled = isTrue(control.disabled) || parentDisabled;
+
+    const ws = React.useContext(WebSocketContext);
+
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (event.code === "Enter" && (event.target as any).tagName === "INPUT") {
+            ws.pageEventFromWeb(control.i, 'submit', control.data);
+            event.stopPropagation();
+        }
+    }
 
     // stack props
     const stackProps: IStackProps = {
@@ -17,7 +29,7 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
         verticalFill: control.verticalfill ? control.verticalfill : false,
         // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
-        wrap: control.wrap === "true",
+        wrap: isTrue(control.wrap),
         styles: {
             root: {
                 width: control.width ? defaultPixels(control.width) : undefined,
@@ -35,8 +47,8 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
                 borderRight: control.borderright ? control.borderright : undefined,
                 borderTop: control.bordertop ? control.bordertop : undefined,
                 borderBottom: control.borderbottom ? control.borderbottom : undefined,
-                overflowX: control.scrollx === "true" ? "auto" : undefined,
-                overflowY: control.scrolly === "true" ? "auto" : undefined,
+                overflowX: isTrue(control.scrollx) ? "auto" : undefined,
+                overflowY: isTrue(control.scrolly) ? "auto" : undefined,
             }
         },
     };
@@ -47,7 +59,11 @@ export const MyStack = React.memo<IControlProps>(({control, parentDisabled}) => 
 
     if (control.verticalalign) {
         stackProps.verticalAlign = control.verticalalign;
-    }    
+    }
+
+    if (isTrue(control.onsubmit)) {
+        stackProps.onKeyPress = handleKeyPress;
+    }
 
     const stackTokens: IStackTokens = {
         childrenGap: control.gap ? control.gap : 10

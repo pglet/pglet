@@ -18,6 +18,7 @@ func newAppCommand() *cobra.Command {
 	var uds bool
 	var tickerDuration int
 	var noWindow bool
+	var allEvents bool
 	var window string
 
 	var cmd = &cobra.Command{
@@ -39,6 +40,7 @@ func newAppCommand() *cobra.Command {
 				Server:         server,
 				Token:          token,
 				Uds:            uds,
+				EmitAllEvents:  allEvents,
 				TickerDuration: tickerDuration,
 			}
 
@@ -60,6 +62,9 @@ func newAppCommand() *cobra.Command {
 				results, err := client.WaitAppSession(cmd.Context(), connectArgs)
 				if err != nil {
 					log.Fatalln("Error waiting for a new session:", err)
+				} else if results.PageName == "" {
+					// timeout - wait again
+					continue
 				}
 				fmt.Println(results.PipeName)
 			}
@@ -73,6 +78,7 @@ func newAppCommand() *cobra.Command {
 	cmd.Flags().IntVarP(&tickerDuration, "ticker", "", 0, "interval in milliseconds between 'tick' events; disabled if not specified.")
 	cmd.Flags().StringVarP(&window, "window", "", "", "open app in a window with specified dimensions and position: [x,y,]width,height")
 	cmd.Flags().BoolVarP(&noWindow, "no-window", "", false, "do not open browser window")
+	cmd.Flags().BoolVarP(&allEvents, "all-events", "", false, "emit all page events")
 
 	return cmd
 }

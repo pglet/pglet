@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import {
     registerWebClientSuccess,
     registerWebClientError,
+    appBecomeInactive,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,
@@ -10,7 +11,9 @@ import {
     changeProps,
     appendProps,
     cleanControl,
-    removeControl
+    removeControl,
+    pageControlsBatchSuccess,
+    pageControlsBatchError
 } from './slices/pageSlice'
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Cookies from 'universal-cookie';
@@ -66,6 +69,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                         session: data.payload.session
                     }));
                 }
+            } else if (data.action === "appBecomeInactive") {
+                dispatch(appBecomeInactive(data.payload));
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
                     dispatch(addPageControlsError(data.payload.error));
@@ -77,6 +82,12 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                     dispatch(replacePageControlsError(data.payload.error));
                 } else {
                     dispatch(replacePageControlsSuccess(data.payload));
+                }                
+            } else if (data.action === "pageControlsBatch") {
+                if (data.payload.error) {
+                    dispatch(pageControlsBatchError(data.payload.error));
+                } else {
+                    dispatch(pageControlsBatchSuccess(data.payload));
                 }                
             } else if (data.action === "updateControlProps") {
                 dispatch(changeProps(data.payload.props));

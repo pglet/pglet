@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { Slider, ISliderProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId } from './Utils'
+import { defaultPixels, getId, isTrue } from './Utils'
 
 export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) => {
 
@@ -12,7 +12,7 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
   const dispatch = useDispatch();
   const [prevValue, setPrevValue] = React.useState<number | null>(null);
 
-  let disabled = (control.disabled === 'true') || parentDisabled;
+  let disabled = isTrue(control.disabled) || parentDisabled;
 
   const handleChange = (value: number) => {
 
@@ -46,14 +46,14 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
   const sliderProps: ISliderProps = {
-    id: getId(control.i),
+    id: getId(control.f ? control.f : control.i),
     value: control.value ? parseInt(control.value) : undefined,
     label: control.label ? control.label : undefined,
     min: control.min ? parseInt(control.min) : undefined,
     max: control.max ? parseInt(control.max) : undefined,
     step: control.step ? parseInt(control.step) : undefined,
-    showValue: control.showvalue === 'true',
-    vertical: control.vertical === 'true',
+    showValue: isTrue(control.showvalue),
+    vertical: isTrue(control.vertical),
     disabled: disabled,
     valueFormat: (value) => {
       const format = control.valueformat ? control.valueformat : '{value}';
