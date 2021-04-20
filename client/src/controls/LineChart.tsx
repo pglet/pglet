@@ -61,8 +61,8 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
     );
   }, shallowEqual);
 
-  const ticks = data.map((d:any) => d.data.filter((p:any) => p.tick !== undefined).map((p:any) => p.tick))
-    .reduce((acc: any, items: any) => ([...acc, ...items]));
+  const ticks = data.length > 0 ? data.map((d:any) => d.data.filter((p:any) => p.tick !== undefined).map((p:any) => p.tick))
+    .reduce((acc: any, items: any) => ([...acc, ...items])) : [];
 
   const chartProps: ILineChartProps = {
     data: {
