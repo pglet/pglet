@@ -2,7 +2,7 @@ import React from 'react';
 import { shallowEqual, useSelector } from 'react-redux'
 import { LineChart, ILineChartProps } from '@fluentui/react-charting';
 import { IControlProps } from './Control.types'
-import { parseNumber, getThemeColor, defaultPixels } from './Utils'
+import { parseNumber, getThemeColor, defaultPixels, parseDate } from './Utils'
 import { useTheme } from '@fluentui/react';
 
 export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled}) => {
@@ -49,9 +49,9 @@ export const MyLineChart = React.memo<IControlProps>(({control, parentDisabled})
           const p = state.page.controls[childId];
           const y = parseNumber(p.y)
           return {
-            x: xtype && xtype.toLowerCase() === "date" ? new Date(p.x) : parseNumber(p.x),
+            x: xtype && xtype.toLowerCase() === "date" ? parseDate(p.x) : parseNumber(p.x),
             y: y,
-            tick: p.tick && p.tick.length > 0 ? xtype === "date" ? new Date(p.tick) : parseNumber(p.tick) : undefined,
+            tick: p.tick && p.tick.length > 0 ? xtype === "date" ? parseDate(p.tick) : parseNumber(p.tick) : undefined,
             legend: p.legend,
             xAxisCalloutData: p.xtooltip ? p.xtooltip : p.x,
             yAxisCalloutData: p.ytooltip ? p.ytooltip : control.yformat !== undefined ? control.yformat.replace('{y}', y) : y
