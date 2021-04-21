@@ -22,6 +22,15 @@ export function parseNumber(n: any): number {
   }
 }
 
+export function parseDate(n: any): Date | undefined {
+  const date = new Date(n.toString());
+  if (date instanceof Date && date.getTime && !isNaN(date.getTime())) {
+    return date;
+  } else {
+    return undefined;
+  }
+}
+
 export function getThemeColor(theme: Theme, color: any): string {
   function getPropValue(obj: any, propName: any) {
     const vals = Object.getOwnPropertyNames(obj).filter(
