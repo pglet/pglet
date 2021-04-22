@@ -180,6 +180,12 @@ func (pc *PipeClient) commandLoop() {
 					Command:   cmd,
 				})
 			}
+
+			if cmd.Name == command.Error {
+				log.Debugln("Error command")
+				pc.emitEvent(pageCloseEvent)
+				return
+			}
 		}
 	}
 }

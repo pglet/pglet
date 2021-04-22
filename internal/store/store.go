@@ -166,7 +166,6 @@ func DeleteSession(pageID int, sessionID string) {
 	cache.Remove(fmt.Sprintf(sessionControlsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID))
-
 }
 
 //

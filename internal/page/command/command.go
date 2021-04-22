@@ -26,6 +26,7 @@ const (
 	Begin           = "begin"
 	End             = "end"
 	Close           = "close"
+	Error           = "error"
 )
 
 var (
@@ -46,6 +47,7 @@ var (
 		Begin:    {Name: Begin, ShouldReturn: false},
 		End:      {Name: End, ShouldReturn: true},
 		Close:    {Name: Close, ShouldReturn: false},
+		Error:    {Name: Error, ShouldReturn: false},
 	}
 )
 
@@ -136,7 +138,7 @@ func parseCommandLine(line string, parseName bool) (*Command, error) {
 			if command.Name == "" && parseName {
 				command.Name = utils.ReplaceEscapeSymbols(v)
 			} else {
-				command.Values = append(command.Values, utils.ReplaceEscapeSymbols(v))
+				command.Values = append(command.Values, utils.ReplaceEscapeSymbols(utils.TrimQuotes(v)))
 			}
 			prevLit = tok
 		} else {
@@ -150,7 +152,7 @@ func parseCommandLine(line string, parseName bool) (*Command, error) {
 		if command.Name == "" && parseName {
 			command.Name = utils.ReplaceEscapeSymbols(prevLit)
 		} else {
-			command.Values = append(command.Values, utils.ReplaceEscapeSymbols(prevLit))
+			command.Values = append(command.Values, utils.ReplaceEscapeSymbols(utils.TrimQuotes(prevLit)))
 		}
 	}
 

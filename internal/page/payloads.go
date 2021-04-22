@@ -129,3 +129,7 @@ type CleanControlPayload struct {
 type AppBecomeInactivePayload struct {
 	Message string `json:"message"`
 }
+
+type SessionCrashedPayload struct {
+	Message string `json:"message"`
+}
