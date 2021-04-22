@@ -14,7 +14,7 @@ export const MyDatePicker = React.memo<IControlProps>(({control, parentDisabled}
 
   const handleSelectDate = (date: Date | null | undefined) => {
 
-    let newValue = date?.toString();
+    let newValue = date?.toISOString();
     if (newValue === undefined) {
       newValue = "";
     }
