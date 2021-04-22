@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	pageChangeEvent = "page change"
-	pageCloseEvent  = "page close"
+	pageChangeEventPrefix = "page change"
+	pageCloseEvent        = "page close "
 )
 
 type PipeClient struct {
@@ -197,7 +197,7 @@ func (pc *PipeClient) writeResult(result string) {
 
 func (pc *PipeClient) emitEvent(evt string) {
 
-	if strings.HasPrefix(evt, pageChangeEvent) && !pc.emitAllEvents {
+	if strings.HasPrefix(evt, pageChangeEventPrefix) && !pc.emitAllEvents {
 		return
 	}
 
