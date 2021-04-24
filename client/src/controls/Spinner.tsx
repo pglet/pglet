@@ -6,7 +6,6 @@ import { defaultPixels } from './Utils'
 export const MySpinner = React.memo<IControlProps>(({control}) => {
 
   let size: SpinnerSize = SpinnerSize.medium;
-
   switch (control.size ? control.size.toLowerCase() : '') {
     case 'xsmall': size = SpinnerSize.xSmall; break;
     case 'small': size = SpinnerSize.small; break;
@@ -14,9 +13,17 @@ export const MySpinner = React.memo<IControlProps>(({control}) => {
     case 'large': size = SpinnerSize.large; break;
   }
 
+  let labelPosition: any = 'bottom';
+  switch (control.labelposition ? control.labelposition.toLowerCase() : '') {
+    case 'left': labelPosition = 'left'; break;
+    case 'right': labelPosition = 'right'; break;
+    case 'bottom': labelPosition = 'bottom'; break;
+    case 'top': labelPosition = 'top'; break;
+  }  
+
   const spinnerProps: ISpinnerProps = {
     label: control.label ? control.label : null,
-    labelPosition: control.labelposition ? control.labelposition.toLowerCase() : null,
+    labelPosition: labelPosition,
     size: size,
     styles: {
       root: {

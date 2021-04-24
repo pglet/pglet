@@ -3,7 +3,7 @@ import { WebSocketContext } from '../WebSocket';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { ControlsList } from './ControlsList'
-import { Dialog, DialogFooter, IDialogProps } from '@fluentui/react';
+import { Dialog, DialogFooter, DialogType, IDialogProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, isTrue } from './Utils'
 
@@ -55,6 +55,12 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         }
     }
 
+    let dialogType: DialogType = DialogType.normal;
+    switch (control.type ? control.type.toLowerCase() : '') {
+      case 'largeheader': dialogType = DialogType.largeHeader; break;
+      case 'close': dialogType = DialogType.close; break;
+    }
+
     // dialog props
     const props: IDialogProps = {
         hidden: control.open !== 'true',
@@ -68,7 +74,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
             isBlocking: isTrue(control.blocking),
         },
         dialogContentProps: {
-            type: isTrue(control.largeheader) ? 1 : isTrue(control.close) ? 2 : 0,
+            type: dialogType,
             title: control.title ? control.title : undefined,
             subText: control.subtext ? control.subtext : undefined,          
         },
