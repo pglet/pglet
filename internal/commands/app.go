@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
@@ -60,7 +61,9 @@ func newAppCommand() *cobra.Command {
 			// continuously wait for new client connections
 			for {
 				results, err := client.WaitAppSession(cmd.Context(), connectArgs)
-				if err != nil {
+				if err == context.Canceled {
+					return
+				} else if err != nil {
 					log.Fatalln("Error waiting for a new session:", err)
 				} else if results.PageName == "" {
 					// timeout - wait again

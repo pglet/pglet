@@ -91,7 +91,8 @@ func (pc *namedPipe) writeResult(result string) {
 	log.Debugln("Waiting for result to consume...")
 	output, err := openFifo(pc.commandPipeName, os.O_WRONLY)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 	log.Debugln("Write result:", result)
 
@@ -117,7 +118,8 @@ func (pc *namedPipe) eventLoop() {
 	for {
 		output, err := openFifo(pc.eventPipeName, os.O_WRONLY)
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
+			return
 		}
 
 		select {
