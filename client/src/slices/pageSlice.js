@@ -26,8 +26,12 @@ const pageSlice = createSlice({
         },
         appBecomeInactive(state, action) {
             state.error = action.payload.message;
-            cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
+            //cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
         },
+        sessionCrashed(state, action) {
+            state.error = action.payload.message;
+            //cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
+        },        
         addPageControlsSuccess(state, action) {
             const { controls, trimIDs } = action.payload
             addControls(state, controls);
@@ -181,6 +185,7 @@ export const {
     registerWebClientSuccess,
     registerWebClientError,
     appBecomeInactive,
+    sessionCrashed,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,

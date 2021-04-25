@@ -52,10 +52,6 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     ws.pageEventFromWeb(control.i, 'clear', control.data)
   }
 
-  const handleEscape = (ev?: any) => {
-    ws.pageEventFromWeb(control.i, 'escape', control.data)
-  }
-
   const handleSearch = (newValue: any) => {
     ws.pageEventFromWeb(control.i, 'search', control.data ? `${control.data}|${newValue!}` : newValue!)
   }  
@@ -90,6 +86,5 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
   return <SearchBox {...props}
     onChange={handleChange}
     onClear={handleClear}
-    onEscape={handleEscape}
     onSearch={handleSearch} />;
 })

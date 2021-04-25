@@ -39,4 +39,6 @@ const (
 	PageControlsBatchAction = "pageControlsBatch"
 
 	AppBecomeInactiveAction = "appBecomeInactive"
+
+	SessionCrashedAction = "sessionCrashed"
 )

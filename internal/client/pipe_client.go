@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	pageChangeEvent = "page change"
-	pageCloseEvent  = "page close"
+	pageChangeEventPrefix = "page change"
+	pageCloseEvent        = "page close "
 )
 
 type PipeClient struct {
@@ -135,7 +135,7 @@ func (pc *PipeClient) commandLoop() {
 			err = json.Unmarshal(*rawResult, payload)
 
 			if err != nil {
-				log.Fatalln("Error parsing response from PageCommandsBatchFromHostAction:", err)
+				log.Errorln("Error parsing response from PageCommandsBatchFromHostAction:", err)
 			}
 
 			log.Debugln("Response from PageCommandsBatchFromHostAction", payload.Results)
@@ -162,7 +162,7 @@ func (pc *PipeClient) commandLoop() {
 				err = json.Unmarshal(*rawResult, payload)
 
 				if err != nil {
-					log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+					log.Errorln("Error parsing response from PageCommandFromHostAction:", err)
 				}
 
 				// save command results
@@ -180,6 +180,12 @@ func (pc *PipeClient) commandLoop() {
 					Command:   cmd,
 				})
 			}
+
+			if cmd.Name == command.Error {
+				log.Debugln("Error command")
+				pc.emitEvent(pageCloseEvent)
+				return
+			}
 		}
 	}
 }
@@ -191,7 +197,7 @@ func (pc *PipeClient) writeResult(result string) {
 
 func (pc *PipeClient) emitEvent(evt string) {
 
-	if strings.HasPrefix(evt, pageChangeEvent) && !pc.emitAllEvents {
+	if strings.HasPrefix(evt, pageChangeEventPrefix) && !pc.emitAllEvents {
 		return
 	}
 

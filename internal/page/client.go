@@ -12,6 +12,7 @@ import (
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
+	"github.com/pglet/pglet/internal/page/command"
 	"github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/pubsub"
 	"github.com/pglet/pglet/internal/store"
@@ -23,7 +24,7 @@ const (
 	None                    ClientRole = "None"
 	WebClient                          = "Web"
 	HostClient                         = "Host"
-	pageNotFoundMessage                = "Page not found or access denied."
+	pageNotFoundMessage                = "Page not found or application is not running."
 	inactiveAppMessage                 = "Application is inactive. Please try refreshing this page later."
 	clientExpirationSeconds            = 20
 )
@@ -336,7 +337,11 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 			handler := newSessionHandler(session)
 			result, err := handler.execute(payload.Command)
 			responsePayload.Result = result
-			if err != nil {
+
+			if payload.Command.Name == command.Error {
+				// session crashed on the client
+				store.DeleteSession(page.ID, session.ID)
+			} else if err != nil {
 				handler.extendExpiration()
 				responsePayload.Error = fmt.Sprint(err)
 			}

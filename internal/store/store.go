@@ -166,7 +166,6 @@ func DeleteSession(pageID int, sessionID string) {
 	cache.Remove(fmt.Sprintf(sessionControlsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID))
 	cache.Remove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID))
-
 }
 
 //
@@ -184,7 +183,8 @@ func GetSessionControl(session *model.Session, ctrlID string) *model.Control {
 	}
 	ctrl, err := model.NewControlFromJSON(cj)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return nil
 	}
 	return ctrl
 }

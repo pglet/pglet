@@ -16,6 +16,7 @@ import { Button } from './Button'
 import { MyText } from './Text'
 import { MyImage } from './Image'
 import { MyLink } from './Link'
+import { MyDatePicker } from './DatePicker'
 import { Tabs } from './Tabs'
 import { Toolbar } from './Toolbar'
 import { MyNav } from './Nav'
@@ -50,6 +51,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'link': MyLink,
         'image': MyImage,
         'button': Button,
+        'datepicker': MyDatePicker,
         'stack': MyStack,
         'tabs': Tabs,
         'toolbar': Toolbar,

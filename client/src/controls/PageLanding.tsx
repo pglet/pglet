@@ -37,7 +37,7 @@ export const PageLanding = () => {
     const page = useSelector((state: any) => state.page.controls['page']);
 
     if (err) {
-        return <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>{err}</MessageBar>
+        return <MessageBar messageBarType={MessageBarType.error} isMultiline={true}>{err}</MessageBar>
     } else if (!page) {
         return <Spinner label="Loading page, please wait..." labelPosition="right" styles={{ root: { height: "35px" }}} />
     } else {

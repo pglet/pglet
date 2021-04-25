@@ -2,14 +2,15 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { TextField, ITextFieldProps } from '@fluentui/react';
+import { TextField, ITextFieldProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId, isTrue } from './Utils'
+import { defaultPixels, getId, getThemeColor, isTrue } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   let disabled = isTrue(control.disabled) || parentDisabled;
   
@@ -46,6 +47,12 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     type: isTrue(control.password) ? "password" : undefined,
     canRevealPassword: isTrue(control.password),
     required: isTrue(control.required),
+    readOnly: isTrue(control.readonly),
+    autoAdjustHeight: isTrue(control.autoadjustheight),
+    underlined: isTrue(control.underlined),
+    borderless: isTrue(control.borderless),
+    prefix: control.prefix ? control.prefix : undefined,
+    suffix: control.suffix ? control.suffix : undefined,
     disabled: disabled,
     styles: {
       root: {
@@ -59,6 +66,19 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
       },
     }
   };
+
+  if (control.icon) {
+    textFieldProps.iconProps = {
+      iconName: control.icon
+    }
+    if (control.iconcolor !== undefined) {
+      textFieldProps.iconProps!.styles = {
+          root: {
+              color: getThemeColor(theme, control.iconcolor)
+          }
+      }
+    }    
+  }
 
   return <TextField {...textFieldProps} onChange={handleChange} />;
 })

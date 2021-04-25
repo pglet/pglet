@@ -4,6 +4,7 @@ import {
     registerWebClientSuccess,
     registerWebClientError,
     appBecomeInactive,
+    sessionCrashed,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,
@@ -71,6 +72,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
                 }
             } else if (data.action === "appBecomeInactive") {
                 dispatch(appBecomeInactive(data.payload));
+            } else if (data.action === "sessionCrashed") {
+                dispatch(sessionCrashed(data.payload));                
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
                     dispatch(addPageControlsError(data.payload.error));

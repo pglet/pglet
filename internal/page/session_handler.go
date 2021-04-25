@@ -27,7 +27,8 @@ const (
 	// ControlIDSeparator is a symbol between parts of control ID
 	ControlIDSeparator = ":"
 	// ReservedPageID is a reserved page ID
-	ReservedPageID = "page"
+	ReservedPageID        = "page"
+	sessionCrashedMessage = "There was an error while processing your request. Please refresh the page to start a new session."
 )
 
 type commandHandlerFn = func(*command.Command) (string, error)
@@ -97,6 +98,7 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 		command.Cleanf:   h.clean,
 		command.Remove:   h.remove,
 		command.Removef:  h.remove,
+		command.Error:    h.sessionCrashed,
 	}
 
 	handler := handlers[strings.ToLower(cmd.Name)]
@@ -681,6 +683,21 @@ func (h *sessionHandler) removeInternal(ids []string, at int) (allIDs []string, 
 	}
 
 	return allIDs, nil
+}
+
+func (h *sessionHandler) sessionCrashed(cmd *command.Command) (result string, err error) {
+	errorMessage := sessionCrashedMessage
+
+	// custom error message comes as a first value
+	if len(cmd.Values) > 0 && cmd.Values[0] != "" {
+		errorMessage = cmd.Values[0]
+	}
+
+	// broadcast command to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage("", SessionCrashedAction, &SessionCrashedPayload{
+		Message: errorMessage,
+	}))
+	return "", nil
 }
 
 func (h *sessionHandler) updateControlProps(props []map[string]interface{}) error {
