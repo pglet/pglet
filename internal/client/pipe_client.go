@@ -135,7 +135,7 @@ func (pc *PipeClient) commandLoop() {
 			err = json.Unmarshal(*rawResult, payload)
 
 			if err != nil {
-				log.Fatalln("Error parsing response from PageCommandsBatchFromHostAction:", err)
+				log.Errorln("Error parsing response from PageCommandsBatchFromHostAction:", err)
 			}
 
 			log.Debugln("Response from PageCommandsBatchFromHostAction", payload.Results)
@@ -162,7 +162,7 @@ func (pc *PipeClient) commandLoop() {
 				err = json.Unmarshal(*rawResult, payload)
 
 				if err != nil {
-					log.Fatalln("Error parsing response from PageCommandFromHostAction:", err)
+					log.Errorln("Error parsing response from PageCommandFromHostAction:", err)
 				}
 
 				// save command results

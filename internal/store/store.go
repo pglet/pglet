@@ -183,7 +183,8 @@ func GetSessionControl(session *model.Session, ctrlID string) *model.Control {
 	}
 	ctrl, err := model.NewControlFromJSON(cj)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return nil
 	}
 	return ctrl
 }

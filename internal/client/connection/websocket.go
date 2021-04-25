@@ -57,7 +57,7 @@ func (c *WebSocket) writeLoop() {
 			if !ok {
 				err := c.conn.Close()
 				if err != nil {
-					log.Fatalln(err)
+					log.Errorln(err)
 				}
 				return
 			}
