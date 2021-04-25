@@ -114,7 +114,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   // stack props
   const stackProps: IStackProps = {
-    verticalFill: control.verticalfill ? isTrue(control.verticalfill) : true,
+    verticalFill: control.verticalfill ? isTrue(control.verticalfill) : undefined,
     horizontalAlign: control.horizontalalign === '' ? undefined : (control.horizontalalign ? control.horizontalalign : "start"),
     verticalAlign: control.verticalalign === '' ? undefined : (control.verticalalign ? control.verticalalign : "start"),
     styles: {
