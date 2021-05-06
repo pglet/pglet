@@ -149,12 +149,37 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
     compact: isTrue(control.compact),
     isHeaderVisible: isFalse(control.headervisible) ? false : true,
     onItemInvoked: _onItemInvoked,
+    onRenderDetailsHeader: (props: any, defaultRender?) => {
+      return defaultRender!({
+         ...props,
+         styles: {
+          root: {
+            paddingTop: '0px',
+            // selectors: {
+            //   ".ms-DetailsHeader": {
+            //     paddingTop: '0px!important'
+            //   },
+            //   '.ms-DetailsHeader-cell': {
+            //      whiteSpace: 'normal',
+            //      textOverflow: 'clip',
+            //      lineHeight: 'normal',
+            //    },
+            //   '.ms-DetailsHeader-cellTitle': {
+            //      height: '100%',
+            //      alignItems: 'center',
+            //    },
+            //  },
+           },
+          }
+      })
+   },
     styles: {
       root: {
+        backgroundColor: 'red',
         //width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
-        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined   
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
       }
     }
   };

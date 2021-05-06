@@ -45,16 +45,6 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         }
     }
 
-    const cleanupLayers = () => {
-        const layers = document.body.getElementsByClassName("ms-Layer--fixed")
-        for (let i = 0; i < layers.length; i++) {
-            let layer: Element = layers[i];
-            if (!layer.hasChildNodes()) {
-                document.body.removeChild(layer);
-            }
-        }
-    }
-
     let dialogType: DialogType = DialogType.normal;
     switch (control.type ? control.type.toLowerCase() : '') {
       case 'largeheader': dialogType = DialogType.largeHeader; break;
@@ -67,9 +57,6 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         minWidth: control.width ? defaultPixels(control.width) : undefined,
         maxWidth: control.maxwidth ? defaultPixels(control.maxwidth) : undefined,
         modalProps: {
-            layerProps: {
-                onLayerWillUnmount: () => cleanupLayers()
-            },
             topOffsetFixed: isTrue(control.fixedtop),
             isBlocking: isTrue(control.blocking),
         },

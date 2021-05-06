@@ -14,16 +14,6 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     let disabled = isTrue(control.disabled) || parentDisabled;
 
-    const cleanupLayers = () => {
-        const layers = document.body.getElementsByClassName("ms-Layer--fixed")
-        for (let i = 0; i < layers.length; i++) {
-            let layer: Element = layers[i];
-            if (!layer.hasChildNodes()) {
-                document.body.removeChild(layer);
-            }
-        }
-    }
-
     const handleDismiss = (ev?: React.SyntheticEvent<HTMLElement> | KeyboardEvent) => {
 
         const autoDismiss = !control.autodismiss || isTrue(control.autodismiss);
@@ -61,9 +51,6 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
         isLightDismiss: isTrue(control.lightdismiss),
         isBlocking: control.blocking !== 'false',
         headerText: control.title ? control.title : undefined,
-        layerProps: {
-            onLayerWillUnmount: () => cleanupLayers()
-        },   
     };
 
     switch (control.type ? control.type.toLowerCase() : '') {
