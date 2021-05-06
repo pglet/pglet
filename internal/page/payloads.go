@@ -33,9 +33,10 @@ func NewMessage(id string, action string, payload interface{}) *Message {
 }
 
 type RegisterHostClientRequestPayload struct {
-	PageName  string `json:"pageName"`
-	IsApp     bool   `json:"isApp"`
-	AuthToken string `json:"authToken"`
+	PageName    string `json:"pageName"`
+	IsApp       bool   `json:"isApp"`
+	AuthToken   string `json:"authToken"`
+	Permissions string `json:"permissions"`
 }
 
 type RegisterHostClientResponsePayload struct {

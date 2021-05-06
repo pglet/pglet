@@ -105,3 +105,15 @@ func ToJSONIndent(v interface{}) string {
 	json, _ := json.MarshalIndent(v, "", "  ")
 	return string(json)
 }
+
+func SplitAndTrim(str string, delim string) []string {
+	items := strings.Split(str, delim)
+	results := make([]string, 0)
+	for _, item := range items {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			results = append(results, item)
+		}
+	}
+	return results
+}

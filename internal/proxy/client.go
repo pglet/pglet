@@ -27,6 +27,7 @@ type ConnectPageArgs struct {
 	Web            bool
 	Server         string
 	Token          string
+	Permissions    string
 	Uds            bool
 	EmitAllEvents  bool
 	TickerDuration int

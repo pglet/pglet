@@ -26,6 +26,7 @@ const (
 	HostClient                         = "Host"
 	pageNotFoundMessage                = "Page not found or application is not running."
 	inactiveAppMessage                 = "Application is inactive. Please try refreshing this page later."
+	loginRequiredMessage               = "login_required"
 	clientExpirationSeconds            = 20
 )
 
@@ -166,6 +167,15 @@ func (c *Client) registerWebClient(message *Message) {
 	} else {
 		var session *model.Session
 
+		// check permissions
+		log.Debugln("Page:", page)
+
+		if page.Permissions != "" {
+			log.Debugln("Page permissions:", page.Permissions)
+			response.Error = loginRequiredMessage
+			goto response
+		}
+
 		if page.IsApp {
 			// app page
 
@@ -285,7 +295,7 @@ func (c *Client) registerHostClient(message *Message) {
 		}
 
 		// create new page
-		page = model.NewPage(responsePayload.PageName, payload.IsApp, c.clientIP)
+		page = model.NewPage(responsePayload.PageName, payload.IsApp, payload.Permissions, c.clientIP)
 		store.AddPage(page)
 	}
 

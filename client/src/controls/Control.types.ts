@@ -12,3 +12,6 @@ export interface IPageProps {
     pageName: string;
     control: any;
 }
+
+export interface ILoginProps {
+}

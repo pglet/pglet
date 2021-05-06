@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { Page } from './Page'
+import { Login } from './Login'
 import { WebSocketContext } from '../WebSocket';
 import { MessageBar, MessageBarType, Spinner } from '@fluentui/react'
 import { getWindowHash } from './Utils'
@@ -36,7 +37,10 @@ export const PageLanding = () => {
     const err = useSelector((state: any) => state.page.error);
     const page = useSelector((state: any) => state.page.controls['page']);
 
-    if (err) {
+    if (err === "login_required") {
+        return <Login />
+    }
+    else if (err) {
         return <MessageBar messageBarType={MessageBarType.error} isMultiline={true}>{err}</MessageBar>
     } else if (!page) {
         return <Spinner label="Loading page, please wait..." labelPosition="right" styles={{ root: { height: "35px" }}} />

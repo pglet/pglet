@@ -40,6 +40,12 @@ const (
 	redisPassword         = "REDIS.PASSWORD"
 	redisMaxIdle          = "REDIS.MAX_IDLE"
 	redisMaxActive        = "REDIS.MAX_ACTIVE"
+
+	// auth
+	githubClientID     = "GITHUB_CLIENT_ID"
+	githubClientSecret = "GITHUB_CLIENT_SECRET"
+	azureClientID      = "AZURE_CLIENT_ID"
+	azureClientSecret  = "AZURE_CLIENT_SECRET"
 )
 
 func init() {
@@ -143,4 +149,22 @@ func LimitSessionsPerHour() int {
 
 func LimitSessionSizeBytes() int {
 	return viper.GetInt(limitSessionSizeBytes)
+}
+
+// Auth
+
+func GithubClientID() string {
+	return viper.GetString(githubClientID)
+}
+
+func GithubClientSecret() string {
+	return viper.GetString(githubClientSecret)
+}
+
+func AzureClientID() string {
+	return viper.GetString(azureClientID)
+}
+
+func AzureClientSecret() string {
+	return viper.GetString(azureClientSecret)
 }

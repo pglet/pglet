@@ -62,7 +62,8 @@ func AddPage(page *model.Page) {
 		"id", page.ID,
 		"name", page.Name,
 		"isApp", page.IsApp,
-		"clientIP", page.ClientIP)
+		"clientIP", page.ClientIP,
+		"permissions", page.Permissions)
 	cache.HashSet(pagesKey, page.Name, page.ID)
 }
 

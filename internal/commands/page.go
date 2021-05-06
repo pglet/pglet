@@ -15,6 +15,7 @@ func newPageCommand() *cobra.Command {
 	var web bool
 	var server string
 	var token string
+	var permissions string
 	var uds bool
 	var tickerDuration int
 	var noWindow bool
@@ -39,6 +40,7 @@ func newPageCommand() *cobra.Command {
 				Web:            web,
 				Server:         server,
 				Token:          token,
+				Permissions:    permissions,
 				Uds:            uds,
 				EmitAllEvents:  allEvents,
 				TickerDuration: tickerDuration,
@@ -60,6 +62,7 @@ func newPageCommand() *cobra.Command {
 	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the page available as public at pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().StringVarP(&permissions, "permissions", "", "", "comma-separated list of users and groups allowed to access this app")
 	cmd.Flags().BoolVarP(&uds, "uds", "", false, "force Unix domain sockets to connect from PowerShell on Linux/macOS")
 	cmd.Flags().IntVarP(&tickerDuration, "ticker", "", 0, "interval in milliseconds between 'tick' events; disabled if not specified.")
 	cmd.Flags().StringVarP(&window, "window", "", "", "open page in a window with specified dimensions and position: [x,y,]width,height")
