@@ -5,9 +5,10 @@ go 1.16
 require (
 	github.com/alexflint/go-filemutex v1.1.0
 	github.com/andybrewer/mack v0.0.0-20200226161639-15be3d47cc54
+	github.com/gin-contrib/sessions v0.0.3 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
 	github.com/gin-gonic/gin v1.6.3
-	github.com/gomodule/redigo v1.8.3
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.9.0
@@ -16,6 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1 // indirect
+	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/wangjia184/sortedset v0.0.0-20200422044937-080872f546ba
 	golang.org/x/sys v0.0.0-20201018230417-eeed37f84f13 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
