@@ -178,9 +178,10 @@ func (c *memoryCache) hashGetObject(key string, result interface{}) {
 	for k, v := range hash {
 		values[i] = []byte(k)
 		i++
-		values[i] = v
+		values[i] = []byte(v)
 		i++
 	}
+
 	err := redis.ScanStruct(values, result)
 	if err != nil {
 		log.Fatalln("error scanning struct:", err)

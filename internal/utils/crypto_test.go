@@ -55,3 +55,17 @@ func TestEncryptWithKey(t *testing.T) {
 		t.Errorf("DecryptWithKey returned %s, want %s", decData, plaintext)
 	}
 }
+
+func TestBase64Encoding(t *testing.T) {
+	plainText := "This is a test string"
+	encoded := EncodeBase64([]byte(plainText))
+
+	decoded, err := DecodeBase64(encoded)
+	if err != nil {
+		t.Error("DecodeBase64 should not fail")
+	}
+
+	if plainText != string(decoded) {
+		t.Errorf("DecodeBase64 returned %s, want %s", string(decoded), plainText)
+	}
+}
