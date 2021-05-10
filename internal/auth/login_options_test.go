@@ -15,9 +15,11 @@ func TestLoginOptions(t *testing.T) {
 	}{
 		{"", nil},
 		{"*", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: false}},
+		{"john@smith.com, jack@bauer.com", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: false}},
+		{"azure:john@smith.com", &LoginOptions{GitHubEnabled: false, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: false}},
 		{"*/*", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: true, AzureEnabled: true, AzureGroupScope: true}},
 		{"github:*", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: false, AzureEnabled: false, AzureGroupScope: false}},
-		{"github:pglet/developers", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: true, AzureEnabled: false, AzureGroupScope: false}},
+		{"github:pglet/devops", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: true, AzureEnabled: false, AzureGroupScope: false}},
 		{"azure:*", &LoginOptions{GitHubEnabled: false, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: false}},
 		{"azure:*/*", &LoginOptions{GitHubEnabled: false, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: true}},
 		{"*, azure:*/*", &LoginOptions{GitHubEnabled: true, GitHubGroupScope: false, AzureEnabled: true, AzureGroupScope: true}},

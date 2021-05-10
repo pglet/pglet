@@ -101,6 +101,10 @@ func ToJSON(v interface{}) string {
 	return string(json)
 }
 
+func FromJSON(src string, dst interface{}) {
+	_ = json.Unmarshal([]byte(src), dst)
+}
+
 func ToJSONIndent(v interface{}) string {
 	json, _ := json.MarshalIndent(v, "", "  ")
 	return string(json)
