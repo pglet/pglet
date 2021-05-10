@@ -7,7 +7,6 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
-	"github.com/pglet/pglet/internal/app"
 	"github.com/pglet/pglet/internal/config"
 	log "github.com/sirupsen/logrus"
 )
@@ -112,8 +111,6 @@ func newRedisCache() cacher {
 			return err
 		},
 	}
-
-	app.RedisPool = pool
 
 	rc := &redisCache{
 		pool:               pool,

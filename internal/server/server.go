@@ -13,13 +13,9 @@ import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/memstore"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/pglet/pglet/internal/app"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
@@ -74,22 +70,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
-
-	// sessions
-	keyPairs := [][]byte{}
-	for _, key := range config.CookieSecrets() {
-		keyPairs = append(keyPairs, []byte(key))
-	}
-
-	var store sessions.Store
-	if app.RedisPool != nil {
-		log.Println("Using Redis session store")
-		store, _ = redis.NewStoreWithPool(app.RedisPool, keyPairs...)
-	} else {
-		log.Println("Using in-memory session store")
-		store = memstore.NewStore(keyPairs...)
-	}
-	router.Use(sessions.Sessions(config.CookieName(), store))
 
 	// force SSL
 	if config.ForceSSL() {
