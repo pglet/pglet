@@ -1,6 +1,4 @@
 import React from 'react'
-import { WebSocketContext } from '../WebSocket';
-import { useDispatch } from 'react-redux'
 import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton } from '@fluentui/react';
 import { ILoginProps } from './Control.types'
 import logo_light from '../assets/img/logo_light.svg'
@@ -8,9 +6,6 @@ import microsoft_logo from '../assets/img/microsoft-logo.svg'
 import github_logo from '../assets/img/github-logo.svg'
 
 export const Login = React.memo<ILoginProps>(() => {
-
-    const ws = React.useContext(WebSocketContext);
-    const dispatch = useDispatch();
 
     // dialog props
     const props: IDialogProps = {

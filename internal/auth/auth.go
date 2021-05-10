@@ -1,6 +1,15 @@
 package auth
 
+import (
+	"strings"
+
+	"github.com/pglet/pglet/internal/utils"
+)
+
 const (
+	GitHubAuth = "github"
+	AzureAuth  = "azure"
+
 	// Users with both a personal Microsoft account and a work or school account from Azure AD can sign in to the application.
 	AzureCommonTenant = "common"
 
@@ -21,3 +30,36 @@ const (
 		More info: https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-protocols-oidc
 	*/
 )
+
+func GetLoginOptions(permissions string) *LoginOptions {
+
+	if permissions == "" {
+		return nil
+	}
+
+	opts := &LoginOptions{}
+
+	// parse permissions
+	permList := utils.SplitAndTrim(permissions, ",")
+
+	for _, permission := range permList {
+		// check permission's auth type
+		authType := ""
+		colonIdx := strings.Index(permission, ":")
+		if colonIdx != -1 {
+			authType = strings.ToLower(permission[:colonIdx])
+			permission = permission[colonIdx+1:]
+		}
+
+		opts.GitHubEnabled = opts.GitHubEnabled || authType == "" || authType == GitHubAuth
+		opts.AzureEnabled = opts.AzureEnabled || authType == "" || authType == AzureAuth
+
+		// check if the requested permission is a group
+		if strings.Index(permission, "/") != -1 {
+			opts.GitHubGroupScope = opts.GitHubGroupScope || (opts.GitHubEnabled && authType == "" || authType == GitHubAuth)
+			opts.AzureGroupScope = opts.AzureGroupScope || (opts.AzureEnabled && authType == "" || authType == AzureAuth)
+		}
+	}
+
+	return opts
+}
