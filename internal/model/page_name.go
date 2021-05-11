@@ -51,7 +51,7 @@ func ParsePageName(pageName string) (*PageName, error) {
 		p.Account = publicAccount
 	}
 
-	rndText, err := utils.GenerateRandomString(12)
+	rndText, err := utils.GenerateRandomString(16)
 	if err != nil {
 		return nil, err
 	}

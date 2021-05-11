@@ -13,6 +13,8 @@ import (
 const (
 
 	// general settings
+	appURL                         = "APP_URL"
+	defaultAppURL                  = "http://localhost:3000"
 	defaultServerPort              = 5000
 	serverPort                     = "SERVER_PORT"
 	forceSSL                       = "FORCE_SSL"
@@ -22,7 +24,6 @@ const (
 	// pages/sessions
 	defaultPageLifetimeMinutes = 1440
 	defaultAppLifetimeMinutes  = 60
-	defaultCookieName          = "pglet"
 	pageLifetimeMinutes        = "PAGE_LIFETIME_MINUTES"
 	appLifetimeMinutes         = "APP_LIFETIME_MINUTES"
 	checkPageIP                = "CHECK_PAGE_IP" // unauthenticated clients only
@@ -43,20 +44,18 @@ const (
 	redisMaxActive        = "REDIS.MAX_ACTIVE"
 
 	// auth
-	cookieName         = "COOKIE_NAME"
-	cookieSecrets      = "COOKIE_SECRETS"
 	githubClientID     = "GITHUB_CLIENT_ID"
 	githubClientSecret = "GITHUB_CLIENT_SECRET"
 	azureClientID      = "AZURE_CLIENT_ID"
 	azureClientSecret  = "AZURE_CLIENT_SECRET"
+	defaultAzureTenant = "common"
+	azureTenant        = "AZURE_TENANT"
 
 	// security
+	cookieSecret           = "COOKIE_SECRET"
+	defaultCookieSecret    = "secret_signing_key"
 	masterSecretKey        = "MASTER_SECRET_KEY"
 	defaultMasterSecretKey = "master_secret_key"
-)
-
-var (
-	defaultCookieSecrets = []string{"secret_hash secret_encrypt"}
 )
 
 func init() {
@@ -82,6 +81,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	// general
+	viper.SetDefault(appURL, defaultAppURL)
 	viper.SetDefault(serverPort, defaultServerPort)
 	viper.SetDefault(wsMaxMessageSize, defaultWebSocketMaxMessageSize)
 
@@ -94,11 +94,15 @@ func init() {
 	viper.SetDefault(redisMaxActive, defaultRedisMaxActive)
 
 	// auth
-	viper.SetDefault(cookieName, defaultCookieName)
-	viper.SetDefault(cookieSecrets, defaultCookieSecrets)
+	viper.SetDefault(AzureTenant(), defaultAzureTenant)
 
 	// security
+	viper.SetDefault(cookieSecret, defaultCookieSecret)
 	viper.SetDefault(masterSecretKey, defaultMasterSecretKey)
+}
+
+func AppURL() string {
+	return viper.GetString(appURL)
 }
 
 func ServerPort() int {
@@ -171,14 +175,6 @@ func LimitSessionSizeBytes() int {
 
 // Auth
 
-func CookieName() string {
-	return viper.GetString(cookieName)
-}
-
-func CookieSecrets() []string {
-	return viper.GetStringSlice(cookieSecrets)
-}
-
 func GithubClientID() string {
 	return viper.GetString(githubClientID)
 }
@@ -195,7 +191,15 @@ func AzureClientSecret() string {
 	return viper.GetString(azureClientSecret)
 }
 
+func AzureTenant() string {
+	return viper.GetString(azureTenant)
+}
+
 // Security
+
+func CookieSecret() []string {
+	return viper.GetStringSlice(cookieSecret)
+}
 
 func MasterSecretKey() string {
 	return viper.GetString(masterSecretKey)

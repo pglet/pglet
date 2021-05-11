@@ -1,5 +1,12 @@
 package auth
 
+import (
+	"github.com/pglet/pglet/internal/config"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/microsoft"
+)
+
 const (
 	GitHubAuth = "github"
 	AzureAuth  = "azure"
@@ -24,3 +31,39 @@ const (
 		More info: https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-protocols-oidc
 	*/
 )
+
+func GetOauthConfig(authProvider string, orgScope bool) *oauth2.Config {
+	if authProvider == GitHubAuth {
+
+		// GitHub
+		scopes := []string{"read:user", "user:email"}
+		if orgScope {
+			scopes = append(scopes, "read:org")
+		}
+
+		return &oauth2.Config{
+			ClientID:     config.GithubClientID(),
+			ClientSecret: config.GithubClientSecret(),
+			RedirectURL:  config.AppURL() + "/api/oauth/github",
+			Scopes:       scopes,
+			Endpoint:     github.Endpoint,
+		}
+	} else if authProvider == AzureAuth {
+
+		// Azure
+		scopes := []string{"user.read"}
+		if orgScope {
+			scopes = append(scopes, "Directory.Read.All")
+		}
+
+		return &oauth2.Config{
+			ClientID:     config.AzureClientID(),
+			ClientSecret: config.AzureClientSecret(),
+			RedirectURL:  config.AppURL() + "/api/oauth/azure",
+			Scopes:       scopes,
+			Endpoint:     microsoft.AzureADEndpoint(config.AzureTenant()),
+		}
+	}
+
+	return nil
+}

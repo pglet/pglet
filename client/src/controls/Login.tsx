@@ -7,6 +7,9 @@ import github_logo from '../assets/img/github-logo.svg'
 
 export const Login = React.memo<ILoginProps>(() => {
 
+    var pageUrl = encodeURIComponent(window.location.pathname);
+    console.log(pageUrl);
+
     // dialog props
     const props: IDialogProps = {
         hidden: false,
@@ -35,14 +38,14 @@ export const Login = React.memo<ILoginProps>(() => {
             <Text variant="xLarge">Sign in to Pglet</Text>
             <Text variant="medium" style={{ textAlign: "center" }}>You must sign in to access this page. Please continue with one of the options below:</Text>
             <Stack tokens={{ childrenGap: 20}} horizontalAlign="stretch">
-                <DefaultButton href="/auth/github" iconProps={{
+                <DefaultButton href={"/api/oauth/github?redirect_url=" + pageUrl} iconProps={{
                     imageProps: {
                         src: github_logo,
                         width: 16,
                         height: 16
                     }
                 }} style={{ padding: "0 50px" }}>Sign in with GitHub</DefaultButton>
-                <DefaultButton href="/auth/azure" iconProps={{
+                <DefaultButton href={"/api/oauth/azure?redirect_url=" + pageUrl} iconProps={{
                     imageProps: {
                         src: microsoft_logo,
                         width: 16,

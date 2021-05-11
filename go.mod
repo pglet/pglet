@@ -9,6 +9,8 @@ require (
 	github.com/gin-gonic/gin v1.7.1
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gomodule/redigo v1.8.4
+	github.com/google/go-github v17.0.0+incompatible // indirect
+	github.com/google/go-github/v35 v35.2.0 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.9.0

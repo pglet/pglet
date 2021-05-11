@@ -10,20 +10,25 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/go-github/github"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
 )
 
 const (
-	apiRoutePrefix      string = "/api"
-	siteDefaultDocument string = "index.html"
+	apiRoutePrefix       string = "/api"
+	siteDefaultDocument  string = "index.html"
+	codeUrlParameter            = "code"
+	redirectUrlParameter        = "redirect_url"
 )
 
 var (
@@ -96,18 +101,18 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	})
 
 	// Setup route group for the API
-	// api := router.Group(apiRoutePrefix)
-	// {
-	// 	api.GET("/", func(c *gin.Context) {
-	// 		time.Sleep(4 * time.Second)
-	// 		c.JSON(http.StatusOK, gin.H{
-	// 			"message": "pong",
-	// 		})
-	// 	})
-	// }
+	api := router.Group(apiRoutePrefix)
+	{
+		api.GET("/", func(c *gin.Context) {
+			time.Sleep(4 * time.Second)
+			c.JSON(http.StatusOK, gin.H{
+				"message": "pong",
+			})
+		})
+	}
 
-	router.GET("/auth/github", githubAuthHandler)
-	router.GET("/auth/azure", azureAuthHandler)
+	api.GET("/oauth/github", githubAuthHandler)
+	api.GET("/oauth/azure", azureAuthHandler)
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {
@@ -176,7 +181,53 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
 }
 
 func githubAuthHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"type": "GitHub"})
+	oauthConfig := auth.GetOauthConfig(auth.GitHubAuth, true)
+
+	redirectURL := c.Query(redirectUrlParameter)
+	log.Debugln(redirectURL)
+
+	code := c.Query(codeUrlParameter)
+	if code == "" {
+		// redirect to authorize page
+		c.Redirect(302, oauthConfig.AuthCodeURL("123"))
+	} else {
+		// request token
+		token, err := oauthConfig.Exchange(oauth2.NoContext, code)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		client := github.NewClient(oauthConfig.Client(oauth2.NoContext, token))
+
+		// read user details
+		githubUser, _, err := client.Users.Get(context.Background(), "")
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		// read user emails
+		listEmailOpts := &github.ListOptions{
+			PerPage: 10,
+		}
+		var allEmails []*github.UserEmail
+		for {
+			emails, resp, _ := client.Users.ListEmails(context.Background(), listEmailOpts)
+			// if err != nil {
+			// 	return err
+			// }
+			allEmails = append(allEmails, emails...)
+			if resp.NextPage == 0 {
+				break
+			}
+			listEmailOpts.Page = resp.NextPage
+		}
+
+		// read user teams
+
+		c.JSON(200, githubUser)
+	}
 }
 
 func azureAuthHandler(c *gin.Context) {

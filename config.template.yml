@@ -1,8 +1,26 @@
+# application base URL
+app_url: http://localhost:8080
+
 # listening port
 server_port: 8080
 
 # force redirecting to HTTPS protocol
 force_ssl: false
+
+# a master secret key to encrypt sensitive data at rest
+master_secret_key: your_master_secret!
+
+# a secret used to sign cookies
+cookie_secret: your_secret!
+
+# GitHub OAuth integration
+github_client_id: 
+github_client_secret:
+
+# Azure OAuth integration
+azure_client_id:
+azure_client_secret:
+azure_tenant: common
 
 # shared page lifetime since the last time it was updated
 page_lifetime_minutes: 1440
