@@ -7,6 +7,7 @@ require (
 	github.com/andybrewer/mack v0.0.0-20200226161639-15be3d47cc54
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.7.1
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gomodule/redigo v1.8.4
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2

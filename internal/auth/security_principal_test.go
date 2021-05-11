@@ -6,13 +6,33 @@ import (
 
 func TestHasPermissions(t *testing.T) {
 
+	var anonUser = &SecurityPrincipal{AuthProvider: ""}
+	var githubUser = &SecurityPrincipal{AuthProvider: GitHubAuth, Username: "JohnSmith"}
+	var githubUserWithGroups = &SecurityPrincipal{AuthProvider: GitHubAuth, Username: "JohnSmith", Groups: []string{"org/Developers", "org/Owners"}}
+	var azureUser = &SecurityPrincipal{AuthProvider: AzureAuth, Username: "john@smith.com"}
+	var azureUserWithGroups = &SecurityPrincipal{AuthProvider: AzureAuth, Username: "john@smith.com", Groups: []string{"tanant-1/Group1", "tenant-1/Group2"}}
+
 	var permissionsTest = []struct {
 		principal   *SecurityPrincipal // input
 		permissions string             // arguments
 		expected    bool               // expected result
 	}{
-		{&SecurityPrincipal{AuthProvider: ""}, "", true},
-		{&SecurityPrincipal{AuthProvider: ""}, "*", false},
+		// anonymous user
+		{anonUser, "", true},
+		{anonUser, "*", false},
+
+		// github user
+		{githubUser, "*", true},
+		{githubUserWithGroups, "github:*", true},
+		{githubUserWithGroups, "org/*", true}, // if user belongs to any team in "org" org
+		{githubUserWithGroups, "org/dev*", true},
+
+		// azure user
+		{azureUser, "*", true},
+		{azureUserWithGroups, "azure:*", true},
+		{azureUserWithGroups, "jack@bauer.com", false},
+		{azureUserWithGroups, "*@smith.com", true}, // all users with @smith.com domain
+		{azureUserWithGroups, "*@somedomain.com, */group1", true},
 	}
 
 	for _, tt := range permissionsTest {

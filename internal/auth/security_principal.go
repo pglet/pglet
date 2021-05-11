@@ -3,6 +3,7 @@ package auth
 import (
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/pglet/pglet/internal/utils"
 )
 
@@ -41,17 +42,18 @@ func (p *SecurityPrincipal) HasPermissions(permissions string) bool {
 		authTypeMatched := authType == "" || p.AuthProvider == authType
 		identityMatched := false
 
+		pg := glob.MustCompile(strings.ToLower(permission))
+
 		if strings.Index(permission, "/") != -1 && p.Groups != nil && len(p.Groups) > 0 {
 			// check group
 			for _, group := range p.Groups {
-				if strings.ToLower(permission) == strings.ToLower(group) {
+				if pg.Match(strings.ToLower(group)) {
 					identityMatched = true
 					break
 				}
 			}
-		} else if strings.ToLower(permission) == strings.ToLower(p.Username) ||
-			// check username/password
-			strings.ToLower(permission) == strings.ToLower(p.Email) {
+		} else if (p.Username != "" && pg.Match(strings.ToLower(p.Username))) ||
+			(p.Email != "" && pg.Match(strings.ToLower(p.Email))) {
 			identityMatched = true
 		}
 
