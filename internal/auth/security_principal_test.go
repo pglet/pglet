@@ -7,10 +7,10 @@ import (
 func TestHasPermissions(t *testing.T) {
 
 	var anonUser = &SecurityPrincipal{AuthProvider: ""}
-	var githubUser = &SecurityPrincipal{AuthProvider: GitHubAuth, Username: "JohnSmith"}
-	var githubUserWithGroups = &SecurityPrincipal{AuthProvider: GitHubAuth, Username: "JohnSmith", Groups: []string{"org/Developers", "org/Owners"}}
-	var azureUser = &SecurityPrincipal{AuthProvider: AzureAuth, Username: "john@smith.com"}
-	var azureUserWithGroups = &SecurityPrincipal{AuthProvider: AzureAuth, Username: "john@smith.com", Groups: []string{"tanant-1/Group1", "tenant-1/Group2"}}
+	var githubUser = &SecurityPrincipal{AuthProvider: GitHubAuth, Login: "JohnSmith"}
+	var githubUserWithGroups = &SecurityPrincipal{AuthProvider: GitHubAuth, Login: "JohnSmith", Groups: []string{"org/Developers", "org/Owners"}}
+	var azureUser = &SecurityPrincipal{AuthProvider: AzureAuth, Login: "john@smith.com"}
+	var azureUserWithGroups = &SecurityPrincipal{AuthProvider: AzureAuth, Login: "john@smith.com", Groups: []string{"tanant-1/Group1", "tenant-1/Group2"}}
 
 	var permissionsTest = []struct {
 		principal   *SecurityPrincipal // input

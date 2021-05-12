@@ -6,7 +6,7 @@ import (
 
 func TestShortGetCipherSecretKey(t *testing.T) {
 	shortKey := "123"
-	chipherKey := getCipherKey(shortKey)
+	chipherKey := GetCipherKey(shortKey)
 
 	l := len(chipherKey)
 	if l != 32 {
@@ -20,7 +20,7 @@ func TestShortGetCipherSecretKey(t *testing.T) {
 
 func TestLongGetCipherSecretKey(t *testing.T) {
 	longKey := "0123456789abcdefghijkl0123456789-somemoresymbols"
-	chipherKey := getCipherKey(longKey)
+	chipherKey := GetCipherKey(longKey)
 
 	l := len(chipherKey)
 	if l != 32 {

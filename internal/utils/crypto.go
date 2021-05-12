@@ -25,7 +25,7 @@ func EncryptWithMasterKey(data []byte) ([]byte, error) {
 }
 
 func EncryptWithKey(data []byte, secretKey string) ([]byte, error) {
-	block, err := aes.NewCipher(getCipherKey(secretKey))
+	block, err := aes.NewCipher(GetCipherKey(secretKey))
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func DecryptWithMasterKey(data []byte) ([]byte, error) {
 }
 
 func DecryptWithKey(cipherData []byte, secretKey string) ([]byte, error) {
-	block, err := aes.NewCipher(getCipherKey(secretKey))
+	block, err := aes.NewCipher(GetCipherKey(secretKey))
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func DecryptWithKey(cipherData []byte, secretKey string) ([]byte, error) {
 	return plaintext, nil
 }
 
-func getCipherKey(secretKey string) []byte {
+func GetCipherKey(secretKey string) []byte {
 	key := make([]byte, 32)
 	for i, b := range []byte(secretKey)[:32] {
 		key[i] = b

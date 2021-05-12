@@ -10,15 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/github"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
@@ -27,8 +24,8 @@ import (
 const (
 	apiRoutePrefix       string = "/api"
 	siteDefaultDocument  string = "index.html"
-	codeUrlParameter            = "code"
 	redirectUrlParameter        = "redirect_url"
+	groupsUrlParameter          = "groups"
 )
 
 var (
@@ -179,78 +176,3 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
 	wsc := page_connection.NewWebSocket(conn)
 	page.NewClient(wsc, clientIP)
 }
-
-func githubAuthHandler(c *gin.Context) {
-	oauthConfig := auth.GetOauthConfig(auth.GitHubAuth, true)
-
-	redirectURL := c.Query(redirectUrlParameter)
-	log.Debugln(redirectURL)
-
-	code := c.Query(codeUrlParameter)
-	if code == "" {
-		// redirect to authorize page
-		c.Redirect(302, oauthConfig.AuthCodeURL("123"))
-	} else {
-		// request token
-		token, err := oauthConfig.Exchange(oauth2.NoContext, code)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		client := github.NewClient(oauthConfig.Client(oauth2.NoContext, token))
-
-		// read user details
-		githubUser, _, err := client.Users.Get(context.Background(), "")
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		// read user emails
-		listEmailOpts := &github.ListOptions{
-			PerPage: 10,
-		}
-		var allEmails []*github.UserEmail
-		for {
-			emails, resp, _ := client.Users.ListEmails(context.Background(), listEmailOpts)
-			// if err != nil {
-			// 	return err
-			// }
-			allEmails = append(allEmails, emails...)
-			if resp.NextPage == 0 {
-				break
-			}
-			listEmailOpts.Page = resp.NextPage
-		}
-
-		// read user teams
-
-		c.JSON(200, githubUser)
-	}
-}
-
-func azureAuthHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"type": "Azure"})
-}
-
-// func pageHandler(c *gin.Context) {
-// 	c.Header("Content-Type", "application/json")
-// 	accountName := c.Param("accountName")
-// 	pageName := c.Param("pageName")
-// 	sessionID := c.Query("sessionID")
-// 	log.Debugln("sessionID:", sessionID)
-
-// 	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-// 	page := store.GetPageByName(fullPageName)
-// 	if page == nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
-// 		return
-// 	}
-// 	session := store.GetSession(page, sessionID)
-// 	if session == nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found"})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, session)
-// }

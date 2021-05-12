@@ -12,6 +12,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v35 v35.2.0 // indirect
 	github.com/google/uuid v1.2.0
+	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.9.0
 	github.com/keegancsmith/rpc v1.3.0

@@ -197,8 +197,8 @@ func AzureTenant() string {
 
 // Security
 
-func CookieSecret() []string {
-	return viper.GetStringSlice(cookieSecret)
+func CookieSecret() string {
+	return viper.GetString(cookieSecret)
 }
 
 func MasterSecretKey() string {

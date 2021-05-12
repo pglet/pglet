@@ -13,14 +13,15 @@ type SecurityPrincipal struct {
 	UID          string   `json:"uid"`
 	AuthProvider string   `json:"authProvider"`
 	Token        string   `json:"token"`
-	Username     string   `json:"username"`
+	Login        string   `json:"login"`
+	Name         string   `json:"name"`
 	Email        string   `json:"email"`
 	Groups       []string `json:"groups"`
 }
 
 func NewPrincipal(authProvider string, groupsEnabled bool) *SecurityPrincipal {
 
-	uid, _ := utils.GenerateRandomString(16)
+	uid, _ := utils.GenerateRandomString(32)
 
 	p := &SecurityPrincipal{
 		UID:          uid,
@@ -45,7 +46,7 @@ func (p *SecurityPrincipal) SetToken(token *oauth2.Token) error {
 	if err != nil {
 		return err
 	}
-	p.Token = string(enc)
+	p.Token = utils.EncodeBase64(enc)
 	return nil
 }
 
@@ -54,7 +55,12 @@ func (p *SecurityPrincipal) GetToken() (*oauth2.Token, error) {
 		return nil, nil
 	}
 
-	j, err := utils.DecryptWithMasterKey([]byte(p.Token))
+	decoded, err := utils.DecodeBase64(p.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	j, err := utils.DecryptWithMasterKey(decoded)
 	if err != nil {
 		return nil, err
 	}
@@ -74,14 +80,6 @@ func (p *SecurityPrincipal) UpdateDetails() error {
 	} else {
 		return errors.New("unknown auth provider")
 	}
-}
-
-func (p *SecurityPrincipal) updateFromGitHub() error {
-	return nil
-}
-
-func (p *SecurityPrincipal) updateFromAzure() error {
-	return nil
 }
 
 func (p *SecurityPrincipal) HasPermissions(permissions string) bool {
@@ -120,7 +118,7 @@ func (p *SecurityPrincipal) HasPermissions(permissions string) bool {
 					break
 				}
 			}
-		} else if (p.Username != "" && pg.Match(strings.ToLower(p.Username))) ||
+		} else if (p.Login != "" && pg.Match(strings.ToLower(p.Login))) ||
 			(p.Email != "" && pg.Match(strings.ToLower(p.Email))) {
 			identityMatched = true
 		}
