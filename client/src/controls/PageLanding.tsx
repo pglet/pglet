@@ -35,10 +35,11 @@ export const PageLanding = () => {
     }, [fullPageName, ws])
 
     const err = useSelector((state: any) => state.page.error);
+    const loginOptions = useSelector((state: any) => state.page.loginOptions);
     const page = useSelector((state: any) => state.page.controls['page']);
 
     if (err === "login_required") {
-        return <Login />
+        return <Login loginOptions={loginOptions} />
     }
     else if (err) {
         return <MessageBar messageBarType={MessageBarType.error} isMultiline={true}>{err}</MessageBar>

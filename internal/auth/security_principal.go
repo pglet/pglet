@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/gobwas/glob"
 	"github.com/pglet/pglet/internal/utils"
@@ -10,22 +11,26 @@ import (
 )
 
 type SecurityPrincipal struct {
-	UID          string   `json:"uid"`
-	AuthProvider string   `json:"authProvider"`
-	Token        string   `json:"token"`
-	Login        string   `json:"login"`
-	Name         string   `json:"name"`
-	Email        string   `json:"email"`
-	Groups       []string `json:"groups"`
+	UID          string    `json:"uid"`
+	AuthProvider string    `json:"authProvider"`
+	Token        string    `json:"token"`
+	Login        string    `json:"login"`
+	Name         string    `json:"name"`
+	Email        string    `json:"email"`
+	Groups       []string  `json:"groups"`
+	ClientIP     string    `json:"clientIP"`
+	Created      time.Time `json:"created,omitempty"`
 }
 
-func NewPrincipal(authProvider string, groupsEnabled bool) *SecurityPrincipal {
+func NewPrincipal(authProvider string, clientIP string, groupsEnabled bool) *SecurityPrincipal {
 
 	uid, _ := utils.GenerateRandomString(32)
 
 	p := &SecurityPrincipal{
 		UID:          uid,
 		AuthProvider: authProvider,
+		ClientIP:     clientIP,
+		Created:      time.Now().UTC(),
 	}
 
 	if groupsEnabled {

@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
@@ -168,11 +169,10 @@ func (c *Client) registerWebClient(message *Message) {
 		var session *model.Session
 
 		// check permissions
-		log.Debugln("Page:", page)
-
 		if page.Permissions != "" {
 			log.Debugln("Page permissions:", page.Permissions)
 			response.Error = loginRequiredMessage
+			response.LoginOptions = auth.GetLoginOptions(page.Permissions)
 			goto response
 		}
 

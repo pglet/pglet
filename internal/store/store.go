@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
@@ -29,6 +30,7 @@ const (
 	sessionControlsKey        = "session_controls:%d:%s"          // session controls, value is JSON data
 	sessionHostClientsKey     = "session_host_clients:%d:%s"      // a Set with client IDs
 	sessionWebClientsKey      = "session_web_clients:%d:%s"       // a Set with client IDs
+	principalKey              = "principal:%s"                    // %s is principalID
 )
 
 //
@@ -261,4 +263,23 @@ func AddSessionWebClient(pageID int, sessionID string, clientID string) {
 func RemoveSessionWebClient(pageID int, sessionID string, clientID string) {
 	cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
 	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
+}
+
+//
+// Security principals
+// ==============================
+
+func GetSecurityPrincipal(principalID string) *auth.SecurityPrincipal {
+	j := cache.GetString(fmt.Sprintf(principalKey, principalID))
+	if j == "" {
+		return nil
+	}
+
+	p := &auth.SecurityPrincipal{}
+	utils.FromJSON(j, p)
+	return p
+}
+
+func SetSecurityPrincipal(p *auth.SecurityPrincipal, expires time.Duration) {
+	cache.SetString(fmt.Sprintf(principalKey, p.UID), utils.ToJSON(p), expires)
 }

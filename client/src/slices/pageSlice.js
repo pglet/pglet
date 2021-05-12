@@ -22,7 +22,8 @@ const pageSlice = createSlice({
         },
         registerWebClientError(state, action) {
             state.loading = false;
-            state.error = action.payload;
+            state.error = action.payload.error;
+            state.loginOptions = action.payload.loginOptions;
         },
         appBecomeInactive(state, action) {
             state.error = action.payload.message;

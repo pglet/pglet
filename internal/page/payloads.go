@@ -3,6 +3,7 @@ package page
 import (
 	"encoding/json"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
 )
@@ -52,8 +53,9 @@ type RegisterWebClientRequestPayload struct {
 }
 
 type RegisterWebClientResponsePayload struct {
-	Session *SessionPayload `json:"session"`
-	Error   string          `json:"error"`
+	Session      *SessionPayload    `json:"session"`
+	Error        string             `json:"error"`
+	LoginOptions *auth.LoginOptions `json:"loginOptions"`
 }
 
 type SessionPayload struct {

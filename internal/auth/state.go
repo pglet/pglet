@@ -5,4 +5,5 @@ type State struct {
 	RedirectURL   string `json:"redirectUrl"`
 	AuthProvider  string `json:"authProvider"`
 	GroupsEnabled bool   `json:"groupsEnabled"`
+	PersistLogin  bool   `json:"persistLogin"`
 }

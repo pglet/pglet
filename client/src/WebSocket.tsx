@@ -62,7 +62,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
             if (data.action === "registerWebClient") {
                 if (data.payload.error) {
-                    dispatch(registerWebClientError(data.payload.error));
+                    dispatch(registerWebClientError(data.payload));
                 } else {
                     dispatch(registerWebClientSuccess({
                         pageName: _registeredPageName,

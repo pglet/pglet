@@ -3,11 +3,13 @@ package server
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/config"
+	"github.com/pglet/pglet/internal/store"
 	"github.com/pglet/pglet/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -16,7 +18,9 @@ import (
 const (
 	redirectUrlParameter  = "redirect_url"
 	groupsUrlParameter    = "groups"
+	persistUrlParameter   = "persist"
 	principalIdCookieName = "pid"
+	principalLifetimeDays = 7
 )
 
 func githubAuthHandler(c *gin.Context) {
@@ -35,11 +39,13 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		// initial flow
 		redirectURL := c.Query(redirectUrlParameter)
 		groupsEnabled := c.Query(groupsUrlParameter) == "1"
+		persistLogin := c.Query(persistUrlParameter) == "1"
 
 		stateID, err := saveOAuthState(c.Writer, &auth.State{
 			RedirectURL:   redirectURL,
 			AuthProvider:  authProvider,
 			GroupsEnabled: groupsEnabled,
+			PersistLogin:  persistLogin,
 		})
 
 		if err != nil {
@@ -74,7 +80,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		}
 
 		// create new principal and update its details from API
-		principal := auth.NewPrincipal(authProvider, state.GroupsEnabled)
+		principal := auth.NewPrincipal(authProvider, c.ClientIP(), state.GroupsEnabled)
 		principal.SetToken(token)
 		err = principal.UpdateDetails()
 
@@ -86,7 +92,8 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		log.Debugln(utils.ToJSON(principal))
 
 		deleteOAuthState(c.Writer, stateID)
-		savePrincipalID(c.Writer, principal.UID)
+		savePrincipalID(c.Writer, principal.UID, state.PersistLogin)
+		store.SetSecurityPrincipal(principal, time.Duration(principalLifetimeDays*24)*time.Hour)
 		c.Redirect(302, state.RedirectURL)
 	}
 }
@@ -141,7 +148,7 @@ func deleteOAuthState(w http.ResponseWriter, stateID string) {
 	http.SetCookie(w, cookie)
 }
 
-func savePrincipalID(w http.ResponseWriter, principalID string) error {
+func savePrincipalID(w http.ResponseWriter, principalID string, persistLogin bool) error {
 	sc := getSecureCookie()
 
 	// serialize to a secure cookie
@@ -157,6 +164,11 @@ func savePrincipalID(w http.ResponseWriter, principalID string) error {
 		Secure:   true,
 		HttpOnly: true,
 	}
+
+	if persistLogin {
+		cookie.MaxAge = principalLifetimeDays * 24 * 60
+	}
+
 	http.SetCookie(w, cookie)
 	return nil
 }
