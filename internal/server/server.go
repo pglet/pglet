@@ -22,10 +22,8 @@ import (
 )
 
 const (
-	apiRoutePrefix       string = "/api"
-	siteDefaultDocument  string = "index.html"
-	redirectUrlParameter        = "redirect_url"
-	groupsUrlParameter          = "groups"
+	apiRoutePrefix      string = "/api"
+	siteDefaultDocument string = "index.html"
 )
 
 var (
@@ -94,7 +92,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, c.ClientIP())
+		websocketHandler(c)
 	})
 
 	// Setup route group for the API
@@ -161,18 +159,25 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	log.Println("Server exited")
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
+func websocketHandler(c *gin.Context) {
+
+	principalID, err := getPrincipalID(c.Request)
+	log.Debugln("websocketHandler principal ID:", principalID)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Errorln("Error upgrading WebSocket connection:", err)
 		return
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc, clientIP)
+	page.NewClient(wsc, c.ClientIP())
 }

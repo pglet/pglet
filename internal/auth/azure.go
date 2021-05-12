@@ -20,7 +20,7 @@ func (p *SecurityPrincipal) updateFromAzure() error {
 	}
 
 	if token == nil {
-		return errors.New("GitHub OAuth token is not set")
+		return errors.New("Azure OAuth token is not set")
 	}
 
 	// GitHub client
@@ -42,6 +42,8 @@ func (p *SecurityPrincipal) updateFromAzure() error {
 	}
 
 	if p.Groups != nil {
+		p.Groups = make([]string, 0)
+
 		// read organization details
 		// https://docs.microsoft.com/en-us/graph/api/organization-get?view=graph-rest-1.0&tabs=http
 		orgResp := &msgraph.OrganizationsResponse{}

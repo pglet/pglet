@@ -63,6 +63,8 @@ func (p *SecurityPrincipal) updateFromGitHub() error {
 
 	// read user teams
 	if p.Groups != nil {
+		p.Groups = make([]string, 0)
+
 		listTeamsOpts := &github.ListOptions{
 			PerPage: 10,
 		}

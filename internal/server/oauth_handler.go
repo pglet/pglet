@@ -13,6 +13,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	redirectUrlParameter  = "redirect_url"
+	groupsUrlParameter    = "groups"
+	principalIdCookieName = "pid"
+)
+
 func githubAuthHandler(c *gin.Context) {
 	oauthHandler(c, auth.GitHubAuth)
 }
@@ -80,6 +86,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		log.Debugln(utils.ToJSON(principal))
 
 		deleteOAuthState(c.Writer, stateID)
+		savePrincipalID(c.Writer, principal.UID)
 		c.Redirect(302, state.RedirectURL)
 	}
 }
@@ -132,6 +139,44 @@ func deleteOAuthState(w http.ResponseWriter, stateID string) {
 		MaxAge:   -1,
 	}
 	http.SetCookie(w, cookie)
+}
+
+func savePrincipalID(w http.ResponseWriter, principalID string) error {
+	sc := getSecureCookie()
+
+	// serialize to a secure cookie
+	encoded, err := sc.Encode(principalIdCookieName, principalID)
+	if err != nil {
+		return err
+	}
+
+	cookie := &http.Cookie{
+		Name:     principalIdCookieName,
+		Value:    encoded,
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	return nil
+}
+
+func getPrincipalID(r *http.Request) (string, error) {
+	sc := getSecureCookie()
+	cookie, err := r.Cookie(principalIdCookieName)
+
+	if err == http.ErrNoCookie {
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+
+	principalID := ""
+	err = sc.Decode(principalIdCookieName, cookie.Value, &principalID)
+	if err != nil {
+		return "", err
+	}
+	return principalID, nil
 }
 
 func getSecureCookie() *securecookie.SecureCookie {

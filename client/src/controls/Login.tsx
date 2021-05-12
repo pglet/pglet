@@ -8,7 +8,6 @@ import github_logo from '../assets/img/github-logo.svg'
 export const Login = React.memo<ILoginProps>(() => {
 
     var pageUrl = encodeURIComponent(window.location.pathname);
-    console.log(pageUrl);
 
     // dialog props
     const props: IDialogProps = {
