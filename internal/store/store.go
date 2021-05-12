@@ -47,12 +47,15 @@ func GetPageByName(pageName string) *model.Page {
 }
 
 func GetPageByID(pageID int) *model.Page {
-	var p model.Page
-	cache.HashGetObject(fmt.Sprintf(pageKey, pageID), &p)
-	if p.ID == 0 {
+	p := &model.Page{}
+
+	j := cache.GetString(fmt.Sprintf(pageKey, pageID))
+	if j == "" {
 		return nil
 	}
-	return &p
+
+	utils.FromJSON(j, p)
+	return p
 }
 
 func AddPage(page *model.Page) {
@@ -60,12 +63,8 @@ func AddPage(page *model.Page) {
 	// TODO - check if the page exists
 	pageID := cache.Inc(pageNextIDKey, 1, 0)
 	page.ID = pageID
-	cache.HashSet(fmt.Sprintf(pageKey, page.ID),
-		"id", page.ID,
-		"name", page.Name,
-		"isApp", page.IsApp,
-		"clientIP", page.ClientIP,
-		"permissions", page.Permissions)
+
+	cache.SetString(fmt.Sprintf(pageKey, page.ID), utils.ToJSON(page), 0)
 	cache.HashSet(pagesKey, page.Name, page.ID)
 }
 

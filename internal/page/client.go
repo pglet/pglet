@@ -555,7 +555,6 @@ func (c *Client) unregisterPage(page *model.Page) {
 			}
 		}()
 	}
-
 }
 
 func (c *Client) registerSession(session *model.Session) {
