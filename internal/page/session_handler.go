@@ -438,7 +438,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 		// other values go to boolean properties
 		if len(batchCmd.Values) > 1 {
 			for _, v := range batchCmd.Values[1:] {
-				batchCmd.Attrs[v] = "true"
+				batchCmd.Attrs[strings.ToLower(v)] = "true"
 			}
 		}
 

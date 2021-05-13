@@ -23,5 +23,6 @@ export interface ILoginOptions {
 }
 
 export interface ILoginProps {
-    loginOptions: ILoginOptions
+    loginOptions: ILoginOptions;
+    onDismiss?: () => any;
 }

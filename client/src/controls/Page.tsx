@@ -8,8 +8,9 @@ import {
   ThemeGenerator,
   themeRulesStandardCreator,
 } from '@fluentui/react/lib/ThemeGenerator';
+import { Login } from './Login'
 import { isDark } from '@fluentui/react/lib/Color';
-import { IPageProps } from './Control.types'
+import { ILoginProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
@@ -135,9 +136,38 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     height: '100vh'
   });
 
+  const loginProviders = control.login ? control.login.split(",").map((s:string) => s.trim().toLowerCase()) : [];
+  const loginGroups = isTrue(control.logingroups)
+
+  const handleDismiss = () => {
+    const payload: any = {
+      i: "page",
+      login: ''
+    }
+
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb("page", 'loginCancelled', "");
+  }
+
+  let loginProps: ILoginProps = {
+    loginOptions: {
+      gitHubEnabled: loginProviders.includes("github") || loginProviders.includes("*"),
+      gitHubGroupScope: loginGroups,
+      azureEnabled: loginProviders.includes("azure") || loginProviders.includes("*"),
+      azureGroupScope: loginGroups,
+      googleEnabled: loginProviders.includes("google") || loginProviders.includes("*"),
+      googleGroupScope: loginGroups
+    },
+    onDismiss: isTrue(control.loginallowdismiss) ? handleDismiss : undefined
+  }
+
   return <ThemeProvider theme={theme} className={className}>
       <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />
       </Stack>
+      { loginProviders.length > 0 &&
+        <Login {...loginProps} />
+      }
     </ThemeProvider>
 })

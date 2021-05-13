@@ -1,12 +1,12 @@
 import React from 'react'
 import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton, Checkbox } from '@fluentui/react';
 import { ILoginProps } from './Control.types'
-import logo_light from '../assets/img/logo_light.svg'
+import pglet_logo from '../assets/img/pglet-logo-no-text.svg'
 import microsoft_logo from '../assets/img/microsoft-logo.svg'
 import google_logo from '../assets/img/google-logo.svg'
 import github_logo from '../assets/img/github-logo.svg'
 
-export const Login = React.memo<ILoginProps>(({loginOptions}) => {
+export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
 
     var pageUrl = encodeURIComponent(window.location.pathname);
 
@@ -15,22 +15,23 @@ export const Login = React.memo<ILoginProps>(({loginOptions}) => {
     // dialog props
     const props: IDialogProps = {
         hidden: false,
+        onDismiss: onDismiss,
         modalProps: {
             topOffsetFixed: false,
-            isBlocking: false,
+            isBlocking: onDismiss ? true : false
         },
         dialogContentProps: {
-            type: DialogType.normal,
-            title: <>
-                <Stack horizontalAlign="center">
-                    <Image src={logo_light} />
-                </Stack>
-            </>,
-            subText: undefined,
+            type: onDismiss ? DialogType.close : DialogType.normal,
+            title: 'Sign in to Pglet',
+            styles: {
+                title: {
+                    textAlign: onDismiss ? 'left' : 'center'
+                }
+            }
         },
         styles: {
             main: {
-                padding: "20px 0",
+                padding: "0 0",
                 ".ms-Dialog-title": {
                     padding: '16px 24px'
                 }
@@ -48,7 +49,9 @@ export const Login = React.memo<ILoginProps>(({loginOptions}) => {
 
     return <Dialog {...props}>
         <Stack horizontalAlign="center" tokens={{ childrenGap: 30}}>
-            <Text variant="xLarge">Sign in to Pglet</Text>
+            <Stack horizontalAlign="center" style={{margin: '10px 0 0 0'}}>
+                <Image src={pglet_logo} width={50} height={50} />
+            </Stack>
             <Text variant="medium" style={{ textAlign: "center" }}>You must sign in to access this page. Please continue with one of the options below:</Text>
             <Stack tokens={{ childrenGap: 20}} horizontalAlign="stretch">
                 {
