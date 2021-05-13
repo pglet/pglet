@@ -7,6 +7,7 @@ import (
 )
 
 type GoogleUser struct {
+	Sub   string `json:"sub"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
@@ -34,6 +35,7 @@ func (p *SecurityPrincipal) updateFromGoogle() error {
 		return err
 	}
 
+	p.ID = googleUser.Sub
 	p.Login = googleUser.Email
 	p.Name = googleUser.Name
 	p.Email = googleUser.Email

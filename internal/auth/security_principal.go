@@ -12,6 +12,7 @@ import (
 
 type SecurityPrincipal struct {
 	UID          string    `json:"uid"`
+	ID           string    `json:"id"`
 	AuthProvider string    `json:"authProvider"`
 	Token        string    `json:"token"`
 	Login        string    `json:"login"`

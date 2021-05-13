@@ -35,6 +35,7 @@ func (p *SecurityPrincipal) updateFromAzure() error {
 		return err
 	}
 
+	p.ID = graphUser.Id
 	p.Login = graphUser.UserPrincipalName
 	p.Name = graphUser.DisplayName
 	if graphUser.Mail == "" {

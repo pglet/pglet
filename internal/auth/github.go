@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -31,6 +32,7 @@ func (p *SecurityPrincipal) updateFromGitHub() error {
 		return err
 	}
 
+	p.ID = strconv.FormatInt(githubUser.GetID(), 10)
 	p.Login = githubUser.GetLogin()
 	p.Name = githubUser.GetName()
 
