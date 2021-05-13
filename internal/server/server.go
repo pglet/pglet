@@ -16,9 +16,11 @@ import (
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
+	"github.com/pglet/pglet/internal/store"
 )
 
 const (
@@ -162,8 +164,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 func websocketHandler(c *gin.Context) {
 
-	principalID, err := getPrincipalID(c.Request)
-	log.Debugln("websocketHandler principal ID:", principalID)
+	// load current security principal
+	principal, err := getSecurityPrincipal(c)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -180,5 +182,19 @@ func websocketHandler(c *gin.Context) {
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc, c.ClientIP())
+	page.NewClient(wsc, c.ClientIP(), principal)
+}
+
+func getSecurityPrincipal(c *gin.Context) (*auth.SecurityPrincipal, error) {
+	principalID, err := getPrincipalID(c.Request)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return nil, err
+	}
+
+	var principal *auth.SecurityPrincipal
+	if principalID != "" {
+		principal = store.GetSecurityPrincipal(principalID)
+	}
+	return principal, nil
 }

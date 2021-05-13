@@ -83,8 +83,18 @@ func oauthHandler(c *gin.Context, authProvider string) {
 			return
 		}
 
+		principalID, err := getPrincipalID(c.Request)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
 		// create new principal and update its details from API
 		principal := auth.NewPrincipal(authProvider, c.ClientIP(), state.GroupsEnabled)
+		if principalID != "" {
+			// use existing principalID
+			principal.UID = principalID
+		}
 		principal.SetToken(token)
 		err = principal.UpdateDetails()
 

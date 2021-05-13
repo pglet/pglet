@@ -81,7 +81,9 @@ export const Login = React.memo<ILoginProps>(({loginOptions}) => {
                             }
                         }}>Sign in with Microsoft account</DefaultButton>                    
                 }
-                <Checkbox label="Stay signed in for a week" checked={persistLogin} onChange={onChange} />
+                <Stack horizontalAlign="center">
+                    <Checkbox label="Stay signed in for a week" checked={persistLogin} onChange={onChange} />
+                </Stack>
             </Stack>
         </Stack>
     </Dialog>

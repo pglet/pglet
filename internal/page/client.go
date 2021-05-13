@@ -36,6 +36,7 @@ type Client struct {
 	role         ClientRole
 	conn         connection.Conn
 	clientIP     string
+	principal    *auth.SecurityPrincipal
 	subscription chan []byte
 	sessions     map[string]*model.Session
 	pages        map[string]*model.Page
@@ -46,14 +47,15 @@ func autoID() string {
 	return uuid.New().String()
 }
 
-func NewClient(conn connection.Conn, clientIP string) *Client {
+func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPrincipal) *Client {
 	c := &Client{
-		id:       autoID(),
-		conn:     conn,
-		clientIP: clientIP,
-		sessions: make(map[string]*model.Session),
-		pages:    make(map[string]*model.Page),
-		done:     make(chan bool, 1),
+		id:        autoID(),
+		conn:      conn,
+		clientIP:  clientIP,
+		principal: principal,
+		sessions:  make(map[string]*model.Session),
+		pages:     make(map[string]*model.Page),
+		done:      make(chan bool, 1),
 	}
 
 	log.Println("Client IP:", clientIP)
@@ -169,8 +171,8 @@ func (c *Client) registerWebClient(message *Message) {
 		var session *model.Session
 
 		// check permissions
-		if page.Permissions != "" {
-			log.Debugln("Page permissions:", page.Permissions)
+		if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
+			log.Debugln("Required page permissions:", page.Permissions)
 			response.Error = loginRequiredMessage
 			response.LoginOptions = auth.GetLoginOptions(page.Permissions)
 			goto response
@@ -303,6 +305,21 @@ func (c *Client) registerHostClient(message *Message) {
 	if config.CheckPageIP() && page.ClientIP != c.clientIP {
 		err = errors.New("Page name is already taken")
 		goto response
+	}
+
+	// update page permissions
+	if page.Permissions != payload.Permissions {
+		page.Permissions = payload.Permissions
+		store.UpdatePage(page)
+	}
+
+	// convert page to app
+	if !page.IsApp && payload.IsApp {
+		page.IsApp = payload.IsApp
+		store.UpdatePage(page)
+
+		// delete zero session
+		store.DeleteSession(page.ID, ZeroSession)
 	}
 
 	if !page.IsApp {

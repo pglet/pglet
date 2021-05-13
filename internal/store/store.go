@@ -68,6 +68,10 @@ func AddPage(page *model.Page) {
 	cache.HashSet(pagesKey, page.Name, page.ID)
 }
 
+func UpdatePage(page *model.Page) {
+	cache.SetString(fmt.Sprintf(pageKey, page.ID), utils.ToJSON(page), 0)
+}
+
 func DeletePage(pageID int) {
 	page := GetPageByID(pageID)
 	if page == nil {
