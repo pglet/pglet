@@ -90,7 +90,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		}
 
 		// create new principal and update its details from API
-		principal := auth.NewPrincipal(authProvider, c.ClientIP(), state.GroupsEnabled)
+		principal := auth.NewPrincipal(authProvider, c.ClientIP(), c.Request.UserAgent(), state.GroupsEnabled)
 		if principalID != "" {
 			// use existing principalID
 			principal.UID = principalID
@@ -105,7 +105,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 
 		log.Debugln(utils.ToJSON(principal))
 
-		deleteOAuthState(c.Writer, stateID)
+		deleteCookie(c.Writer, stateID)
 		savePrincipalID(c.Writer, principal.UID, state.PersistLogin)
 		store.SetSecurityPrincipal(principal, time.Duration(principalLifetimeDays*24)*time.Hour)
 		c.Redirect(302, state.RedirectURL)
@@ -149,17 +149,6 @@ func getOAuthState(r *http.Request, stateID string) (*auth.State, error) {
 		return nil, err
 	}
 	return state, nil
-}
-
-func deleteOAuthState(w http.ResponseWriter, stateID string) {
-	cookie := &http.Cookie{
-		Name:     stateID,
-		Path:     "/",
-		Secure:   true,
-		HttpOnly: true,
-		MaxAge:   -1,
-	}
-	http.SetCookie(w, cookie)
 }
 
 func savePrincipalID(w http.ResponseWriter, principalID string, persistLogin bool) error {
@@ -207,4 +196,15 @@ func getPrincipalID(r *http.Request) (string, error) {
 
 func getSecureCookie() *securecookie.SecureCookie {
 	return securecookie.New(utils.GetCipherKey(config.CookieSecret()), utils.GetCipherKey(config.MasterSecretKey()))
+}
+
+func deleteCookie(w http.ResponseWriter, name string) {
+	cookie := &http.Cookie{
+		Name:     name,
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, cookie)
 }

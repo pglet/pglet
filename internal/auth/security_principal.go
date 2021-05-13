@@ -11,27 +11,29 @@ import (
 )
 
 type SecurityPrincipal struct {
-	UID          string    `json:"uid"`
-	ID           string    `json:"id"`
-	AuthProvider string    `json:"authProvider"`
-	Token        string    `json:"token"`
-	Login        string    `json:"login"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	Groups       []string  `json:"groups"`
-	ClientIP     string    `json:"clientIP"`
-	Created      time.Time `json:"created,omitempty"`
+	UID           string    `json:"uid"`
+	ID            string    `json:"id"`
+	AuthProvider  string    `json:"authProvider"`
+	Token         string    `json:"token"`
+	Login         string    `json:"login"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	Groups        []string  `json:"groups"`
+	ClientIP      string    `json:"clientIP"`
+	UserAgentHash string    `json:"userAgentHash"`
+	Created       time.Time `json:"created,omitempty"`
 }
 
-func NewPrincipal(authProvider string, clientIP string, groupsEnabled bool) *SecurityPrincipal {
+func NewPrincipal(authProvider string, clientIP string, userAgent string, groupsEnabled bool) *SecurityPrincipal {
 
 	uid, _ := utils.GenerateRandomString(32)
 
 	p := &SecurityPrincipal{
-		UID:          uid,
-		AuthProvider: authProvider,
-		ClientIP:     clientIP,
-		Created:      time.Now().UTC(),
+		UID:           uid,
+		AuthProvider:  authProvider,
+		ClientIP:      clientIP,
+		UserAgentHash: utils.SHA1(userAgent),
+		Created:       time.Now().UTC(),
 	}
 
 	if groupsEnabled {
