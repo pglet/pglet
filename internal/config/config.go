@@ -50,6 +50,8 @@ const (
 	azureClientSecret  = "AZURE_CLIENT_SECRET"
 	defaultAzureTenant = "common"
 	azureTenant        = "AZURE_TENANT"
+	googleClientID     = "GOOGLE_CLIENT_ID"
+	googleClientSecret = "GOOGLE_CLIENT_SECRET"
 
 	// security
 	cookieSecret           = "COOKIE_SECRET"
@@ -193,6 +195,14 @@ func AzureClientSecret() string {
 
 func AzureTenant() string {
 	return viper.GetString(azureTenant)
+}
+
+func GoogleClientID() string {
+	return viper.GetString(googleClientID)
+}
+
+func GoogleClientSecret() string {
+	return viper.GetString(googleClientSecret)
 }
 
 // Security

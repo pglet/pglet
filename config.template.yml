@@ -22,6 +22,10 @@ azure_client_id:
 azure_client_secret:
 azure_tenant: common
 
+# Google OAuth integration
+google_client_id: 
+google_client_secret:
+
 # shared page lifetime since the last time it was updated
 page_lifetime_minutes: 1440
 

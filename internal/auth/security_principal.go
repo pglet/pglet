@@ -80,6 +80,8 @@ func (p *SecurityPrincipal) UpdateDetails() error {
 		return p.updateFromGitHub()
 	} else if p.AuthProvider == AzureAuth {
 		return p.updateFromAzure()
+	} else if p.AuthProvider == GoogleAuth {
+		return p.updateFromGoogle()
 	} else if p.AuthProvider == "" {
 		return errors.New("auth provider is not set")
 	} else {

@@ -31,6 +31,10 @@ func azureAuthHandler(c *gin.Context) {
 	oauthHandler(c, auth.AzureAuth)
 }
 
+func googleAuthHandler(c *gin.Context) {
+	oauthHandler(c, auth.GoogleAuth)
+}
+
 func oauthHandler(c *gin.Context, authProvider string) {
 	code := c.Query("code")
 	stateID := c.Query("state")

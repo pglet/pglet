@@ -3,6 +3,7 @@ import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton, Ch
 import { ILoginProps } from './Control.types'
 import logo_light from '../assets/img/logo_light.svg'
 import microsoft_logo from '../assets/img/microsoft-logo.svg'
+import google_logo from '../assets/img/google-logo.svg'
 import github_logo from '../assets/img/github-logo.svg'
 
 export const Login = React.memo<ILoginProps>(({loginOptions}) => {
@@ -60,6 +61,16 @@ export const Login = React.memo<ILoginProps>(({loginOptions}) => {
                             }
                         }} style={{ padding: "0 50px" }}>Sign in with GitHub</DefaultButton>
                 }
+                {
+                    loginOptions.googleEnabled &&
+                        <DefaultButton href={"/api/oauth/google" + getOAuthURL(loginOptions.googleGroupScope)} iconProps={{
+                            imageProps: {
+                                src: google_logo,
+                                width: 16,
+                                height: 16
+                            }
+                        }} style={{ padding: "0 50px" }}>Sign in with Google</DefaultButton>                    
+                }                
                 {
                     loginOptions.azureEnabled &&
                         <DefaultButton href={"/api/oauth/azure" + getOAuthURL(loginOptions.gitHubGroupScope)} iconProps={{

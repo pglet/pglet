@@ -108,6 +108,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	api.GET("/oauth/github", githubAuthHandler)
 	api.GET("/oauth/azure", azureAuthHandler)
+	api.GET("/oauth/google", googleAuthHandler)
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {

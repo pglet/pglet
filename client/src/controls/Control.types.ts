@@ -18,6 +18,8 @@ export interface ILoginOptions {
     gitHubGroupScope: boolean;
     azureEnabled: boolean;
     azureGroupScope: boolean;
+    googleEnabled: boolean;
+    googleGroupScope: boolean;    
 }
 
 export interface ILoginProps {

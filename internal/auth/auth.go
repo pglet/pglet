@@ -4,12 +4,14 @@ import (
 	"github.com/pglet/pglet/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/microsoft"
 )
 
 const (
 	GitHubAuth = "github"
 	AzureAuth  = "azure"
+	GoogleAuth = "google"
 
 	// Users with both a personal Microsoft account and a work or school account from Azure AD can sign in to the application.
 	AzureCommonTenant = "common"
@@ -62,6 +64,21 @@ func GetOauthConfig(authProvider string, orgScope bool) *oauth2.Config {
 			RedirectURL:  config.AppURL() + "/api/oauth/azure",
 			Scopes:       scopes,
 			Endpoint:     microsoft.AzureADEndpoint(config.AzureTenant()),
+		}
+	} else if authProvider == GoogleAuth {
+
+		// Google
+		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
+		// if orgScope {
+		// 	scopes = append(scopes, "Directory.Read.All")
+		// }
+
+		return &oauth2.Config{
+			ClientID:     config.GoogleClientID(),
+			ClientSecret: config.GoogleClientSecret(),
+			RedirectURL:  config.AppURL() + "/api/oauth/google",
+			Scopes:       scopes,
+			Endpoint:     google.Endpoint,
 		}
 	}
 
