@@ -92,6 +92,11 @@ func (p *SecurityPrincipal) UpdateDetails() error {
 	}
 }
 
+func (p *SecurityPrincipal) Signout() error {
+	// TODO
+	return nil
+}
+
 func (p *SecurityPrincipal) HasPermissions(permissions string) bool {
 
 	if permissions == "" {

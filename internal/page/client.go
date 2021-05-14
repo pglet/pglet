@@ -233,22 +233,53 @@ func (c *Client) registerWebClient(message *Message) {
 				principalID = c.principal.UID
 
 				// copy principal's details to a page
-				page := store.GetSessionControl(session, "page")
-				page.SetAttr("userId", c.principal.ID)
-				page.SetAttr("userLogin", c.principal.Login)
-				page.SetAttr("userName", c.principal.Name)
-				page.SetAttr("userEmail", c.principal.Email)
-				page.SetAttr("userClientIP", c.principal.ClientIP)
-				store.SetSessionControl(session, page)
+				pctl := store.GetSessionControl(session, "page")
+				pctl.SetAttr("userid", c.principal.ID)
+				pctl.SetAttr("userlogin", c.principal.Login)
+				pctl.SetAttr("username", c.principal.Name)
+				pctl.SetAttr("useremail", c.principal.Email)
+				pctl.SetAttr("userclientip", c.principal.ClientIP)
+				store.SetSessionControl(session, pctl)
 			}
 
 			if session.PrincipalID != principalID {
 				// update session's principal
 				store.SetSessionPrincipalID(session, principalID)
 
-				// fire "page.signin" event
 				if session.PrincipalID != "" {
+					// hide signin dialog
+					pctl := store.GetSessionControl(session, "page")
+					pctl.SetAttr("signin", "")
+					store.SetSessionControl(session, pctl)
+
+					// send user properties
+					props := []map[string]interface{}{
+						{
+							"i":            "page",
+							"userid":       c.principal.ID,
+							"userlogin":    c.principal.Login,
+							"username":     c.principal.Name,
+							"useremail":    c.principal.Email,
+							"userclientip": c.principal.ClientIP,
+							"signin":       "",
+						},
+					}
+
+					data, _ := json.Marshal(props)
 					msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+						PageName:    session.Page.Name,
+						SessionID:   session.ID,
+						EventTarget: "page",
+						EventName:   "change",
+						EventData:   string(data),
+					})
+
+					for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
+						pubsub.Send(clientChannelName(clientID), msg)
+					}
+
+					// fire "page.signin" event
+					msg = NewMessageData("", PageEventToHostAction, &PageEventPayload{
 						PageName:    page.Name,
 						SessionID:   session.ID,
 						EventTarget: "page",

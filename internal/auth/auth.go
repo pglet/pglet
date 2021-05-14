@@ -68,7 +68,10 @@ func GetOauthConfig(authProvider string, orgScope bool) *oauth2.Config {
 	} else if authProvider == GoogleAuth {
 
 		// Google
-		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
+		scopes := []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		}
 		// if orgScope {
 		// 	scopes = append(scopes, "Directory.Read.All")
 		// }

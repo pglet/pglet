@@ -89,12 +89,16 @@ func oauthHandler(c *gin.Context, authProvider string) {
 			return
 		}
 
+		if principalID != "" {
+			currentPrincipal := store.GetSecurityPrincipal(principalID)
+			if currentPrincipal != nil {
+				currentPrincipal.Signout()
+			}
+			store.DeleteSecurityPrincipal(principalID)
+		}
+
 		// create new principal and update its details from API
 		principal := auth.NewPrincipal(authProvider, c.ClientIP(), c.Request.UserAgent(), state.GroupsEnabled)
-		if principalID != "" {
-			// use existing principalID
-			principal.UID = principalID
-		}
 		principal.SetToken(token)
 		err = principal.UpdateDetails()
 

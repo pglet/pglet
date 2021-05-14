@@ -292,3 +292,7 @@ func GetSecurityPrincipal(principalID string) *auth.SecurityPrincipal {
 func SetSecurityPrincipal(p *auth.SecurityPrincipal, expires time.Duration) {
 	cache.SetString(fmt.Sprintf(principalKey, p.UID), utils.ToJSON(p), expires)
 }
+
+func DeleteSecurityPrincipal(principalID string) {
+	cache.Remove(fmt.Sprintf(principalKey, principalID))
+}
