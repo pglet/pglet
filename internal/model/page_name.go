@@ -11,21 +11,8 @@ import (
 )
 
 const (
-	publicAccount = "public"
+	publicAccount = "p"
 	maxSlugSize   = 60
-)
-
-var (
-	reservedAccountNames = []string{
-		"pglet",
-		"admin",
-		"administrator",
-		"cp",
-	}
-
-	reservedPageNames = []string{
-		"public/index",
-	}
 )
 
 type PageName struct {
