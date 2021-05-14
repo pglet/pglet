@@ -27,7 +27,7 @@ const (
 	HostClient                         = "Host"
 	pageNotFoundMessage                = "Page not found or application is not running."
 	inactiveAppMessage                 = "Application is inactive. Please try refreshing this page later."
-	loginRequiredMessage               = "login_required"
+	signinRequiredMessage              = "signin_required"
 	clientExpirationSeconds            = 20
 )
 
@@ -173,8 +173,8 @@ func (c *Client) registerWebClient(message *Message) {
 		// check permissions
 		if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
 			log.Debugln("Required page permissions:", page.Permissions)
-			response.Error = loginRequiredMessage
-			response.LoginOptions = auth.GetLoginOptions(page.Permissions)
+			response.Error = signinRequiredMessage
+			response.SigninOptions = auth.GetSigninOptions(page.Permissions)
 			goto response
 		}
 

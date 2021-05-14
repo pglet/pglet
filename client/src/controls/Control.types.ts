@@ -13,7 +13,7 @@ export interface IPageProps {
     control: any;
 }
 
-export interface ILoginOptions {
+export interface ISigninOptions {
     gitHubEnabled: boolean;
     gitHubGroupScope: boolean;
     azureEnabled: boolean;
@@ -22,7 +22,7 @@ export interface ILoginOptions {
     googleGroupScope: boolean;    
 }
 
-export interface ILoginProps {
-    loginOptions: ILoginOptions;
+export interface ISigninProps {
+    signinOptions: ISigninOptions;
     onDismiss?: () => any;
 }

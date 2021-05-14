@@ -1,16 +1,16 @@
 import React from 'react'
 import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton, Checkbox } from '@fluentui/react';
-import { ILoginProps } from './Control.types'
+import { ISigninProps } from './Control.types'
 import pglet_logo from '../assets/img/pglet-logo-no-text.svg'
 import microsoft_logo from '../assets/img/microsoft-logo.svg'
 import google_logo from '../assets/img/google-logo.svg'
 import github_logo from '../assets/img/github-logo.svg'
 
-export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
+export const Signin = React.memo<ISigninProps>(({signinOptions, onDismiss}) => {
 
     var pageUrl = encodeURIComponent(window.location.pathname);
 
-    const [persistLogin, setPersistLogin] = React.useState<boolean>(true);
+    const [persistSignin, setPersistSignin] = React.useState<boolean>(true);
 
     // dialog props
     const props: IDialogProps = {
@@ -40,11 +40,11 @@ export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
     };
 
     const onChange = React.useCallback((ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean): void => {
-        setPersistLogin(!!checked);
+        setPersistSignin(!!checked);
       }, []);
 
     const getOAuthURL = (groupsEnabled:boolean): string => {
-        return `?redirect_url=${pageUrl}&persist=${persistLogin ? '1' : '0'}&groups=${groupsEnabled ? '1' : '0'}`
+        return `?redirect_url=${pageUrl}&persist=${persistSignin ? '1' : '0'}&groups=${groupsEnabled ? '1' : '0'}`
     }
 
     return <Dialog {...props}>
@@ -55,8 +55,8 @@ export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
             <Text variant="medium" style={{ textAlign: "center" }}>You must sign in to access this page. Please continue with one of the options below:</Text>
             <Stack tokens={{ childrenGap: 20}} horizontalAlign="stretch">
                 {
-                    loginOptions.gitHubEnabled &&
-                        <DefaultButton href={"/api/oauth/github" + getOAuthURL(loginOptions.gitHubGroupScope)} iconProps={{
+                    signinOptions.gitHubEnabled &&
+                        <DefaultButton href={"/api/oauth/github" + getOAuthURL(signinOptions.gitHubGroupScope)} iconProps={{
                             imageProps: {
                                 src: github_logo,
                                 width: 16,
@@ -65,8 +65,8 @@ export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
                         }} style={{ padding: "0 50px" }}>Sign in with GitHub</DefaultButton>
                 }
                 {
-                    loginOptions.googleEnabled &&
-                        <DefaultButton href={"/api/oauth/google" + getOAuthURL(loginOptions.googleGroupScope)} iconProps={{
+                    signinOptions.googleEnabled &&
+                        <DefaultButton href={"/api/oauth/google" + getOAuthURL(signinOptions.googleGroupScope)} iconProps={{
                             imageProps: {
                                 src: google_logo,
                                 width: 16,
@@ -75,8 +75,8 @@ export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
                         }} style={{ padding: "0 50px" }}>Sign in with Google</DefaultButton>                    
                 }                
                 {
-                    loginOptions.azureEnabled &&
-                        <DefaultButton href={"/api/oauth/azure" + getOAuthURL(loginOptions.gitHubGroupScope)} iconProps={{
+                    signinOptions.azureEnabled &&
+                        <DefaultButton href={"/api/oauth/azure" + getOAuthURL(signinOptions.gitHubGroupScope)} iconProps={{
                             imageProps: {
                                 src: microsoft_logo,
                                 width: 16,
@@ -85,7 +85,7 @@ export const Login = React.memo<ILoginProps>(({loginOptions, onDismiss}) => {
                         }}>Sign in with Microsoft account</DefaultButton>                    
                 }
                 <Stack horizontalAlign="center">
-                    <Checkbox label="Stay signed in for a week" checked={persistLogin} onChange={onChange} />
+                    <Checkbox label="Stay signed in for a week" checked={persistSignin} onChange={onChange} />
                 </Stack>
             </Stack>
         </Stack>

@@ -53,9 +53,9 @@ type RegisterWebClientRequestPayload struct {
 }
 
 type RegisterWebClientResponsePayload struct {
-	Session      *SessionPayload    `json:"session"`
-	Error        string             `json:"error"`
-	LoginOptions *auth.LoginOptions `json:"loginOptions"`
+	Session       *SessionPayload     `json:"session"`
+	Error         string              `json:"error"`
+	SigninOptions *auth.SigninOptions `json:"signinOptions"`
 }
 
 type SessionPayload struct {

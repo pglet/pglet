@@ -6,7 +6,7 @@ import (
 	"github.com/pglet/pglet/internal/utils"
 )
 
-type LoginOptions struct {
+type SigninOptions struct {
 	GitHubEnabled    bool `json:"gitHubEnabled"`
 	GitHubGroupScope bool `json:"gitHubGroupScope"`
 	AzureEnabled     bool `json:"azureEnabled"`
@@ -15,13 +15,13 @@ type LoginOptions struct {
 	GoogleGroupScope bool `json:"googleGroupScope"`
 }
 
-func GetLoginOptions(permissions string) *LoginOptions {
+func GetSigninOptions(permissions string) *SigninOptions {
 
 	if permissions == "" {
 		return nil
 	}
 
-	opts := &LoginOptions{}
+	opts := &SigninOptions{}
 
 	// parse permissions
 	permList := utils.SplitAndTrim(permissions, ",")

@@ -23,7 +23,7 @@ const pageSlice = createSlice({
         registerWebClientError(state, action) {
             state.loading = false;
             state.error = action.payload.error;
-            state.loginOptions = action.payload.loginOptions;
+            state.signinOptions = action.payload.signinOptions;
         },
         appBecomeInactive(state, action) {
             state.error = action.payload.message;

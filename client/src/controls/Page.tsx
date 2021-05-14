@@ -8,9 +8,9 @@ import {
   ThemeGenerator,
   themeRulesStandardCreator,
 } from '@fluentui/react/lib/ThemeGenerator';
-import { Login } from './Login'
+import { Signin } from './Signin'
 import { isDark } from '@fluentui/react/lib/Color';
-import { ILoginProps, IPageProps } from './Control.types'
+import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
@@ -136,13 +136,13 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     height: '100vh'
   });
 
-  const loginProviders = control.login ? control.login.split(",").map((s:string) => s.trim().toLowerCase()) : [];
-  const loginGroups = isTrue(control.logingroups)
+  const authProviders = control.signin ? control.signin.split(",").map((s:string) => s.trim().toLowerCase()) : [];
+  const signinGroups = isTrue(control.signingroups)
 
   const handleDismiss = () => {
     const payload: any = {
       i: "page",
-      login: ''
+      signin: ''
     }
 
     dispatch(changeProps([payload]));
@@ -150,24 +150,24 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     ws.pageEventFromWeb("page", 'dismissSignin', "");
   }
 
-  let loginProps: ILoginProps = {
-    loginOptions: {
-      gitHubEnabled: loginProviders.includes("github") || loginProviders.includes("*"),
-      gitHubGroupScope: loginGroups,
-      azureEnabled: loginProviders.includes("azure") || loginProviders.includes("*"),
-      azureGroupScope: loginGroups,
-      googleEnabled: loginProviders.includes("google") || loginProviders.includes("*"),
-      googleGroupScope: loginGroups
+  let signinProps: ISigninProps = {
+    signinOptions: {
+      gitHubEnabled: authProviders.includes("github") || authProviders.includes("*"),
+      gitHubGroupScope: signinGroups,
+      azureEnabled: authProviders.includes("azure") || authProviders.includes("*"),
+      azureGroupScope: signinGroups,
+      googleEnabled: authProviders.includes("google") || authProviders.includes("*"),
+      googleGroupScope: signinGroups
     },
-    onDismiss: isTrue(control.loginallowdismiss) ? handleDismiss : undefined
+    onDismiss: isTrue(control.signinallowdismiss) ? handleDismiss : undefined
   }
 
   return <ThemeProvider theme={theme} className={className}>
       <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />
       </Stack>
-      { loginProviders.length > 0 &&
-        <Login {...loginProps} />
+      { authProviders.length > 0 &&
+        <Signin {...signinProps} />
       }
     </ThemeProvider>
 })

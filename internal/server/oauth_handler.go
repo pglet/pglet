@@ -43,13 +43,13 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		// initial flow
 		redirectURL := c.Query(redirectUrlParameter)
 		groupsEnabled := c.Query(groupsUrlParameter) == "1"
-		persistLogin := c.Query(persistUrlParameter) == "1"
+		persistAuthCookie := c.Query(persistUrlParameter) == "1"
 
 		stateID, err := saveOAuthState(c.Writer, &auth.State{
-			RedirectURL:   redirectURL,
-			AuthProvider:  authProvider,
-			GroupsEnabled: groupsEnabled,
-			PersistLogin:  persistLogin,
+			RedirectURL:       redirectURL,
+			AuthProvider:      authProvider,
+			GroupsEnabled:     groupsEnabled,
+			PersistAuthCookie: persistAuthCookie,
 		})
 
 		if err != nil {
@@ -106,7 +106,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		log.Debugln(utils.ToJSON(principal))
 
 		deleteCookie(c.Writer, stateID)
-		savePrincipalID(c.Writer, principal.UID, state.PersistLogin)
+		savePrincipalID(c.Writer, principal.UID, state.PersistAuthCookie)
 		store.SetSecurityPrincipal(principal, time.Duration(principalLifetimeDays*24)*time.Hour)
 		c.Redirect(302, state.RedirectURL)
 	}
@@ -151,7 +151,7 @@ func getOAuthState(r *http.Request, stateID string) (*auth.State, error) {
 	return state, nil
 }
 
-func savePrincipalID(w http.ResponseWriter, principalID string, persistLogin bool) error {
+func savePrincipalID(w http.ResponseWriter, principalID string, persistAuthCookie bool) error {
 	sc := getSecureCookie()
 
 	// serialize to a secure cookie
@@ -168,7 +168,7 @@ func savePrincipalID(w http.ResponseWriter, principalID string, persistLogin boo
 		HttpOnly: true,
 	}
 
-	if persistLogin {
+	if persistAuthCookie {
 		cookie.MaxAge = principalLifetimeDays * 24 * 60
 	}
 
