@@ -83,6 +83,8 @@ func (c *Client) subscribe() {
 				return
 			}
 			c.send(msg)
+		case <-c.done:
+			return
 		}
 	}
 }
@@ -559,9 +561,6 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		return err
 	}
 
-	// re-send events to all connected host clients
-	//go func() {
-
 	data, _ := json.Marshal(payload.Props)
 	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
 		PageName:    session.Page.Name,
@@ -574,7 +573,6 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
 		pubsub.Send(clientChannelName(clientID), msg)
 	}
-	//}()
 
 	// re-send the message to all connected web clients
 	go func() {

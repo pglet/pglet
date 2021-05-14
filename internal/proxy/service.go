@@ -44,13 +44,13 @@ type Service struct {
 	hostClients map[string]*client.HostClient
 
 	appTimerMutex sync.RWMutex
-	appTimers     map[string]*time.Timer
+	appTimers     map[string]chan bool
 }
 
 func newService() *Service {
 	ps := &Service{}
 	ps.hostClients = make(map[string]*client.HostClient)
-	ps.appTimers = make(map[string]*time.Timer)
+	ps.appTimers = make(map[string]chan bool)
 	return ps
 }
 
@@ -199,17 +199,13 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 
 	log.Debugln("Waiting for a new app session:", pageName)
 
-	timer := time.NewTimer(waitAppTimeoutSeconds * time.Second)
-
 	var sessionID string
 
 	// wait for new session
 	select {
 	case sessionID = <-hc.PageNewSessions(pageName):
-		timer.Stop()
 		break
-	case <-timer.C:
-		//log.Debugln("Wait app session timeout elapsed")
+	case <-time.After(waitAppTimeoutSeconds * time.Second):
 		return nil
 	case <-ctx.Done():
 		return errors.New("abort waiting for new session")
@@ -238,19 +234,24 @@ func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
 	defer ps.appTimerMutex.Unlock()
 
 	key := pageName + serverURL
-	timer, ok := ps.appTimers[key]
+	canceled, ok := ps.appTimers[key]
 	if ok {
-		timer.Stop()
+		canceled <- true
 	}
 
-	timer = time.NewTimer((waitAppTimeoutSeconds + 1) * time.Second)
-	ps.appTimers[key] = timer
+	canceled = make(chan bool)
+	ps.appTimers[key] = canceled
 
 	go func() {
-		<-timer.C
-		log.Debugln("App page has become inactive:", pageName)
-		delete(ps.appTimers, key)
-		ps.handleInactiveApp(pageName, serverURL)
+		select {
+		case <-time.After((waitAppTimeoutSeconds + 1) * time.Second):
+			log.Debugln("App page has become inactive:", pageName)
+			delete(ps.appTimers, key)
+			ps.handleInactiveApp(pageName, serverURL)
+		case <-canceled:
+			log.Debugln("exit handleAppTimeout...")
+			return
+		}
 	}()
 }
 
