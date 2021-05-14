@@ -227,6 +227,40 @@ func (c *Client) registerWebClient(message *Message) {
 				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
 			}
 
+			// assign principal to a session
+			principalID := ""
+			if c.principal != nil {
+				principalID = c.principal.UID
+
+				// copy principal's details to a page
+				page := store.GetSessionControl(session, "page")
+				page.SetAttr("userId", c.principal.ID)
+				page.SetAttr("userLogin", c.principal.Login)
+				page.SetAttr("userName", c.principal.Name)
+				page.SetAttr("userEmail", c.principal.Email)
+				page.SetAttr("userClientIP", c.principal.ClientIP)
+				store.SetSessionControl(session, page)
+			}
+
+			if session.PrincipalID != principalID {
+				// update session's principal
+				store.SetSessionPrincipalID(session, principalID)
+
+				// fire "page.signin" event
+				if session.PrincipalID != "" {
+					msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+						PageName:    page.Name,
+						SessionID:   session.ID,
+						EventTarget: "page",
+						EventName:   "signin",
+					})
+
+					for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
+						pubsub.Send(clientChannelName(clientID), msg)
+					}
+				}
+			}
+
 		} else {
 			// shared page
 			// retrieve zero session

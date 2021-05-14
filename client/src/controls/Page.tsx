@@ -147,7 +147,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
-    ws.pageEventFromWeb("page", 'loginCancelled', "");
+    ws.pageEventFromWeb("page", 'dismissSignin', "");
   }
 
   let loginProps: ILoginProps = {

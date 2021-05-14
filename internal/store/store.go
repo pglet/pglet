@@ -19,18 +19,19 @@ const (
 	pageNextIDKey             = "page_next_id"                    // Inc integer with the next page ID
 	pagesKey                  = "pages"                           // pages hash with pageName:pageID
 	pageKey                   = "page:%d"                         // page data
-	pageHostClientsKey        = "page_host_clients:%d"            // a Set with client IDs
-	pageHostClientSessionsKey = "page_host_client_sessions:%d:%s" // a Set with sessionIDs
-	pageSessionsKey           = "page_sessions:%d"                // a Set with session IDs
-	clientSessionsKey         = "client_sessions:%s"              // a Set with session IDs
-	sessionKey                = "session:%d:%s"                   // session data
+	pageHostClientsKey        = "page:%d:host_clients"            // a Set with client IDs
+	pageHostClientSessionsKey = "page:%d:%s:host_client_sessions" // a Set with sessionIDs
+	pageSessionsKey           = "page:%d:sessions"                // a Set with session IDs
+	clientSessionsKey         = "client:%s:sessions"              // a Set with session IDs
 	sessionsExpiredKey        = "sessions_expired"                // set of page:session IDs sorted by Unix timestamp of their expiration date
 	clientsExpiredKey         = "clients_expired"                 // set of client IDs sorted by Unix timestamp of their expiration date
 	sessionNextControlIDField = "nextControlID"                   // Inc integer with the next control ID for a given session
-	sessionControlsKey        = "session_controls:%d:%s"          // session controls, value is JSON data
-	sessionHostClientsKey     = "session_host_clients:%d:%s"      // a Set with client IDs
-	sessionWebClientsKey      = "session_web_clients:%d:%s"       // a Set with client IDs
-	principalKey              = "principal:%s"                    // %s is principalID
+	sessionPrincipalIDField   = "principalID"
+	sessionKey                = "session:%d:%s"              // session data
+	sessionControlsKey        = "session:%d:%s:controls"     // session controls, value is JSON data
+	sessionHostClientsKey     = "session:%d:%s:host_clients" // a Set with client IDs
+	sessionWebClientsKey      = "session:%d:%s:web_clients"  // a Set with client IDs
+	principalKey              = "principal:%s"               // %s is principalID
 )
 
 //
@@ -163,6 +164,11 @@ func SetSessionExpiration(session *model.Session, expires time.Time) {
 
 func GetExpiredSessions() []string {
 	return cache.SortedSetPopRange(sessionsExpiredKey, 0, time.Now().Unix())
+}
+
+func SetSessionPrincipalID(session *model.Session, principalID string) {
+	session.PrincipalID = principalID
+	cache.HashSet(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), sessionPrincipalIDField, principalID)
 }
 
 func DeleteSession(pageID int, sessionID string) {
