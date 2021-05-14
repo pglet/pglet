@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
@@ -710,10 +711,19 @@ func (h *sessionHandler) canAccess(cmd *command.Command) (result string, err err
 		permissions = cmd.Values[0]
 	}
 
-	// TODO
-	log.Println("Check permissions:", permissions)
+	var principal *auth.SecurityPrincipal
+	if h.session.PrincipalID != "" {
+		principal = store.GetSecurityPrincipal(h.session.PrincipalID)
+	}
 
-	return "", nil
+	r := false
+	if principal != nil {
+		r = principal.HasPermissions(permissions)
+	} else if permissions == "" {
+		r = true
+	}
+
+	return strings.ToLower(strconv.FormatBool(r)), nil
 }
 
 func (h *sessionHandler) signout(cmd *command.Command) (result string, err error) {

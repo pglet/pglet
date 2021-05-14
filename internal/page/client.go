@@ -227,24 +227,31 @@ func (c *Client) registerWebClient(message *Message) {
 				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
 			}
 
-			// assign principal to a session
-			pctl := store.GetSessionControl(session, "page")
-			pctl.SetAttr("userid", "")
-			pctl.SetAttr("userlogin", "")
-			pctl.SetAttr("username", "")
-			pctl.SetAttr("useremail", "")
-			pctl.SetAttr("userclientip", "")
+			userProps := map[string]string{
+				"userid":       "",
+				"userlogin":    "",
+				"username":     "",
+				"useremail":    "",
+				"userclientip": "",
+			}
 
 			principalID := ""
 			if c.principal != nil {
 				principalID = c.principal.UID
 
-				// copy principal's details to a page
-				pctl.SetAttr("userid", c.principal.ID)
-				pctl.SetAttr("userlogin", c.principal.Login)
-				pctl.SetAttr("username", c.principal.Name)
-				pctl.SetAttr("useremail", c.principal.Email)
-				pctl.SetAttr("userclientip", c.principal.ClientIP)
+				userProps = map[string]string{
+					"userid":       c.principal.ID,
+					"userlogin":    c.principal.Login,
+					"username":     c.principal.Name,
+					"useremail":    c.principal.Email,
+					"userclientip": c.principal.ClientIP,
+				}
+			}
+
+			// update page's user details
+			pctl := store.GetSessionControl(session, "page")
+			for k, v := range userProps {
+				pctl.SetAttr(k, v)
 			}
 			store.SetSessionControl(session, pctl)
 
@@ -252,48 +259,33 @@ func (c *Client) registerWebClient(message *Message) {
 				// update session's principal
 				store.SetSessionPrincipalID(session, principalID)
 
-				var authEventName string
-				var changeEventProps map[string]interface{}
+				authEventName := "signout"
 
 				if session.PrincipalID != "" {
+
+					authEventName = "signin"
+
 					// hide signin dialog
 					pctl := store.GetSessionControl(session, "page")
 					pctl.SetAttr("signin", "")
 					store.SetSessionControl(session, pctl)
-
-					authEventName = "signin"
-
-					// send user properties
-					changeEventProps = map[string]interface{}{
-						"i":            "page",
-						"userid":       c.principal.ID,
-						"userlogin":    c.principal.Login,
-						"username":     c.principal.Name,
-						"useremail":    c.principal.Email,
-						"userclientip": c.principal.ClientIP,
-						"signin":       "",
-					}
-
-				} else {
-					authEventName = "signout"
-
-					// clear user properties
-					changeEventProps = map[string]interface{}{
-						"i":            "page",
-						"userid":       "",
-						"userlogin":    "",
-						"username":     "",
-						"useremail":    "",
-						"userclientip": "",
-						"signin":       "",
-					}
 				}
 
-				props := []map[string]interface{}{
+				changeEventProps := map[string]interface{}{
+					"i":      "page",
+					"signin": "",
+				}
+
+				// inject user props
+				for k, v := range userProps {
+					changeEventProps[k] = v
+				}
+
+				eventData := []map[string]interface{}{
 					changeEventProps,
 				}
 
-				data, _ := json.Marshal(props)
+				data, _ := json.Marshal(eventData)
 				msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
 					PageName:    session.Page.Name,
 					SessionID:   session.ID,
