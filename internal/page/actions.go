@@ -41,4 +41,6 @@ const (
 	AppBecomeInactiveAction = "appBecomeInactive"
 
 	SessionCrashedAction = "sessionCrashed"
+
+	SignoutAction = "signout"
 )

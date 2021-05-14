@@ -136,3 +136,6 @@ type AppBecomeInactivePayload struct {
 type SessionCrashedPayload struct {
 	Message string `json:"message"`
 }
+
+type SignoutPayload struct {
+}

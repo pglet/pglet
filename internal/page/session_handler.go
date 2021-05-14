@@ -85,20 +85,22 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 		h.session.Page.Name, h.session.ID, cmd)
 
 	handlers := map[string]commandHandlerFn{
-		command.Add:      h.add,
-		command.Addf:     h.add,
-		command.Replace:  h.replace,
-		command.Replacef: h.replace,
-		command.Set:      h.set,
-		command.Setf:     h.set,
-		command.Append:   h.appendHandler,
-		command.Appendf:  h.appendHandler,
-		command.Get:      h.get,
-		command.Clean:    h.clean,
-		command.Cleanf:   h.clean,
-		command.Remove:   h.remove,
-		command.Removef:  h.remove,
-		command.Error:    h.sessionCrashed,
+		command.Add:       h.add,
+		command.Addf:      h.add,
+		command.Replace:   h.replace,
+		command.Replacef:  h.replace,
+		command.Set:       h.set,
+		command.Setf:      h.set,
+		command.Append:    h.appendHandler,
+		command.Appendf:   h.appendHandler,
+		command.Get:       h.get,
+		command.Clean:     h.clean,
+		command.Cleanf:    h.clean,
+		command.Remove:    h.remove,
+		command.Removef:   h.remove,
+		command.Signout:   h.signout,
+		command.CanAccess: h.canAccess,
+		command.Error:     h.sessionCrashed,
 	}
 
 	handler := handlers[strings.ToLower(cmd.Name)]
@@ -697,6 +699,26 @@ func (h *sessionHandler) sessionCrashed(cmd *command.Command) (result string, er
 	h.broadcastCommandToWebClients(NewMessage("", SessionCrashedAction, &SessionCrashedPayload{
 		Message: errorMessage,
 	}))
+	return "", nil
+}
+
+func (h *sessionHandler) canAccess(cmd *command.Command) (result string, err error) {
+	permissions := ""
+
+	// permissions is the first value
+	if len(cmd.Values) > 0 && cmd.Values[0] != "" {
+		permissions = cmd.Values[0]
+	}
+
+	// TODO
+	log.Println("Check permissions:", permissions)
+
+	return "", nil
+}
+
+func (h *sessionHandler) signout(cmd *command.Command) (result string, err error) {
+	// broadcast command to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage("", SignoutAction, &SignoutPayload{}))
 	return "", nil
 }
 

@@ -32,7 +32,11 @@ const pageSlice = createSlice({
         sessionCrashed(state, action) {
             state.error = action.payload.message;
             //cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
-        },        
+        },
+        signout(state, action) {
+            var redirectUrl = encodeURIComponent(window.location.pathname);
+            window.location.replace("/api/auth/signout?redirect_url=" + redirectUrl);
+        },         
         addPageControlsSuccess(state, action) {
             const { controls, trimIDs } = action.payload
             addControls(state, controls);
@@ -187,6 +191,7 @@ export const {
     registerWebClientError,
     appBecomeInactive,
     sessionCrashed,
+    signout,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,

@@ -25,7 +25,7 @@ import (
 
 const (
 	pgletIoURL            = "https://app.pglet.io"
-	waitAppTimeoutSeconds = 5
+	waitAppTimeoutSeconds = 1
 )
 
 var (

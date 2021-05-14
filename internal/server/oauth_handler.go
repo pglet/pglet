@@ -116,6 +116,30 @@ func oauthHandler(c *gin.Context, authProvider string) {
 	}
 }
 
+func signoutHandler(c *gin.Context) {
+	redirectURL := c.Query(redirectUrlParameter)
+
+	if redirectURL == "" {
+		redirectURL = "/"
+	}
+
+	principalID, err := getPrincipalID(c.Request)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	if principalID != "" {
+		currentPrincipal := store.GetSecurityPrincipal(principalID)
+		if currentPrincipal != nil {
+			currentPrincipal.Signout()
+		}
+		store.DeleteSecurityPrincipal(principalID)
+	}
+	deleteCookie(c.Writer, principalIdCookieName)
+	c.Redirect(302, redirectURL)
+}
+
 func saveOAuthState(w http.ResponseWriter, state *auth.State) (string, error) {
 	id, _ := utils.GenerateRandomString(32)
 	state.Id = id
