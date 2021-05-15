@@ -93,7 +93,13 @@ func (p *SecurityPrincipal) UpdateDetails() error {
 }
 
 func (p *SecurityPrincipal) Signout() error {
-	// TODO
+	if p.AuthProvider == GitHubAuth {
+		return p.signoutGitHub()
+	} else if p.AuthProvider == AzureAuth {
+		return p.signoutAzure()
+	} else if p.AuthProvider == GoogleAuth {
+		return p.signoutGoogle()
+	}
 	return nil
 }
 

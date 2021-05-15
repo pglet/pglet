@@ -1,12 +1,18 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/google/go-github/github"
+	"github.com/pglet/pglet/internal/config"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -86,5 +92,40 @@ func (p *SecurityPrincipal) updateFromGitHub() error {
 			listTeamsOpts.Page = resp.NextPage
 		}
 	}
+	return nil
+}
+
+func (p *SecurityPrincipal) signoutGitHub() error {
+
+	token, err := p.GetToken()
+	if err != nil {
+		return err
+	}
+	if token == nil {
+		return nil
+	}
+
+	// https://docs.github.com/en/rest/reference/apps#delete-an-app-token
+	client := &http.Client{}
+
+	postBody, _ := json.Marshal(map[string]string{
+		"client_id":    config.GithubClientID(),
+		"access_token": token.AccessToken,
+	})
+	requestBody := bytes.NewBuffer(postBody)
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("https://api.github.com/applications/%s/token", config.GithubClientID()), requestBody)
+	req.Header.Add("accept", "application/vnd.github.v3+json")
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	log.Debugln("signoutGitHub:", string(body))
 	return nil
 }

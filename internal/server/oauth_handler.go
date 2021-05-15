@@ -90,10 +90,6 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		}
 
 		if principalID != "" {
-			currentPrincipal := store.GetSecurityPrincipal(principalID)
-			if currentPrincipal != nil {
-				currentPrincipal.Signout()
-			}
 			store.DeleteSecurityPrincipal(principalID)
 		}
 
@@ -130,10 +126,6 @@ func signoutHandler(c *gin.Context) {
 	}
 
 	if principalID != "" {
-		currentPrincipal := store.GetSecurityPrincipal(principalID)
-		if currentPrincipal != nil {
-			currentPrincipal.Signout()
-		}
 		store.DeleteSecurityPrincipal(principalID)
 	}
 	deleteCookie(c.Writer, principalIdCookieName)

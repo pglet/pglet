@@ -75,6 +75,10 @@ func (p *SecurityPrincipal) updateFromAzure() error {
 	return nil
 }
 
+func (p *SecurityPrincipal) signoutAzure() error {
+	return nil
+}
+
 func GetObject(client *http.Client, url string, dst interface{}) error {
 	resp, err := client.Get(url)
 	if err != nil {

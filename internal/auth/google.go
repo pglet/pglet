@@ -46,6 +46,8 @@ func (p *SecurityPrincipal) updateFromGoogle() error {
 	return nil
 }
 
-func (p *SecurityPrincipal) signoutGoogle() {
+func (p *SecurityPrincipal) signoutGoogle() error {
+	// https://myaccount.google.com/permissions
 	// https://developers.google.com/identity/protocols/oauth2/web-server#httprest_8
+	return nil
 }

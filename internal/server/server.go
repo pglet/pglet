@@ -21,6 +21,7 @@ import (
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/store"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -189,13 +190,26 @@ func websocketHandler(c *gin.Context) {
 func getSecurityPrincipal(c *gin.Context) (*auth.SecurityPrincipal, error) {
 	principalID, err := getPrincipalID(c.Request)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
 
 	var principal *auth.SecurityPrincipal
 	if principalID != "" {
 		principal = store.GetSecurityPrincipal(principalID)
+		if principal == nil {
+			return nil, nil
+		} else if principal.ClientIP != c.ClientIP() || principal.UserAgentHash != utils.SHA1(c.Request.UserAgent()) {
+			log.Errorln("Principal not found or its IP address or User Agent do not match")
+			store.DeleteSecurityPrincipal(principalID)
+		} else {
+			err := principal.UpdateDetails()
+			if err != nil {
+				log.Errorln("Error updating principal details:", err)
+				store.DeleteSecurityPrincipal(principalID)
+				return nil, nil
+			}
+			store.SetSecurityPrincipal(principal, time.Duration(principalLifetimeDays*24)*time.Hour)
+		}
 	}
 	return principal, nil
 }
