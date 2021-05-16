@@ -2,19 +2,18 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
 import { Signin } from './Signin'
 import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
-import { lightThemeColor, buildTheme } from './Theming'
+import { darkThemeColor } from './Theming'
 
-export const Page = React.memo<IPageProps>(({ control, pageName }) => {
+export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-  const [theme, setTheme] = React.useState<PartialTheme | undefined>();
 
   // page title
   let title = `${pageName} - pglet`;
@@ -45,14 +44,11 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
   React.useEffect(() => {
 
     // theme
-    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : lightThemeColor.primary
-    const themeTextColor = control.themetextcolor ? control.themetextcolor : lightThemeColor.text
-    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : lightThemeColor.background
-
-    var theme = buildTheme(themePrimaryColor, themeTextColor, themeBackgroundColor)
-    setTheme(theme);
-    document.documentElement.style.background = themeBackgroundColor;
-
+    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : darkThemeColor.primary
+    const themeTextColor = control.themetextcolor ? control.themetextcolor : darkThemeColor.text
+    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : darkThemeColor.background
+    updateTheme(themePrimaryColor, themeTextColor, themeBackgroundColor);
+    
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";
 
@@ -100,10 +96,6 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     childrenGap: control.gap ? control.gap : 10
   }
 
-  const className = mergeStyles({
-    height: '100vh'
-  });
-
   const authProviders = control.signin ? control.signin.split(",").map((s:string) => s.trim().toLowerCase()) : [];
   const signinGroups = isTrue(control.signingroups)
 
@@ -130,12 +122,12 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     onDismiss: isTrue(control.signinallowdismiss) ? handleDismiss : undefined
   }
 
-  return <ThemeProvider theme={theme} className={className}>
+  return <>
       <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />
       </Stack>
       { authProviders.length > 0 &&
         <Signin {...signinProps} />
       }
-    </ThemeProvider>
+    </>
 })

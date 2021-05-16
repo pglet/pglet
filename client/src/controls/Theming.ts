@@ -7,6 +7,12 @@ export const lightThemeColor = {
     background: '#ffffff'
 }
 
+export const darkThemeColor = {
+    primary: '#cc73ff',
+    text: '#e1e4e8',
+    background: '#24292e'
+}
+
 export function buildTheme(themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) : Theme {
     // theme
     let themeRules = themeRulesStandardCreator();

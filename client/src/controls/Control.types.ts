@@ -11,6 +11,7 @@ export interface IControlsListProps {
 export interface IPageProps {
     pageName: string;
     control: any;
+    updateTheme: (themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) => any;
 }
 
 export interface ISigninOptions {
