@@ -34,8 +34,15 @@ export function buildTheme(themePrimaryColor:any, themeTextColor:any, themeBackg
       [key: string]: string;
     } = ThemeGenerator.getThemeAsJson(themeRules);
 
-    return createTheme({
+    let theme = createTheme({
       ...{ palette: themeAsJson },
       isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
     });
+
+    //theme.semanticColors.inputBackground = "#32383E";
+    // theme.semanticColors.primaryButtonText = "#fff";
+    // theme.semanticColors.primaryButtonTextHovered = "#e1e4e8";
+    // theme.semanticColors.primaryButtonTextPressed = "#b1b4b8";
+
+    return theme;
 }
