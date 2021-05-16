@@ -28,7 +28,7 @@ func newPageCommand() *cobra.Command {
 		Long:  `Page command creates a new shared page and opens connection to it.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
-			client.Start()
+			client.Start(web)
 
 			pageName := "*" // auto-generated
 			if len(args) > 0 {

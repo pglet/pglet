@@ -39,14 +39,14 @@ type ConnectPageResults struct {
 	PageURL  string
 }
 
-func (proxy *Client) Start() {
+func (proxy *Client) Start(web bool) {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
 			// start Proxy service
-			startProxyService()
+			startProxyService(web)
 			time.Sleep(200 * time.Millisecond)
 		} else {
 			return
@@ -71,13 +71,18 @@ func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) 
 	return
 }
 
-func startProxyService() {
+func startProxyService(web bool) {
 	log.Traceln("Starting Pglet server")
 
 	// run server
 	execPath, _ := os.Executable()
 
-	cmd := exec.Command(execPath, "server")
+	arg := "server"
+	if web {
+		arg = "proxy"
+	}
+
+	cmd := exec.Command(execPath, arg)
 
 	//if runtime.GOOS == "windows" {
 	//cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}

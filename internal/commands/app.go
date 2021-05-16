@@ -29,7 +29,7 @@ func newAppCommand() *cobra.Command {
 		Long:  `App command creates a new multi-user app and waits for new web user connections.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
-			client.Start()
+			client.Start(web)
 
 			pageName := "*" // auto-generated
 			if len(args) > 0 {
