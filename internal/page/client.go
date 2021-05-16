@@ -441,6 +441,12 @@ func (c *Client) executeCommandFromHostClient(message *Message) {
 		Error:  "",
 	}
 
+	if !payload.Command.IsSupported() {
+		responsePayload.Error = fmt.Sprintf("unknown command: %s", payload.Command.Name)
+		c.send(NewMessageData(message.ID, "", responsePayload))
+		return
+	}
+
 	// retrieve page and session
 	page := store.GetPageByName(payload.PageName)
 	if page != nil {
@@ -481,6 +487,14 @@ func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
 	responsePayload := &PageCommandsBatchResponsePayload{
 		Results: make([]string, 0),
 		Error:   "",
+	}
+
+	for _, command := range payload.Commands {
+		if !command.IsSupported() {
+			responsePayload.Error = fmt.Sprintf("unknown command: %s", command.Name)
+			c.send(NewMessageData(message.ID, "", responsePayload))
+			return
+		}
 	}
 
 	// retrieve page and session

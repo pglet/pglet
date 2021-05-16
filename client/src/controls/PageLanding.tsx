@@ -17,7 +17,7 @@ export const PageLanding = () => {
     let { accountName, pageName } = useParams<ParamTypes>();
 
     if (!accountName) {
-        accountName = "public";
+        accountName = "p";
     }
 
     if (!pageName) {

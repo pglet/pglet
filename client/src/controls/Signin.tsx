@@ -1,15 +1,17 @@
 import React from 'react'
-import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton, Checkbox } from '@fluentui/react';
+import { Dialog, DialogType, IDialogProps, Image, Stack, Text, DefaultButton, Checkbox, useTheme } from '@fluentui/react';
 import { ISigninProps } from './Control.types'
 import pglet_logo from '../assets/img/pglet-logo-no-text.svg'
 import microsoft_logo from '../assets/img/microsoft-logo.svg'
 import google_logo from '../assets/img/google-logo.svg'
 import github_logo from '../assets/img/github-logo.svg'
+import github_logo_white from '../assets/img/github-logo-white.svg'
 
 export const Signin = React.memo<ISigninProps>(({signinOptions, onDismiss}) => {
 
     var pageUrl = encodeURIComponent(window.location.pathname);
 
+    const theme = useTheme();
     const [persistSignin, setPersistSignin] = React.useState<boolean>(true);
 
     // dialog props
@@ -58,7 +60,7 @@ export const Signin = React.memo<ISigninProps>(({signinOptions, onDismiss}) => {
                     signinOptions.gitHubEnabled &&
                         <DefaultButton href={"/api/oauth/github" + getOAuthURL(signinOptions.gitHubGroupScope)} iconProps={{
                             imageProps: {
-                                src: github_logo,
+                                src: theme.isInverted ? github_logo_white : github_logo,
                                 width: 16,
                                 height: 16
                             }

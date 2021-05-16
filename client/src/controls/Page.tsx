@@ -2,18 +2,13 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
-import {
-  BaseSlots,
-  ThemeGenerator,
-  themeRulesStandardCreator,
-} from '@fluentui/react/lib/ThemeGenerator';
+import { Stack, IStackProps, IStackTokens, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
 import { Signin } from './Signin'
-import { isDark } from '@fluentui/react/lib/Color';
 import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
+import { lightThemeColor, buildTheme } from './Theming'
 
 export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
@@ -27,40 +22,6 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     title = control.title
   }
   useTitle(title)
-
-  function buildTheme() {
-    // theme
-    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
-    const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
-
-    // theme
-    let themeRules = themeRulesStandardCreator();
-    function changeColor(baseSlot: BaseSlots, newColor: any) {
-      const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
-      ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
-      if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
-        // isInverted got swapped, so need to refresh slots with new shading rules
-        ThemeGenerator.insureSlots(themeRules, currentIsDark);
-      }
-    }
-
-    changeColor(BaseSlots.primaryColor, themePrimaryColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-    changeColor(BaseSlots.foregroundColor, themeTextColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-
-    const themeAsJson: {
-      [key: string]: string;
-    } = ThemeGenerator.getThemeAsJson(themeRules);
-
-    setTheme(createTheme({
-      ...{ palette: themeAsJson },
-      isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
-    }));
-
-    document.documentElement.style.background = themeBackgroundColor;
-  }
 
   const data = {
     fireUpdateHashEvent: true
@@ -83,7 +44,14 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   React.useEffect(() => {
 
-    buildTheme();
+    // theme
+    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : lightThemeColor.primary
+    const themeTextColor = control.themetextcolor ? control.themetextcolor : lightThemeColor.text
+    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : lightThemeColor.background
+
+    var theme = buildTheme(themePrimaryColor, themeTextColor, themeBackgroundColor)
+    setTheme(theme);
+    document.documentElement.style.background = themeBackgroundColor;
 
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";
