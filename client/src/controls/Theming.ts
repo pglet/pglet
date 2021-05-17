@@ -13,7 +13,28 @@ export const darkThemeColor = {
     background: '#24292e'
 }
 
-export function buildTheme(themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) : Theme {
+export function buildTheme(standardTheme:any, themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) : Theme {
+
+    let primaryColor = darkThemeColor.primary;
+    let textColor = darkThemeColor.text;
+    let backgroundColor = darkThemeColor.background;
+
+    if (standardTheme && standardTheme.toLowerCase() === 'light') {
+        primaryColor = lightThemeColor.primary;
+        textColor = lightThemeColor.text;
+        backgroundColor = lightThemeColor.background;
+    }
+
+    if (themePrimaryColor) {
+        primaryColor = themePrimaryColor
+    }
+    if (themeTextColor) {
+        textColor = themeTextColor
+    }
+    if (themeBackgroundColor) {
+        backgroundColor = themeBackgroundColor
+    }
+
     // theme
     let themeRules = themeRulesStandardCreator();
     function changeColor(baseSlot: BaseSlots, newColor: any) {
@@ -25,10 +46,10 @@ export function buildTheme(themePrimaryColor:any, themeTextColor:any, themeBackg
       }
     }
 
-    changeColor(BaseSlots.primaryColor, themePrimaryColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-    changeColor(BaseSlots.foregroundColor, themeTextColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
+    changeColor(BaseSlots.primaryColor, primaryColor);
+    changeColor(BaseSlots.backgroundColor, backgroundColor);
+    changeColor(BaseSlots.foregroundColor, textColor);
+    changeColor(BaseSlots.backgroundColor, backgroundColor);
 
     const themeAsJson: {
       [key: string]: string;

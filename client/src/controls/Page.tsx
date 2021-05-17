@@ -8,7 +8,6 @@ import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
-import { darkThemeColor } from './Theming'
 
 export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) => {
 
@@ -44,10 +43,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
   React.useEffect(() => {
 
     // theme
-    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : darkThemeColor.primary
-    const themeTextColor = control.themetextcolor ? control.themetextcolor : darkThemeColor.text
-    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : darkThemeColor.background
-    updateTheme(themePrimaryColor, themeTextColor, themeBackgroundColor);
+    updateTheme(control.theme, control.themeprimarycolor, control.themetextcolor, control.themebackgroundcolor);
     
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";

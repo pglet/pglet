@@ -6,7 +6,7 @@ import { Signin } from './Signin'
 import { WebSocketContext } from '../WebSocket';
 import { mergeStyles, MessageBar, MessageBarType, PartialTheme, Spinner, ThemeProvider } from '@fluentui/react'
 import { getWindowHash } from './Utils'
-import { buildTheme, darkThemeColor } from './Theming';
+import { buildTheme } from './Theming';
 
 interface ParamTypes {
     accountName: string,
@@ -29,14 +29,14 @@ export const PageLanding = () => {
 
     let fullPageName = `${accountName}/${pageName}`;
 
-    const updateTheme = (themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) => {
-        var theme = buildTheme(themePrimaryColor, themeTextColor, themeBackgroundColor)
+    const updateTheme = (standardTheme:any, themePrimaryColor?:any, themeTextColor?:any, themeBackgroundColor?:any) => {
+        var theme = buildTheme(standardTheme, themePrimaryColor, themeTextColor, themeBackgroundColor)
         setTheme(theme);
-        document.documentElement.style.background = themeBackgroundColor;
+        document.documentElement.style.background = theme.semanticColors.bodyBackground;
     }
 
     React.useEffect(() => {
-        updateTheme(darkThemeColor.primary, darkThemeColor.text, darkThemeColor.background);
+        updateTheme('dark');
         ws.registerWebClient(fullPageName, getWindowHash());
 
     }, [fullPageName, ws])
