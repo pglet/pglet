@@ -189,7 +189,7 @@ func savePrincipalID(w http.ResponseWriter, principalID string, persistAuthCooki
 	}
 
 	if persistAuthCookie {
-		cookie.MaxAge = principalLifetimeDays * 24 * 60
+		cookie.MaxAge = principalLifetimeDays * 24 * 60 * 60
 	}
 
 	http.SetCookie(w, cookie)

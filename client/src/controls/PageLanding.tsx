@@ -56,7 +56,7 @@ export const PageLanding = () => {
         else if (err) {
             return <MessageBar messageBarType={MessageBarType.error} isMultiline={true}>{err}</MessageBar>
         } else if (!page) {
-            return <Spinner label="Loading page, please wait..." labelPosition="right" styles={{ root: { height: "35px" }}} />
+            return <Spinner label="Loading page, please wait..." labelPosition="right" styles={{ root: { height: "100vh" }}} />
         } else {
             return <Page control={page} pageName={fullPageName} updateTheme={updateTheme} />
         }
