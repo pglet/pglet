@@ -1,4 +1,4 @@
-import { Theme, isDark, createTheme } from '@fluentui/react';
+import { Theme, isDark, createTheme, IStyle } from '@fluentui/react';
 import { BaseSlots, ThemeGenerator, themeRulesStandardCreator } from '@fluentui/react/lib/ThemeGenerator';
 
 export const lightThemeColor = {
@@ -8,7 +8,7 @@ export const lightThemeColor = {
 }
 
 export const darkThemeColor = {
-    primary: '#d48aff',
+    primary: '#cd75ff',
     text: '#e1e4e8',
     background: '#24292e'
 }
@@ -60,10 +60,46 @@ export function buildTheme(standardTheme:any, themePrimaryColor:any, themeTextCo
       isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
     });
 
-    //theme.semanticColors.inputBackground = "#32383E";
-    // theme.semanticColors.primaryButtonText = "#fff";
-    // theme.semanticColors.primaryButtonTextHovered = "#e1e4e8";
-    // theme.semanticColors.primaryButtonTextPressed = "#b1b4b8";
+    // 
+    if (isDefaultDark(theme)) {
+      customizeDarkTheme(theme);
+    }
 
     return theme;
+}
+
+export function getThemeExtraStyles(theme:Theme | undefined) : IStyle {
+  if (theme === undefined) {
+    return null;
+  }
+  if(isDefaultDark(theme)) {
+    return {
+      ".ms-MessageBar--error": {
+        backgroundColor: '#5f2725'
+      },
+      ".ms-MessageBar--blocked": {
+        backgroundColor: '#5f2725'
+      },
+      ".ms-MessageBar--success": {
+        backgroundColor: '#2a3c1b'
+      },
+      ".ms-MessageBar--warning": {
+        backgroundColor: '#5f4519'
+      },
+      ".ms-MessageBar--severeWarning": {
+        backgroundColor: '#673612'
+      }            
+    };
+  }
+  return {};
+}
+
+function isDefaultDark(theme:Theme) : boolean {
+  return theme.palette.themePrimary === darkThemeColor.primary &&
+    theme.semanticColors.bodyText === darkThemeColor.text &&
+    theme.semanticColors.bodyBackground === darkThemeColor.background;
+}
+
+function customizeDarkTheme(theme:Theme) {
+  //theme.semanticColors.inputBackground = "#2c3136";
 }

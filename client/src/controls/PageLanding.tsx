@@ -4,9 +4,9 @@ import { useSelector } from 'react-redux';
 import { Page } from './Page'
 import { Signin } from './Signin'
 import { WebSocketContext } from '../WebSocket';
-import { mergeStyles, MessageBar, MessageBarType, PartialTheme, Spinner, ThemeProvider } from '@fluentui/react'
+import { mergeStyles, MessageBar, MessageBarType, Spinner, Theme, ThemeProvider } from '@fluentui/react'
 import { getWindowHash } from './Utils'
-import { buildTheme } from './Theming';
+import { buildTheme, getThemeExtraStyles } from './Theming';
 
 interface ParamTypes {
     accountName: string,
@@ -16,7 +16,7 @@ interface ParamTypes {
 export const PageLanding = () => {
 
     let { accountName, pageName } = useParams<ParamTypes>();
-    const [theme, setTheme] = React.useState<PartialTheme | undefined>();
+    const [theme, setTheme] = React.useState<Theme | undefined>();
     const ws = React.useContext(WebSocketContext);
 
     if (!accountName) {
@@ -46,8 +46,8 @@ export const PageLanding = () => {
     const page = useSelector((state: any) => state.page.controls['page']);
 
     const className = mergeStyles({
-        height: '100vh'
-      });
+        height: '100vh',
+      }, getThemeExtraStyles(theme));
 
     const renderContent = () => {
         if (err === "signin_required") {
