@@ -90,12 +90,9 @@ func (c *Client) subscribe() {
 }
 
 func (c *Client) extendExpiration() {
-	ticker := time.NewTicker(time.Duration(clientExpirationSeconds-2) * time.Second)
-	defer ticker.Stop()
-
 	for {
 		select {
-		case <-ticker.C:
+		case <-time.After(time.Duration(clientExpirationSeconds-2) * time.Second):
 			// extend client expiration
 			store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
 
@@ -183,7 +180,7 @@ func (c *Client) registerWebClient(message *Message) {
 		if page.IsApp {
 			// app page
 
-			if len(store.GetPageHostClients(page)) == 0 {
+			if len(store.GetPageHostClients(page.ID)) == 0 {
 				response.Error = inactiveAppMessage
 				goto response
 			}
@@ -220,7 +217,7 @@ func (c *Client) registerWebClient(message *Message) {
 				// TODO
 				// pick first host client for now
 				// in the future we will implement load distribution algorithm
-				for _, clientID := range store.GetPageHostClients(page) {
+				for _, clientID := range store.GetPageHostClients(page.ID) {
 					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
 					pubsub.Send(clientChannelName(clientID), msg)
 					break
@@ -617,14 +614,14 @@ func (c *Client) registerPage(page *model.Page) {
 
 	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
 
-	store.AddPageHostClient(page, c.id)
+	store.AddPageHostClient(page.ID, c.id)
 	c.pages[page.Name] = page
 }
 
 func (c *Client) unregisterPage(page *model.Page) {
 	log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
 
-	store.RemovePageHostClient(page, c.id)
+	store.RemovePageHostClient(page.ID, c.id)
 	delete(c.pages, page.Name)
 
 	// delete app sessions
@@ -654,7 +651,7 @@ func (c *Client) unregisterPage(page *model.Page) {
 
 			store.RemovePageHostClientSessions(page.ID, c.id)
 
-			if len(store.GetPageHostClients(page)) == 0 {
+			if len(store.GetPageHostClients(page.ID)) == 0 {
 				store.DeletePage(page.ID)
 			}
 

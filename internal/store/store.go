@@ -97,16 +97,16 @@ func GetPageSessions(pageID int) []string {
 	return cache.SetGet(fmt.Sprintf(pageSessionsKey, pageID))
 }
 
-func GetPageHostClients(page *model.Page) []string {
-	return cache.SetGet(fmt.Sprintf(pageHostClientsKey, page.ID))
+func GetPageHostClients(pageID int) []string {
+	return cache.SetGet(fmt.Sprintf(pageHostClientsKey, pageID))
 }
 
-func AddPageHostClient(page *model.Page, clientID string) {
-	cache.SetAdd(fmt.Sprintf(pageHostClientsKey, page.ID), clientID)
+func AddPageHostClient(pageID int, clientID string) {
+	cache.SetAdd(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
 }
 
-func RemovePageHostClient(page *model.Page, clientID string) {
-	cache.SetRemove(fmt.Sprintf(pageHostClientsKey, page.ID), clientID)
+func RemovePageHostClient(pageID int, clientID string) {
+	cache.SetRemove(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
 }
 
 //
@@ -125,16 +125,34 @@ func GetClientSessions(clientID string) []string {
 	return cache.SetGet(fmt.Sprintf(clientSessionsKey, clientID))
 }
 
-func DeleteExpiredClient(clientID string) {
+func DeleteExpiredClient(clientID string) []string {
+	clients := make([]string, 0)
 	for _, fullSessionID := range GetClientSessions(clientID) {
 		pageID, sessionID := model.ParseSessionID(fullSessionID)
 		cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
 		cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
 		cache.SetRemove(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
+
+		for _, sessionID := range GetPageHostClientSessions(pageID, clientID) {
+			RemoveSessionHostClient(pageID, sessionID, clientID)
+
+			sessionClients := GetSessionWebClients(pageID, sessionID)
+			for _, clientID := range sessionClients {
+				clients = append(clients, clientID)
+				RemoveSessionWebClient(pageID, sessionID, clientID)
+			}
+
+			DeleteSession(pageID, sessionID)
+		}
 		RemovePageHostClientSessions(pageID, clientID)
+
+		if len(GetPageHostClients(pageID)) == 0 {
+			DeletePage(pageID)
+		}
 	}
 	cache.Remove(fmt.Sprintf(clientSessionsKey, clientID))
 	cache.SortedSetRemove(clientsExpiredKey, clientID)
+	return clients
 }
 
 //
