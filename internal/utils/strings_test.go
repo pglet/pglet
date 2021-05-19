@@ -29,3 +29,11 @@ func TestJsonSerialization(t *testing.T) {
 		t.Errorf("ToJSON/FromJSON: expected %v, actual %v", expected, actual)
 	}
 }
+
+func TestGenerateRandomString(t *testing.T) {
+	s, err := GenerateRandomString(32)
+	if err != nil {
+		t.Error("GenerateRandomString should not fail")
+	}
+	t.Log(s)
+}
