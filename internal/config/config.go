@@ -1,16 +1,23 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 const (
+
+	// Google Secret Manager
+	googleSecretManagerProject = "GOOGLE_SECRET_MANAGER_PROJECT"
 
 	// general settings
 	appURL                         = "APP_URL"
@@ -96,11 +103,50 @@ func init() {
 	viper.SetDefault(redisMaxActive, defaultRedisMaxActive)
 
 	// auth
-	viper.SetDefault(AzureTenant(), defaultAzureTenant)
+	viper.SetDefault(githubClientID, getSecretManagerValue(githubClientID, ""))
+	viper.SetDefault(githubClientSecret, getSecretManagerValue(githubClientSecret, ""))
+
+	viper.SetDefault(googleClientID, getSecretManagerValue(googleClientID, ""))
+	viper.SetDefault(googleClientSecret, getSecretManagerValue(googleClientSecret, ""))
+
+	viper.SetDefault(azureClientID, getSecretManagerValue(azureClientID, ""))
+	viper.SetDefault(azureClientSecret, getSecretManagerValue(azureClientSecret, ""))
+	viper.SetDefault(azureTenant, getSecretManagerValue(azureTenant, defaultAzureTenant))
 
 	// security
-	viper.SetDefault(cookieSecret, defaultCookieSecret)
-	viper.SetDefault(masterSecretKey, defaultMasterSecretKey)
+	viper.SetDefault(cookieSecret, getSecretManagerValue(cookieSecret, defaultCookieSecret))
+	viper.SetDefault(masterSecretKey, getSecretManagerValue(masterSecretKey, defaultMasterSecretKey))
+}
+
+func getSecretManagerValue(name string, defaultValue string) string {
+
+	projectName := os.Getenv(googleSecretManagerProject)
+	if projectName == "" {
+		return defaultValue
+	}
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		log.Errorf("failed to create secretmanager client: %v", err)
+		return defaultValue
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", projectName, name),
+	}
+
+	// Call the API.
+	result, err := client.AccessSecretVersion(ctx, req)
+	if err != nil {
+		log.Errorf("failed to access secret version: %v", err)
+		return defaultValue
+	}
+
+	return string(result.Payload.Data)
 }
 
 func AppURL() string {
