@@ -125,6 +125,8 @@ func getSecretManagerValue(name string, defaultValue string) string {
 		return defaultValue
 	}
 
+	log.Printf("Reading '%s' from Secret Manager\n", name)
+
 	// Create the client.
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
