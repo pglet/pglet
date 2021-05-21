@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	pgletIoURL            = "https://app.pglet.io"
-	waitAppTimeoutSeconds = 5
+	pgletIoURL            = "https://console.pglet.io"
+	waitAppTimeoutSeconds = 1
 )
 
 var (
@@ -44,13 +44,13 @@ type Service struct {
 	hostClients map[string]*client.HostClient
 
 	appTimerMutex sync.RWMutex
-	appTimers     map[string]*time.Timer
+	appTimers     map[string]chan bool
 }
 
 func newService() *Service {
 	ps := &Service{}
 	ps.hostClients = make(map[string]*client.HostClient)
-	ps.appTimers = make(map[string]*time.Timer)
+	ps.appTimers = make(map[string]chan bool)
 	return ps
 }
 
@@ -77,7 +77,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	if err != nil {
 		return err
@@ -93,9 +93,10 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 
 	// call server
 	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
-		PageName:  pageName,
-		IsApp:     false,
-		AuthToken: args.Token,
+		PageName:    pageName,
+		IsApp:       false,
+		AuthToken:   args.Token,
+		Permissions: args.Permissions,
 	})
 
 	// parse response
@@ -135,7 +136,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	if err != nil {
 		return err
@@ -151,9 +152,10 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 
 	// call server
 	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
-		PageName:  pageName,
-		IsApp:     true,
-		AuthToken: args.Token,
+		PageName:    pageName,
+		IsApp:       true,
+		AuthToken:   args.Token,
+		Permissions: args.Permissions,
 	})
 
 	// parse response
@@ -181,7 +183,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	ps.handleAppTimeout(pageName, serverURL)
 
@@ -197,17 +199,13 @@ func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, re
 
 	log.Debugln("Waiting for a new app session:", pageName)
 
-	timer := time.NewTimer(waitAppTimeoutSeconds * time.Second)
-
 	var sessionID string
 
 	// wait for new session
 	select {
 	case sessionID = <-hc.PageNewSessions(pageName):
-		timer.Stop()
 		break
-	case <-timer.C:
-		//log.Debugln("Wait app session timeout elapsed")
+	case <-time.After(waitAppTimeoutSeconds * time.Second):
 		return nil
 	case <-ctx.Done():
 		return errors.New("abort waiting for new session")
@@ -236,19 +234,24 @@ func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
 	defer ps.appTimerMutex.Unlock()
 
 	key := pageName + serverURL
-	timer, ok := ps.appTimers[key]
+	canceled, ok := ps.appTimers[key]
 	if ok {
-		timer.Stop()
+		canceled <- true
 	}
 
-	timer = time.NewTimer((waitAppTimeoutSeconds + 1) * time.Second)
-	ps.appTimers[key] = timer
+	canceled = make(chan bool)
+	ps.appTimers[key] = canceled
 
 	go func() {
-		<-timer.C
-		log.Debugln("App page has become inactive:", pageName)
-		delete(ps.appTimers, key)
-		ps.handleInactiveApp(pageName, serverURL)
+		select {
+		case <-time.After((waitAppTimeoutSeconds + 1) * time.Second):
+			log.Debugln("App page has become inactive:", pageName)
+			delete(ps.appTimers, key)
+			ps.handleInactiveApp(pageName, serverURL)
+		case <-canceled:
+			log.Debugln("exit handleAppTimeout...")
+			return
+		}
 	}()
 }
 
@@ -273,7 +276,7 @@ func (ps *Service) handleInactiveApp(pageName string, serverURL string) {
 func Start(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	log.Println("Starting Proxy service...")
+	log.Println("Starting Client service...")
 
 	m, err := filemutex.New(lockFilename)
 	if err != nil {
@@ -282,7 +285,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	err = m.TryLock()
 	if err != nil {
-		log.Fatalln("Another Proxy service process has started")
+		log.Fatalln("Another Client service process has started")
 	}
 
 	defer m.Unlock()
@@ -314,7 +317,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	<-ctx.Done()
 
-	log.Println("Stopping proxy service...")
+	log.Println("Stopping Client service...")
 
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
@@ -322,12 +325,12 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	if err = srv.Shutdown(ctxShutDown); err != nil {
-		log.Fatalf("Proxy service shutdown failed:%+s", err)
+		log.Fatalf("Client service shutdown failed:%+s", err)
 	}
 
 	proxySvc.close()
 
-	log.Println("Proxy service exited")
+	log.Println("Client service exited")
 }
 
 func (ps *Service) close() {
@@ -360,9 +363,9 @@ func buildWSEndPointURL(serverURL string) string {
 	return u.String()
 }
 
-func getServerURL(web bool, server string) (string, error) {
+func getServerURL(local bool, server string) (string, error) {
 
-	if server == "" && web {
+	if server == "" && !local {
 		return pgletIoURL, nil
 	} else if server == "" {
 		return "", nil

@@ -3,6 +3,7 @@ package page
 import (
 	"encoding/json"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/model"
 	"github.com/pglet/pglet/internal/page/command"
 )
@@ -33,9 +34,10 @@ func NewMessage(id string, action string, payload interface{}) *Message {
 }
 
 type RegisterHostClientRequestPayload struct {
-	PageName  string `json:"pageName"`
-	IsApp     bool   `json:"isApp"`
-	AuthToken string `json:"authToken"`
+	PageName    string `json:"pageName"`
+	IsApp       bool   `json:"isApp"`
+	AuthToken   string `json:"authToken"`
+	Permissions string `json:"permissions"`
 }
 
 type RegisterHostClientResponsePayload struct {
@@ -51,8 +53,9 @@ type RegisterWebClientRequestPayload struct {
 }
 
 type RegisterWebClientResponsePayload struct {
-	Session *SessionPayload `json:"session"`
-	Error   string          `json:"error"`
+	Session       *SessionPayload     `json:"session"`
+	Error         string              `json:"error"`
+	SigninOptions *auth.SigninOptions `json:"signinOptions"`
 }
 
 type SessionPayload struct {
@@ -132,4 +135,7 @@ type AppBecomeInactivePayload struct {
 
 type SessionCrashedPayload struct {
 	Message string `json:"message"`
+}
+
+type SignoutPayload struct {
 }

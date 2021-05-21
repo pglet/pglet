@@ -5,6 +5,7 @@ import {
     registerWebClientError,
     appBecomeInactive,
     sessionCrashed,
+    signout,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,
@@ -62,7 +63,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
             if (data.action === "registerWebClient") {
                 if (data.payload.error) {
-                    dispatch(registerWebClientError(data.payload.error));
+                    dispatch(registerWebClientError(data.payload));
                 } else {
                     dispatch(registerWebClientSuccess({
                         pageName: _registeredPageName,
@@ -73,7 +74,9 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
             } else if (data.action === "appBecomeInactive") {
                 dispatch(appBecomeInactive(data.payload));
             } else if (data.action === "sessionCrashed") {
-                dispatch(sessionCrashed(data.payload));                
+                dispatch(sessionCrashed(data.payload));
+            } else if (data.action === "signout") {
+                dispatch(signout(data.payload));
             } else if (data.action === "addPageControls") {
                 if (data.payload.error) {
                     dispatch(addPageControlsError(data.payload.error));

@@ -6,9 +6,10 @@ import (
 )
 
 type Session struct {
-	Page     *Page  `json:"-"`
-	ID       string `json:"id" redis:"id"`
-	ClientIP string `json:"clientIP" redis:"clientIP"`
+	Page        *Page  `json:"-"`
+	ID          string `json:"id" redis:"id"`
+	ClientIP    string `json:"clientIP" redis:"clientIP"`
+	PrincipalID string `json:"principalId" redis:"principalID"`
 }
 
 func ParseSessionID(fullSessionID string) (pageID int, sessionID string) {

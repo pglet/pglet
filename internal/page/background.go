@@ -50,7 +50,7 @@ func CleanupPagesAndSessions() {
 				store.DeleteSession(pageID, sessionID)
 
 				// delete page if no more sessions
-				if !page.IsApp && len(store.GetPageSessions(pageID)) == 0 && len(store.GetPageHostClients(page)) == 0 {
+				if !page.IsApp && len(store.GetPageSessions(pageID)) == 0 && len(store.GetPageHostClients(page.ID)) == 0 {
 					store.DeletePage(pageID)
 				}
 			}
@@ -68,7 +68,18 @@ func CleanupExpiredClients() {
 		clients := store.GetExpiredClients()
 		for _, clientID := range clients {
 			log.Debugln("Delete expired client:", clientID)
-			store.DeleteExpiredClient(clientID)
+			webClients := store.DeleteExpiredClient(clientID)
+
+			go func() {
+				for _, clientID := range webClients {
+					log.Debugln("Notify client which app become inactive:", clientID)
+
+					msg := NewMessageData("", AppBecomeInactiveAction, &AppBecomeInactivePayload{
+						Message: inactiveAppMessage,
+					})
+					pubsub.Send(clientChannelName(clientID), msg)
+				}
+			}()
 		}
 	}
 }

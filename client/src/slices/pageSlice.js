@@ -22,7 +22,8 @@ const pageSlice = createSlice({
         },
         registerWebClientError(state, action) {
             state.loading = false;
-            state.error = action.payload;
+            state.error = action.payload.error;
+            state.signinOptions = action.payload.signinOptions;
         },
         appBecomeInactive(state, action) {
             state.error = action.payload.message;
@@ -31,7 +32,11 @@ const pageSlice = createSlice({
         sessionCrashed(state, action) {
             state.error = action.payload.message;
             //cookies.remove(`sid-${action.payload.pageName}#${action.payload.pageHash}`);
-        },        
+        },
+        signout(state, action) {
+            var redirectUrl = encodeURIComponent(window.location.pathname);
+            window.location.replace("/api/auth/signout?redirect_url=" + redirectUrl);
+        },         
         addPageControlsSuccess(state, action) {
             const { controls, trimIDs } = action.payload
             addControls(state, controls);
@@ -186,6 +191,7 @@ export const {
     registerWebClientError,
     appBecomeInactive,
     sessionCrashed,
+    signout,
     addPageControlsSuccess,
     addPageControlsError,
     replacePageControlsSuccess,

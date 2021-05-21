@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,10 +16,12 @@ import (
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/page"
 	page_connection "github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/store"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 const (
@@ -73,6 +74,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 
+	// force SSL
 	if config.ForceSSL() {
 		router.Use(secure.Secure(secure.Options{
 			AllowedHosts:          []string{},
@@ -93,7 +95,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// WebSockets
 	router.GET("/ws", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, c.ClientIP())
+		websocketHandler(c)
 	})
 
 	// Setup route group for the API
@@ -107,8 +109,10 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 		})
 	}
 
-	api.GET("/users/:userID", userHandler)
-	api.GET("/pages/:accountName/:pageName", pageHandler)
+	api.GET("/oauth/github", githubAuthHandler)
+	api.GET("/oauth/azure", azureAuthHandler)
+	api.GET("/oauth/google", googleAuthHandler)
+	api.GET("/auth/signout", signoutHandler)
 
 	// unknown API routes - 404, all the rest - index.html
 	router.NoRoute(func(c *gin.Context) {
@@ -160,61 +164,52 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	log.Println("Server exited")
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request, clientIP string) {
+func websocketHandler(c *gin.Context) {
+
+	// load current security principal
+	principal, err := getSecurityPrincipal(c)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Errorln("Error upgrading WebSocket connection:", err)
 		return
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc, clientIP)
+	page.NewClient(wsc, c.ClientIP(), principal)
 }
 
-func userHandler(c *gin.Context) {
-
-	time.Sleep(2 * time.Second)
-
-	if userID, err := strconv.Atoi(c.Param("userID")); err == nil {
-		c.Header("Content-Type", "application/json")
-		c.JSON(http.StatusOK, gin.H{
-			"id":       userID,
-			"username": "admin",
-		})
-	} else {
-		// User ID is invalid
-		c.AbortWithStatus(http.StatusNotFound)
+func getSecurityPrincipal(c *gin.Context) (*auth.SecurityPrincipal, error) {
+	principalID, err := getPrincipalID(c.Request)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func pageHandler(c *gin.Context) {
-	c.Header("Content-Type", "application/json")
-	accountName := c.Param("accountName")
-	pageName := c.Param("pageName")
-	sessionID := c.Query("sessionID")
-	log.Debugln("sessionID:", sessionID)
-
-	fullPageName := fmt.Sprintf("%s/%s", accountName, pageName)
-	page := store.GetPageByName(fullPageName)
-	if page == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Page not found"})
-		return
+	var principal *auth.SecurityPrincipal
+	if principalID != "" {
+		principal = store.GetSecurityPrincipal(principalID)
+		if principal == nil {
+			return nil, nil
+		} else if principal.ClientIP != c.ClientIP() || principal.UserAgentHash != utils.SHA1(c.Request.UserAgent()) {
+			log.Errorln("Principal not found or its IP address or User Agent do not match")
+			store.DeleteSecurityPrincipal(principalID)
+		} else {
+			err := principal.UpdateDetails()
+			if err != nil {
+				log.Errorln("Error updating principal details:", err)
+				store.DeleteSecurityPrincipal(principalID)
+				return nil, nil
+			}
+			store.SetSecurityPrincipal(principal, time.Duration(principalLifetimeDays*24)*time.Hour)
+		}
 	}
-	session := store.GetSession(page, sessionID)
-	if session == nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Session not found"})
-		return
-	}
-	c.JSON(http.StatusOK, session)
-}
-
-func removeElementAt(source []int, pos int) []int {
-	copy(source[pos:], source[pos+1:]) // Shift a[i+1:] left one index.
-	source[len(source)-1] = 0          // Erase last element (write zero value).
-	return source[:len(source)-1]      // Truncate slice.
+	return principal, nil
 }

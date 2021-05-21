@@ -11,21 +11,8 @@ import (
 )
 
 const (
-	publicAccount = "public"
+	publicAccount = "p"
 	maxSlugSize   = 60
-)
-
-var (
-	reservedAccountNames = []string{
-		"pglet",
-		"admin",
-		"administrator",
-		"cp",
-	}
-
-	reservedPageNames = []string{
-		"public/index",
-	}
 )
 
 type PageName struct {
@@ -51,7 +38,7 @@ func ParsePageName(pageName string) (*PageName, error) {
 		p.Account = publicAccount
 	}
 
-	rndText, err := utils.GenerateRandomString(12)
+	rndText, err := utils.GenerateRandomString(16)
 	if err != nil {
 		return nil, err
 	}

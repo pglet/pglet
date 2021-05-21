@@ -1,18 +1,27 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 const (
 
+	// Google Secret Manager
+	googleSecretManagerProject = "GOOGLE_SECRET_MANAGER_PROJECT"
+
 	// general settings
+	appURL                         = "APP_URL"
+	defaultAppURL                  = "http://localhost:3000"
 	defaultServerPort              = 5000
 	serverPort                     = "SERVER_PORT"
 	forceSSL                       = "FORCE_SSL"
@@ -40,6 +49,22 @@ const (
 	redisPassword         = "REDIS.PASSWORD"
 	redisMaxIdle          = "REDIS.MAX_IDLE"
 	redisMaxActive        = "REDIS.MAX_ACTIVE"
+
+	// auth
+	githubClientID     = "GITHUB_CLIENT_ID"
+	githubClientSecret = "GITHUB_CLIENT_SECRET"
+	azureClientID      = "AZURE_CLIENT_ID"
+	azureClientSecret  = "AZURE_CLIENT_SECRET"
+	defaultAzureTenant = "common"
+	azureTenant        = "AZURE_TENANT"
+	googleClientID     = "GOOGLE_CLIENT_ID"
+	googleClientSecret = "GOOGLE_CLIENT_SECRET"
+
+	// security
+	cookieSecret           = "COOKIE_SECRET"
+	defaultCookieSecret    = "secret_signing_key"
+	masterSecretKey        = "MASTER_SECRET_KEY"
+	defaultMasterSecretKey = "master_secret_key"
 )
 
 func init() {
@@ -65,6 +90,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	// general
+	viper.SetDefault(appURL, defaultAppURL)
 	viper.SetDefault(serverPort, defaultServerPort)
 	viper.SetDefault(wsMaxMessageSize, defaultWebSocketMaxMessageSize)
 
@@ -75,6 +101,58 @@ func init() {
 	// redis
 	viper.SetDefault(redisMaxIdle, defaultRedisMaxIdle)
 	viper.SetDefault(redisMaxActive, defaultRedisMaxActive)
+
+	// auth
+	viper.SetDefault(githubClientID, getSecretManagerValue(githubClientID, ""))
+	viper.SetDefault(githubClientSecret, getSecretManagerValue(githubClientSecret, ""))
+
+	viper.SetDefault(googleClientID, getSecretManagerValue(googleClientID, ""))
+	viper.SetDefault(googleClientSecret, getSecretManagerValue(googleClientSecret, ""))
+
+	viper.SetDefault(azureClientID, getSecretManagerValue(azureClientID, ""))
+	viper.SetDefault(azureClientSecret, getSecretManagerValue(azureClientSecret, ""))
+	viper.SetDefault(azureTenant, getSecretManagerValue(azureTenant, defaultAzureTenant))
+
+	// security
+	viper.SetDefault(cookieSecret, getSecretManagerValue(cookieSecret, defaultCookieSecret))
+	viper.SetDefault(masterSecretKey, getSecretManagerValue(masterSecretKey, defaultMasterSecretKey))
+}
+
+func getSecretManagerValue(name string, defaultValue string) string {
+
+	projectName := os.Getenv(googleSecretManagerProject)
+	if projectName == "" {
+		return defaultValue
+	}
+
+	log.Printf("Reading '%s' from Secret Manager\n", name)
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		log.Errorf("failed to create secretmanager client: %v", err)
+		return defaultValue
+	}
+	defer client.Close()
+
+	// Build the request.
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", projectName, name),
+	}
+
+	// Call the API.
+	result, err := client.AccessSecretVersion(ctx, req)
+	if err != nil {
+		log.Errorf("failed to access secret version: %v", err)
+		return defaultValue
+	}
+
+	return string(result.Payload.Data)
+}
+
+func AppURL() string {
+	return viper.GetString(appURL)
 }
 
 func ServerPort() int {
@@ -143,4 +221,44 @@ func LimitSessionsPerHour() int {
 
 func LimitSessionSizeBytes() int {
 	return viper.GetInt(limitSessionSizeBytes)
+}
+
+// Auth
+
+func GithubClientID() string {
+	return viper.GetString(githubClientID)
+}
+
+func GithubClientSecret() string {
+	return viper.GetString(githubClientSecret)
+}
+
+func AzureClientID() string {
+	return viper.GetString(azureClientID)
+}
+
+func AzureClientSecret() string {
+	return viper.GetString(azureClientSecret)
+}
+
+func AzureTenant() string {
+	return viper.GetString(azureTenant)
+}
+
+func GoogleClientID() string {
+	return viper.GetString(googleClientID)
+}
+
+func GoogleClientSecret() string {
+	return viper.GetString(googleClientSecret)
+}
+
+// Security
+
+func CookieSecret() string {
+	return viper.GetString(cookieSecret)
+}
+
+func MasterSecretKey() string {
+	return viper.GetString(masterSecretKey)
 }

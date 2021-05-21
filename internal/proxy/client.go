@@ -24,9 +24,10 @@ type Client struct {
 
 type ConnectPageArgs struct {
 	PageName       string
-	Web            bool
+	Local          bool
 	Server         string
 	Token          string
+	Permissions    string
 	Uds            bool
 	EmitAllEvents  bool
 	TickerDuration int
@@ -38,21 +39,21 @@ type ConnectPageResults struct {
 	PageURL  string
 }
 
-func (proxy *Client) Start() {
+func (proxy *Client) Start(local bool) {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
 			// start Proxy service
-			startProxyService()
+			startProxyService(local)
 			time.Sleep(200 * time.Millisecond)
 		} else {
 			return
 		}
 	}
 
-	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
+	log.Fatalf("Gave up connecting to Client service after %d attemps\n", connectAttempts)
 }
 
 func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
@@ -70,13 +71,18 @@ func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) 
 	return
 }
 
-func startProxyService() {
+func startProxyService(local bool) {
 	log.Traceln("Starting Pglet server")
 
 	// run server
 	execPath, _ := os.Executable()
 
-	cmd := exec.Command(execPath, "server")
+	arg := "client"
+	if local {
+		arg = "server"
+	}
+
+	cmd := exec.Command(execPath, arg)
 
 	//if runtime.GOOS == "windows" {
 	//cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}

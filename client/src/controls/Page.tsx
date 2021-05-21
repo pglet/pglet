@@ -2,23 +2,17 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens, createTheme, ThemeProvider, mergeStyles, PartialTheme } from '@fluentui/react';
-import {
-  BaseSlots,
-  ThemeGenerator,
-  themeRulesStandardCreator,
-} from '@fluentui/react/lib/ThemeGenerator';
-import { isDark } from '@fluentui/react/lib/Color';
-import { IPageProps } from './Control.types'
+import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
+import { Signin } from './Signin'
+import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
 
-export const Page = React.memo<IPageProps>(({ control, pageName }) => {
+export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-  const [theme, setTheme] = React.useState<PartialTheme | undefined>();
 
   // page title
   let title = `${pageName} - pglet`;
@@ -26,40 +20,6 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     title = control.title
   }
   useTitle(title)
-
-  function buildTheme() {
-    // theme
-    const themePrimaryColor = control.themeprimarycolor ? control.themeprimarycolor : '#8e16c9'
-    const themeTextColor = control.themetextcolor ? control.themetextcolor : '#020203'
-    const themeBackgroundColor = control.themebackgroundcolor ? control.themebackgroundcolor : '#ffffff'
-
-    // theme
-    let themeRules = themeRulesStandardCreator();
-    function changeColor(baseSlot: BaseSlots, newColor: any) {
-      const currentIsDark = isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!);
-      ThemeGenerator.setSlot(themeRules[BaseSlots[baseSlot]], newColor, currentIsDark, true, true);
-      if (currentIsDark !== isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!)) {
-        // isInverted got swapped, so need to refresh slots with new shading rules
-        ThemeGenerator.insureSlots(themeRules, currentIsDark);
-      }
-    }
-
-    changeColor(BaseSlots.primaryColor, themePrimaryColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-    changeColor(BaseSlots.foregroundColor, themeTextColor);
-    changeColor(BaseSlots.backgroundColor, themeBackgroundColor);
-
-    const themeAsJson: {
-      [key: string]: string;
-    } = ThemeGenerator.getThemeAsJson(themeRules);
-
-    setTheme(createTheme({
-      ...{ palette: themeAsJson },
-      isInverted: isDark(themeRules[BaseSlots[BaseSlots.backgroundColor]].color!),
-    }));
-
-    document.documentElement.style.background = themeBackgroundColor;
-  }
 
   const data = {
     fireUpdateHashEvent: true
@@ -82,8 +42,9 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
 
   React.useEffect(() => {
 
-    buildTheme();
-
+    // theme
+    updateTheme(control.theme, control.themeprimarycolor, control.themetextcolor, control.themebackgroundcolor);
+    
     const hash = getWindowHash();
     const pageHash = control.hash !== undefined ? control.hash : "";
 
@@ -131,13 +92,38 @@ export const Page = React.memo<IPageProps>(({ control, pageName }) => {
     childrenGap: control.gap ? control.gap : 10
   }
 
-  const className = mergeStyles({
-    height: '100vh'
-  });
+  const authProviders = control.signin ? control.signin.split(",").map((s:string) => s.trim().toLowerCase()) : [];
+  const signinGroups = isTrue(control.signingroups)
 
-  return <ThemeProvider theme={theme} className={className}>
+  const handleDismiss = () => {
+    const payload: any = {
+      i: "page",
+      signin: ''
+    }
+
+    dispatch(changeProps([payload]));
+    ws.updateControlProps([payload]);
+    ws.pageEventFromWeb("page", 'dismissSignin', "");
+  }
+
+  let signinProps: ISigninProps = {
+    signinOptions: {
+      gitHubEnabled: authProviders.includes("github") || authProviders.includes("*"),
+      gitHubGroupScope: signinGroups,
+      azureEnabled: authProviders.includes("azure") || authProviders.includes("*"),
+      azureGroupScope: signinGroups,
+      googleEnabled: authProviders.includes("google") || authProviders.includes("*"),
+      googleGroupScope: signinGroups
+    },
+    onDismiss: isTrue(control.signinallowdismiss) ? handleDismiss : undefined
+  }
+
+  return <>
       <Stack tokens={stackTokens} {...stackProps}>
         <ControlsList controls={childControls} parentDisabled={disabled} />
       </Stack>
-    </ThemeProvider>
+      { authProviders.length > 0 &&
+        <Signin {...signinProps} />
+      }
+    </>
 })

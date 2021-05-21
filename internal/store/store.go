@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
@@ -18,17 +19,19 @@ const (
 	pageNextIDKey             = "page_next_id"                    // Inc integer with the next page ID
 	pagesKey                  = "pages"                           // pages hash with pageName:pageID
 	pageKey                   = "page:%d"                         // page data
-	pageHostClientsKey        = "page_host_clients:%d"            // a Set with client IDs
-	pageHostClientSessionsKey = "page_host_client_sessions:%d:%s" // a Set with sessionIDs
-	pageSessionsKey           = "page_sessions:%d"                // a Set with session IDs
-	clientSessionsKey         = "client_sessions:%s"              // a Set with session IDs
-	sessionKey                = "session:%d:%s"                   // session data
+	pageHostClientsKey        = "page:%d:host_clients"            // a Set with client IDs
+	pageHostClientSessionsKey = "page:%d:%s:host_client_sessions" // a Set with sessionIDs
+	pageSessionsKey           = "page:%d:sessions"                // a Set with session IDs
+	clientSessionsKey         = "client:%s:sessions"              // a Set with session IDs
 	sessionsExpiredKey        = "sessions_expired"                // set of page:session IDs sorted by Unix timestamp of their expiration date
 	clientsExpiredKey         = "clients_expired"                 // set of client IDs sorted by Unix timestamp of their expiration date
 	sessionNextControlIDField = "nextControlID"                   // Inc integer with the next control ID for a given session
-	sessionControlsKey        = "session_controls:%d:%s"          // session controls, value is JSON data
-	sessionHostClientsKey     = "session_host_clients:%d:%s"      // a Set with client IDs
-	sessionWebClientsKey      = "session_web_clients:%d:%s"       // a Set with client IDs
+	sessionPrincipalIDField   = "principalID"
+	sessionKey                = "session:%d:%s"              // session data
+	sessionControlsKey        = "session:%d:%s:controls"     // session controls, value is JSON data
+	sessionHostClientsKey     = "session:%d:%s:host_clients" // a Set with client IDs
+	sessionWebClientsKey      = "session:%d:%s:web_clients"  // a Set with client IDs
+	principalKey              = "principal:%s"               // %s is principalID
 )
 
 //
@@ -45,12 +48,15 @@ func GetPageByName(pageName string) *model.Page {
 }
 
 func GetPageByID(pageID int) *model.Page {
-	var p model.Page
-	cache.HashGetObject(fmt.Sprintf(pageKey, pageID), &p)
-	if p.ID == 0 {
+	p := &model.Page{}
+
+	j := cache.GetString(fmt.Sprintf(pageKey, pageID))
+	if j == "" {
 		return nil
 	}
-	return &p
+
+	utils.FromJSON(j, p)
+	return p
 }
 
 func AddPage(page *model.Page) {
@@ -58,12 +64,13 @@ func AddPage(page *model.Page) {
 	// TODO - check if the page exists
 	pageID := cache.Inc(pageNextIDKey, 1, 0)
 	page.ID = pageID
-	cache.HashSet(fmt.Sprintf(pageKey, page.ID),
-		"id", page.ID,
-		"name", page.Name,
-		"isApp", page.IsApp,
-		"clientIP", page.ClientIP)
+
+	cache.SetString(fmt.Sprintf(pageKey, page.ID), utils.ToJSON(page), 0)
 	cache.HashSet(pagesKey, page.Name, page.ID)
+}
+
+func UpdatePage(page *model.Page) {
+	cache.SetString(fmt.Sprintf(pageKey, page.ID), utils.ToJSON(page), 0)
 }
 
 func DeletePage(pageID int) {
@@ -90,16 +97,16 @@ func GetPageSessions(pageID int) []string {
 	return cache.SetGet(fmt.Sprintf(pageSessionsKey, pageID))
 }
 
-func GetPageHostClients(page *model.Page) []string {
-	return cache.SetGet(fmt.Sprintf(pageHostClientsKey, page.ID))
+func GetPageHostClients(pageID int) []string {
+	return cache.SetGet(fmt.Sprintf(pageHostClientsKey, pageID))
 }
 
-func AddPageHostClient(page *model.Page, clientID string) {
-	cache.SetAdd(fmt.Sprintf(pageHostClientsKey, page.ID), clientID)
+func AddPageHostClient(pageID int, clientID string) {
+	cache.SetAdd(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
 }
 
-func RemovePageHostClient(page *model.Page, clientID string) {
-	cache.SetRemove(fmt.Sprintf(pageHostClientsKey, page.ID), clientID)
+func RemovePageHostClient(pageID int, clientID string) {
+	cache.SetRemove(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
 }
 
 //
@@ -118,16 +125,34 @@ func GetClientSessions(clientID string) []string {
 	return cache.SetGet(fmt.Sprintf(clientSessionsKey, clientID))
 }
 
-func DeleteExpiredClient(clientID string) {
+func DeleteExpiredClient(clientID string) []string {
+	clients := make([]string, 0)
 	for _, fullSessionID := range GetClientSessions(clientID) {
 		pageID, sessionID := model.ParseSessionID(fullSessionID)
 		cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
 		cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
 		cache.SetRemove(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
+
+		for _, sessionID := range GetPageHostClientSessions(pageID, clientID) {
+			RemoveSessionHostClient(pageID, sessionID, clientID)
+
+			sessionClients := GetSessionWebClients(pageID, sessionID)
+			for _, clientID := range sessionClients {
+				clients = append(clients, clientID)
+				RemoveSessionWebClient(pageID, sessionID, clientID)
+			}
+
+			DeleteSession(pageID, sessionID)
+		}
 		RemovePageHostClientSessions(pageID, clientID)
+
+		if len(GetPageHostClients(pageID)) == 0 {
+			DeletePage(pageID)
+		}
 	}
 	cache.Remove(fmt.Sprintf(clientSessionsKey, clientID))
 	cache.SortedSetRemove(clientsExpiredKey, clientID)
+	return clients
 }
 
 //
@@ -157,6 +182,11 @@ func SetSessionExpiration(session *model.Session, expires time.Time) {
 
 func GetExpiredSessions() []string {
 	return cache.SortedSetPopRange(sessionsExpiredKey, 0, time.Now().Unix())
+}
+
+func SetSessionPrincipalID(session *model.Session, principalID string) {
+	session.PrincipalID = principalID
+	cache.HashSet(fmt.Sprintf(sessionKey, session.Page.ID, session.ID), sessionPrincipalIDField, principalID)
 }
 
 func DeleteSession(pageID int, sessionID string) {
@@ -260,4 +290,27 @@ func AddSessionWebClient(pageID int, sessionID string, clientID string) {
 func RemoveSessionWebClient(pageID int, sessionID string, clientID string) {
 	cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
 	cache.SetRemove(fmt.Sprintf(clientSessionsKey, clientID), fmt.Sprintf(sessionIDKey, pageID, sessionID))
+}
+
+//
+// Security principals
+// ==============================
+
+func GetSecurityPrincipal(principalID string) *auth.SecurityPrincipal {
+	j := cache.GetString(fmt.Sprintf(principalKey, principalID))
+	if j == "" {
+		return nil
+	}
+
+	p := &auth.SecurityPrincipal{}
+	utils.FromJSON(j, p)
+	return p
+}
+
+func SetSecurityPrincipal(p *auth.SecurityPrincipal, expires time.Duration) {
+	cache.SetString(fmt.Sprintf(principalKey, p.UID), utils.ToJSON(p), expires)
+}
+
+func DeleteSecurityPrincipal(principalID string) {
+	cache.Remove(fmt.Sprintf(principalKey, principalID))
 }

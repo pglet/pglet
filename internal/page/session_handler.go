@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pglet/pglet/internal/auth"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/model"
@@ -85,20 +86,22 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 		h.session.Page.Name, h.session.ID, cmd)
 
 	handlers := map[string]commandHandlerFn{
-		command.Add:      h.add,
-		command.Addf:     h.add,
-		command.Replace:  h.replace,
-		command.Replacef: h.replace,
-		command.Set:      h.set,
-		command.Setf:     h.set,
-		command.Append:   h.appendHandler,
-		command.Appendf:  h.appendHandler,
-		command.Get:      h.get,
-		command.Clean:    h.clean,
-		command.Cleanf:   h.clean,
-		command.Remove:   h.remove,
-		command.Removef:  h.remove,
-		command.Error:    h.sessionCrashed,
+		command.Add:       h.add,
+		command.Addf:      h.add,
+		command.Replace:   h.replace,
+		command.Replacef:  h.replace,
+		command.Set:       h.set,
+		command.Setf:      h.set,
+		command.Append:    h.appendHandler,
+		command.Appendf:   h.appendHandler,
+		command.Get:       h.get,
+		command.Clean:     h.clean,
+		command.Cleanf:    h.clean,
+		command.Remove:    h.remove,
+		command.Removef:   h.remove,
+		command.Signout:   h.signout,
+		command.CanAccess: h.canAccess,
+		command.Error:     h.sessionCrashed,
 	}
 
 	handler := handlers[strings.ToLower(cmd.Name)]
@@ -438,7 +441,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 		// other values go to boolean properties
 		if len(batchCmd.Values) > 1 {
 			for _, v := range batchCmd.Values[1:] {
-				batchCmd.Attrs[v] = "true"
+				batchCmd.Attrs[strings.ToLower(v)] = "true"
 			}
 		}
 
@@ -697,6 +700,35 @@ func (h *sessionHandler) sessionCrashed(cmd *command.Command) (result string, er
 	h.broadcastCommandToWebClients(NewMessage("", SessionCrashedAction, &SessionCrashedPayload{
 		Message: errorMessage,
 	}))
+	return "", nil
+}
+
+func (h *sessionHandler) canAccess(cmd *command.Command) (result string, err error) {
+	permissions := ""
+
+	// permissions is the first value
+	if len(cmd.Values) > 0 && cmd.Values[0] != "" {
+		permissions = cmd.Values[0]
+	}
+
+	var principal *auth.SecurityPrincipal
+	if h.session.PrincipalID != "" {
+		principal = store.GetSecurityPrincipal(h.session.PrincipalID)
+	}
+
+	r := false
+	if principal != nil {
+		r = principal.HasPermissions(permissions)
+	} else if permissions == "" {
+		r = true
+	}
+
+	return strings.ToLower(strconv.FormatBool(r)), nil
+}
+
+func (h *sessionHandler) signout(cmd *command.Command) (result string, err error) {
+	// broadcast command to all connected web clients
+	h.broadcastCommandToWebClients(NewMessage("", SignoutAction, &SignoutPayload{}))
 	return "", nil
 }
 

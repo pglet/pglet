@@ -25,7 +25,7 @@ func (c *Local) Start(handler ReadMessageHandler) (err error) {
 
 	// create page client
 	cl := page_connection.NewLocal(c.writeCh, c.readCh)
-	page.NewClient(cl, "")
+	page.NewClient(cl, "", nil)
 
 	// start read loop
 	go c.readLoop(handler)

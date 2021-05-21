@@ -17,10 +17,10 @@ import (
 
 func TestMain(m *testing.M) {
 
-	redisAddr := os.Getenv("REDIS_ADDR")
+	redisAddr := os.Getenv("PGLET_REDIS_ADDR")
 
 	// test in-memory
-	os.Setenv("REDIS_ADDR", "")
+	os.Setenv("PGLET_REDIS_ADDR", "")
 	Init()
 	retCode := m.Run()
 	if retCode != 0 {
@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 
 	// test Redis
 	if redisAddr != "" {
-		os.Setenv("REDIS_ADDR", redisAddr)
+		os.Setenv("PGLET_REDIS_ADDR", redisAddr)
 		Init()
 		retCode = m.Run()
 		if retCode != 0 {
