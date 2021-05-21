@@ -13,7 +13,7 @@ import (
 
 func newAppCommand() *cobra.Command {
 
-	var web bool
+	var local bool
 	var server string
 	var token string
 	var permissions string
@@ -29,7 +29,7 @@ func newAppCommand() *cobra.Command {
 		Long:  `App command creates a new multi-user app and waits for new web user connections.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			client := &proxy.Client{}
-			client.Start(web)
+			client.Start(local)
 
 			pageName := "*" // auto-generated
 			if len(args) > 0 {
@@ -38,7 +38,7 @@ func newAppCommand() *cobra.Command {
 
 			connectArgs := &proxy.ConnectPageArgs{
 				PageName:       pageName,
-				Web:            web,
+				Local:          local,
 				Server:         server,
 				Token:          token,
 				Permissions:    permissions,
@@ -76,7 +76,7 @@ func newAppCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&web, "web", "", false, "makes the app available as public at pglet.io service or a self-hosted Pglet server")
+	cmd.Flags().BoolVarP(&local, "local", "", false, "run the app on a local Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the app on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&permissions, "permissions", "", "", "comma-separated list of users and groups allowed to access this app")

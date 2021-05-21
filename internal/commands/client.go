@@ -7,12 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newProxyCommand() *cobra.Command {
+func newClientCommand() *cobra.Command {
 
 	var cmd = &cobra.Command{
-		Use:   "proxy",
-		Short: "Start proxy service",
-		Long:  `Proxy service is for ...`,
+		Use:   "client",
+		Short: "Start client service",
+		Long:  `Client service is for ...`,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			waitGroup := sync.WaitGroup{}

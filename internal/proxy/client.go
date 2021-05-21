@@ -24,7 +24,7 @@ type Client struct {
 
 type ConnectPageArgs struct {
 	PageName       string
-	Web            bool
+	Local          bool
 	Server         string
 	Token          string
 	Permissions    string
@@ -39,21 +39,21 @@ type ConnectPageResults struct {
 	PageURL  string
 }
 
-func (proxy *Client) Start(web bool) {
+func (proxy *Client) Start(local bool) {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
 			// start Proxy service
-			startProxyService(web)
+			startProxyService(local)
 			time.Sleep(200 * time.Millisecond)
 		} else {
 			return
 		}
 	}
 
-	log.Fatalf("Gave up connecting to Proxy service after %d attemps\n", connectAttempts)
+	log.Fatalf("Gave up connecting to Client service after %d attemps\n", connectAttempts)
 }
 
 func (proxy *Client) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs) (results *ConnectPageResults, err error) {
@@ -71,15 +71,15 @@ func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) 
 	return
 }
 
-func startProxyService(web bool) {
+func startProxyService(local bool) {
 	log.Traceln("Starting Pglet server")
 
 	// run server
 	execPath, _ := os.Executable()
 
-	arg := "server"
-	if web {
-		arg = "proxy"
+	arg := "client"
+	if local {
+		arg = "server"
 	}
 
 	cmd := exec.Command(execPath, arg)

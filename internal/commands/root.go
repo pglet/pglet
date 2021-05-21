@@ -41,7 +41,7 @@ func NewRootCmd() *cobra.Command {
 		newPageCommand(),
 		newAppCommand(),
 		newServerCommand(),
-		newProxyCommand(),
+		newClientCommand(),
 	)
 
 	return cmd

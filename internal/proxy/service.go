@@ -77,7 +77,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Web, args.Server)
+	serverURL, err := getServerURL(args.Local, args.Server)
 
 	ps.handleAppTimeout(pageName, serverURL)
 
@@ -276,7 +276,7 @@ func (ps *Service) handleInactiveApp(pageName string, serverURL string) {
 func Start(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	log.Println("Starting Proxy service...")
+	log.Println("Starting Client service...")
 
 	m, err := filemutex.New(lockFilename)
 	if err != nil {
@@ -285,7 +285,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	err = m.TryLock()
 	if err != nil {
-		log.Fatalln("Another Proxy service process has started")
+		log.Fatalln("Another Client service process has started")
 	}
 
 	defer m.Unlock()
@@ -317,7 +317,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	<-ctx.Done()
 
-	log.Println("Stopping proxy service...")
+	log.Println("Stopping Client service...")
 
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
@@ -325,12 +325,12 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	if err = srv.Shutdown(ctxShutDown); err != nil {
-		log.Fatalf("Proxy service shutdown failed:%+s", err)
+		log.Fatalf("Client service shutdown failed:%+s", err)
 	}
 
 	proxySvc.close()
 
-	log.Println("Proxy service exited")
+	log.Println("Client service exited")
 }
 
 func (ps *Service) close() {
@@ -363,9 +363,9 @@ func buildWSEndPointURL(serverURL string) string {
 	return u.String()
 }
 
-func getServerURL(web bool, server string) (string, error) {
+func getServerURL(local bool, server string) (string, error) {
 
-	if server == "" && web {
+	if server == "" && !local {
 		return pgletIoURL, nil
 	} else if server == "" {
 		return "", nil
