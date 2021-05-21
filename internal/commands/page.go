@@ -59,7 +59,7 @@ func newPageCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&local, "local", "", false, "run the page on a local Pglet server")
+	cmd.Flags().BoolVarP(&local, "local", "", false, "run the page on the local instance of Pglet server")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&permissions, "permissions", "", "", "comma-separated list of users and groups allowed to access this app")
