@@ -73,7 +73,10 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
-	router.AppEngine = config.AppEngine()
+
+	if config.TrustedProxies() != nil && len(config.TrustedProxies()) > 0 {
+		router.TrustedProxies = config.TrustedProxies()
+	}
 
 	// force SSL
 	if config.ForceSSL() {
@@ -182,14 +185,6 @@ func websocketHandler(c *gin.Context) {
 	if err != nil {
 		log.Errorln("Error upgrading WebSocket connection:", err)
 		return
-	}
-
-	// Loop over header names
-	for name, values := range c.Request.Header {
-		// Loop over all values for the name.
-		for _, value := range values {
-			log.Println("HEADER:", name, value)
-		}
 	}
 
 	wsc := page_connection.NewWebSocket(conn)

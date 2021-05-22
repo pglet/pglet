@@ -18,7 +18,7 @@ const (
 
 	// Google Secret Manager
 	googleSecretManagerProject = "GOOGLE_SECRET_MANAGER_PROJECT"
-	appEngine                  = "APP_ENGINE"
+	trustedProxies             = "TRUSTED_PROXIES"
 
 	// general settings
 	appURL                         = "APP_URL"
@@ -152,8 +152,8 @@ func getSecretManagerValue(name string, defaultValue string) string {
 	return string(result.Payload.Data)
 }
 
-func AppEngine() bool {
-	return viper.GetBool(appEngine)
+func TrustedProxies() []string {
+	return viper.GetStringSlice(trustedProxies)
 }
 
 func AppURL() string {
