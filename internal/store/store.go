@@ -133,21 +133,24 @@ func DeleteExpiredClient(clientID string) []string {
 		cache.SetRemove(fmt.Sprintf(sessionWebClientsKey, pageID, sessionID), clientID)
 		cache.SetRemove(fmt.Sprintf(pageHostClientsKey, pageID), clientID)
 
-		for _, sessionID := range GetPageHostClientSessions(pageID, clientID) {
-			RemoveSessionHostClient(pageID, sessionID, clientID)
+		page := GetPageByID(pageID)
+		if page.IsApp {
+			for _, sessionID := range GetPageHostClientSessions(pageID, clientID) {
+				RemoveSessionHostClient(pageID, sessionID, clientID)
 
-			sessionClients := GetSessionWebClients(pageID, sessionID)
-			for _, clientID := range sessionClients {
-				clients = append(clients, clientID)
-				RemoveSessionWebClient(pageID, sessionID, clientID)
+				sessionClients := GetSessionWebClients(pageID, sessionID)
+				for _, clientID := range sessionClients {
+					clients = append(clients, clientID)
+					RemoveSessionWebClient(pageID, sessionID, clientID)
+				}
+
+				DeleteSession(pageID, sessionID)
 			}
+			RemovePageHostClientSessions(pageID, clientID)
 
-			DeleteSession(pageID, sessionID)
-		}
-		RemovePageHostClientSessions(pageID, clientID)
-
-		if len(GetPageHostClients(pageID)) == 0 {
-			DeletePage(pageID)
+			if len(GetPageHostClients(pageID)) == 0 {
+				DeletePage(pageID)
+			}
 		}
 	}
 	cache.Remove(fmt.Sprintf(clientSessionsKey, clientID))
