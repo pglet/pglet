@@ -76,6 +76,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	if config.TrustedProxies() != nil && len(config.TrustedProxies()) > 0 {
 		router.TrustedProxies = config.TrustedProxies()
+		log.Println("router.TrustedProxies:", router.TrustedProxies)
 	}
 
 	// force SSL
@@ -186,6 +187,9 @@ func websocketHandler(c *gin.Context) {
 		log.Errorln("Error upgrading WebSocket connection:", err)
 		return
 	}
+
+	remoteIP, trusted := c.RemoteIP()
+	log.Println("RemoteIP:", remoteIP, trusted)
 
 	wsc := page_connection.NewWebSocket(conn)
 	page.NewClient(wsc, c.ClientIP(), principal)
