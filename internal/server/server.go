@@ -184,6 +184,14 @@ func websocketHandler(c *gin.Context) {
 		return
 	}
 
+	// Loop over header names
+	for name, values := range c.Request.Header {
+		// Loop over all values for the name.
+		for _, value := range values {
+			log.Println("HEADER:", name, value)
+		}
+	}
+
 	wsc := page_connection.NewWebSocket(conn)
 	page.NewClient(wsc, c.ClientIP(), principal)
 }
