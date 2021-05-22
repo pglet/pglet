@@ -135,6 +135,12 @@ func (h *sessionHandler) executeBatch(commands []*command.Command) (results []st
 				return nil, err
 			}
 			messages = append(messages, NewMessage("", UpdateControlPropsAction, payload))
+		} else if cmdName == command.Get {
+			value, err := h.get(cmd)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, value)
 		} else if cmdName == command.Clean {
 			payload, err := h.cleanWithMessage(cmd)
 			if err != nil {
