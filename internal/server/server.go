@@ -73,6 +73,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
+	router.AppEngine = config.AppEngine()
 
 	// force SSL
 	if config.ForceSSL() {
