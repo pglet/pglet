@@ -17,6 +17,7 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/gosimple/slug v1.9.0
+	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/keegancsmith/rpc v1.3.0
 	github.com/pglet/npipe v0.0.0-20200920205735-40be968c9c38
 	github.com/sirupsen/logrus v1.8.1

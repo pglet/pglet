@@ -283,34 +283,43 @@ func (hc *HostClient) PageNewSessions(pageName string) chan string {
 func (hc *HostClient) CloseAppClients(pageName string) {
 	log.Debugln("Closing inactive app clients", pageName)
 
+	clients := make([]*PipeClient, 0)
+
 	hc.pagesLock.Lock()
-	defer hc.pagesLock.Unlock()
-
 	pr, ok := hc.pages[pageName]
-	if !ok {
-		return
-	}
-
-	for _, clients := range pr.Sessions {
-		for client := range clients {
-			client.close()
+	if ok {
+		for _, sessionClients := range pr.Sessions {
+			for client := range sessionClients {
+				clients = append(clients, client)
+			}
 		}
 	}
-
 	delete(hc.pages, pageName)
+	hc.pagesLock.Unlock()
+
+	// close all clients
+	for _, client := range clients {
+		client.close()
+	}
 }
 
 func (hc *HostClient) Close() {
 	log.Debugf("Closing host client %s\n", hc.wsURL)
 
-	hc.pagesLock.RLock()
-	defer hc.pagesLock.RUnlock()
+	clients := make([]*PipeClient, 0)
 
+	hc.pagesLock.Lock()
 	for _, pr := range hc.pages {
-		for _, clients := range pr.Sessions {
-			for client := range clients {
-				client.close()
+		for _, sessionClients := range pr.Sessions {
+			for client := range sessionClients {
+				clients = append(clients, client)
 			}
 		}
+	}
+	hc.pagesLock.Unlock()
+
+	// close all clients
+	for _, client := range clients {
+		client.close()
 	}
 }
