@@ -32,15 +32,16 @@ const (
 )
 
 type Client struct {
-	id           string
-	role         ClientRole
-	conn         connection.Conn
-	clientIP     string
-	principal    *auth.SecurityPrincipal
-	subscription chan []byte
-	sessions     map[string]*model.Session
-	pages        map[string]*model.Page
-	done         chan bool
+	id                   string
+	role                 ClientRole
+	conn                 connection.Conn
+	clientIP             string
+	principal            *auth.SecurityPrincipal
+	subscription         chan []byte
+	sessions             map[string]*model.Session
+	pages                map[string]*model.Page
+	exitSubscribe        chan bool
+	exitExtendExpiration chan bool
 }
 
 func autoID() string {
@@ -49,13 +50,13 @@ func autoID() string {
 
 func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPrincipal) *Client {
 	c := &Client{
-		id:        autoID(),
-		conn:      conn,
-		clientIP:  clientIP,
-		principal: principal,
-		sessions:  make(map[string]*model.Session),
-		pages:     make(map[string]*model.Page),
-		done:      make(chan bool, 1),
+		id:                   autoID(),
+		conn:                 conn,
+		clientIP:             clientIP,
+		principal:            principal,
+		sessions:             make(map[string]*model.Session),
+		pages:                make(map[string]*model.Page),
+		exitExtendExpiration: make(chan bool),
 	}
 
 	log.Println("Client IP:", clientIP)
@@ -65,7 +66,7 @@ func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPr
 
 	go func() {
 		conn.Start(c.readHandler)
-		c.done <- true
+		c.exitExtendExpiration <- true
 		c.unregister()
 	}()
 
@@ -80,30 +81,33 @@ func (c *Client) subscribe() {
 		select {
 		case msg, more := <-c.subscription:
 			if !more {
+				log.Debugln("Exit subscribe():", c.id)
 				return
 			}
 			c.send(msg)
-		case <-c.done:
-			return
 		}
 	}
 }
 
 func (c *Client) extendExpiration() {
+	ticker := time.NewTicker(time.Duration(clientExpirationSeconds-2) * time.Second)
+	defer ticker.Stop()
 	for {
-		select {
-		case <-time.After(time.Duration(clientExpirationSeconds-2) * time.Second):
-			// extend client expiration
-			store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
+		// extend client expiration
+		store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
 
-			// extend app session expiration
-			if c.role == WebClient {
-				for _, session := range c.sessions {
-					h := newSessionHandler(session)
-					h.extendExpiration()
-				}
+		// extend app session expiration
+		if c.role == WebClient {
+			for _, session := range c.sessions {
+				h := newSessionHandler(session)
+				h.extendExpiration()
 			}
-		case <-c.done:
+		}
+
+		select {
+		case <-ticker.C:
+		case <-c.exitExtendExpiration:
+			log.Debugln("Exit extendExpiration():", c.id)
 			return
 		}
 	}
@@ -180,7 +184,9 @@ func (c *Client) registerWebClient(message *Message) {
 		if page.IsApp {
 			// app page
 
-			if len(store.GetPageHostClients(page.ID)) == 0 {
+			pageHostClients := store.GetPageHostClients(page.ID)
+
+			if len(pageHostClients) == 0 {
 				response.Error = inactiveAppMessage
 				goto response
 			}
@@ -217,7 +223,7 @@ func (c *Client) registerWebClient(message *Message) {
 				// TODO
 				// pick first host client for now
 				// in the future we will implement load distribution algorithm
-				for _, clientID := range store.GetPageHostClients(page.ID) {
+				for _, clientID := range pageHostClients {
 					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
 					pubsub.Send(clientChannelName(clientID), msg)
 					break
@@ -384,7 +390,7 @@ func (c *Client) registerHostClient(message *Message) {
 		store.AddPage(page)
 	}
 
-	// make sure unath client has access to a given page
+	// make sure unauth client has access to a given page
 	if config.CheckPageIP() && page.ClientIP != c.clientIP {
 		err = errors.New("Page name is already taken")
 		goto response

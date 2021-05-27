@@ -25,7 +25,7 @@ import (
 
 const (
 	pgletIoURL            = "https://console.pglet.io"
-	waitAppTimeoutSeconds = 1
+	waitAppTimeoutSeconds = 5
 )
 
 var (
@@ -249,7 +249,7 @@ func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
 			delete(ps.appTimers, key)
 			ps.handleInactiveApp(pageName, serverURL)
 		case <-canceled:
-			log.Debugln("exit handleAppTimeout...")
+			//log.Debugln("exit handleAppTimeout...")
 			return
 		}
 	}()

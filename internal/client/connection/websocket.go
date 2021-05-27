@@ -39,6 +39,7 @@ func (c *WebSocket) Send(message []byte) {
 }
 
 func (hc *WebSocket) readLoop(handler ReadMessageHandler) {
+	log.Debugln("Starting WS readLoop")
 	for {
 		_, bytesMessage, err := hc.conn.ReadMessage()
 		if err != nil {
@@ -51,6 +52,7 @@ func (hc *WebSocket) readLoop(handler ReadMessageHandler) {
 }
 
 func (c *WebSocket) writeLoop() {
+	log.Debugln("Starting WS writeLoop")
 	for {
 		select {
 		case message, ok := <-c.send:
