@@ -19,7 +19,7 @@ func NewWebSocket(wsURL string) *WebSocket {
 	return cws
 }
 
-func (c *WebSocket) Start(handler ReadMessageHandler) (err error) {
+func (c *WebSocket) Start(readHandler ReadMessageHandler, reconnectHandler ReconnectHandler) (err error) {
 
 	log.Println("Connecting via WebSockets to:", c.wsURL)
 	c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
@@ -29,7 +29,7 @@ func (c *WebSocket) Start(handler ReadMessageHandler) (err error) {
 	}
 
 	// start read/write loops
-	go c.readLoop(handler)
+	go c.readLoop(readHandler)
 	go c.writeLoop()
 	return
 }

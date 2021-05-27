@@ -19,7 +19,7 @@ func NewLocal() *Local {
 	return cws
 }
 
-func (c *Local) Start(handler ReadMessageHandler) (err error) {
+func (c *Local) Start(readHandler ReadMessageHandler, reconnectHandler ReconnectHandler) (err error) {
 
 	log.Println("Connecting to local Pglet Server")
 
@@ -28,7 +28,7 @@ func (c *Local) Start(handler ReadMessageHandler) (err error) {
 	page.NewClient(cl, "", nil)
 
 	// start read loop
-	go c.readLoop(handler)
+	go c.readLoop(readHandler)
 
 	return
 }

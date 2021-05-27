@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -12,6 +13,11 @@ import (
 	"github.com/pglet/pglet/internal/client/connection"
 	"github.com/pglet/pglet/internal/page"
 )
+
+type PageRegistration struct {
+	RegistrationRequest *page.RegisterHostClientRequestPayload
+	Sessions            map[string]map[*PipeClient]bool
+}
 
 type HostClient struct {
 
@@ -23,9 +29,9 @@ type HostClient struct {
 	// active connection
 	conn connection.Conn
 
-	// pageSessionClients by "pageName:sessionID"
-	pageSessionClients map[string]map[string]map[*PipeClient]bool
-	pipeClientsMutex   sync.RWMutex
+	// page registrations
+	pages     map[string]*PageRegistration
+	pagesLock sync.RWMutex
 
 	// async calls registry
 	calls map[string]chan *json.RawMessage
@@ -38,7 +44,7 @@ type HostClient struct {
 func NewHostClient(wsURL string) *HostClient {
 	hc := &HostClient{}
 	hc.wsURL = wsURL
-	hc.pageSessionClients = make(map[string]map[string]map[*PipeClient]bool)
+	hc.pages = make(map[string]*PageRegistration)
 	hc.calls = make(map[string]chan *json.RawMessage)
 	hc.newSessions = make(map[string]chan string)
 
@@ -57,13 +63,16 @@ func (hc *HostClient) Start() (err error) {
 
 	// connect only once
 	hc.connectOnce.Do(func() {
-		err = hc.conn.Start(hc.readHandler)
+		err = hc.conn.Start(hc.readHandler, hc.reconnectHandler)
 	})
 
 	return
 }
 
 func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
+
+	//log.Debugln("Host client read message:", string(bytesMessage))
+
 	message := &page.Message{}
 	err = json.Unmarshal(bytesMessage, message)
 	if err == nil {
@@ -86,6 +95,44 @@ func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
 		log.Errorf("Unsupported message received: %s", bytesMessage)
 	}
 	return
+}
+
+func (hc *HostClient) reconnectHandler() error {
+	return nil
+}
+
+func (hc *HostClient) RegisterPage(ctx context.Context, request *page.RegisterHostClientRequestPayload) (*page.RegisterHostClientResponsePayload, error) {
+	// call server
+	result := hc.Call(ctx, page.RegisterHostClientAction, request)
+
+	// parse response
+	response := &page.RegisterHostClientResponsePayload{}
+	err := json.Unmarshal(*result, response)
+
+	if err != nil {
+		log.Errorln("Error parsing ConnectAppPage response:", err)
+		return nil, err
+	}
+
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+
+	// update pages registry
+	hc.pagesLock.Lock()
+	defer hc.pagesLock.Unlock()
+
+	pr, ok := hc.pages[response.PageName]
+	if !ok {
+		pr = &PageRegistration{
+			Sessions: make(map[string]map[*PipeClient]bool),
+		}
+		hc.pages[response.PageName] = pr
+	}
+	pr.RegistrationRequest = request
+	pr.RegistrationRequest.PageName = response.PageName
+
+	return response, nil
 }
 
 func (hc *HostClient) Call(ctx context.Context, action string, payload interface{}) *json.RawMessage {
@@ -131,45 +178,47 @@ func (hc *HostClient) CallAndForget(action string, payload interface{}) {
 	hc.conn.Send(msg)
 }
 
-func (hc *HostClient) RegisterPipeClient(pc *PipeClient) {
+func (hc *HostClient) RegisterPipeClient(pc *PipeClient) error {
 	log.Debugf("Register pipe client for %s:%s\n", pc.pageName, pc.sessionID)
 
-	hc.pipeClientsMutex.Lock()
-	defer hc.pipeClientsMutex.Unlock()
+	hc.pagesLock.Lock()
+	defer hc.pagesLock.Unlock()
 
-	pageSessions, ok := hc.pageSessionClients[pc.pageName]
+	pr, ok := hc.pages[pc.pageName]
 	if !ok {
-		pageSessions = make(map[string]map[*PipeClient]bool)
-		hc.pageSessionClients[pc.pageName] = pageSessions
-
+		return fmt.Errorf("page or app %s is not registered", pc.pageName)
 	}
 
-	sessionClients, ok := pageSessions[pc.sessionID]
+	sessionClients, ok := pr.Sessions[pc.sessionID]
 	if !ok {
 		sessionClients = make(map[*PipeClient]bool)
-		pageSessions[pc.sessionID] = sessionClients
+		pr.Sessions[pc.sessionID] = sessionClients
 	}
 	sessionClients[pc] = true
+	return nil
 }
 
 func (hc *HostClient) UnregisterPipeClient(pc *PipeClient) {
 	log.Debugf("Unregister pipe client for %s:%s\n", pc.pageName, pc.sessionID)
 
-	hc.pipeClientsMutex.Lock()
-	defer hc.pipeClientsMutex.Unlock()
+	hc.pagesLock.Lock()
+	defer hc.pagesLock.Unlock()
 
-	pageSessions, ok := hc.pageSessionClients[pc.pageName]
-	if ok {
-		sessionClients, ok := pageSessions[pc.sessionID]
-		if ok {
-			delete(sessionClients, pc)
-		}
-		if len(sessionClients) == 0 {
-			delete(pageSessions, pc.sessionID)
-		}
+	pr, ok := hc.pages[pc.pageName]
+	if !ok {
+		return
 	}
-	if len(pageSessions) == 0 {
-		delete(hc.pageSessionClients, pc.pageName)
+
+	sessionClients, ok := pr.Sessions[pc.sessionID]
+	if ok {
+		delete(sessionClients, pc)
+	}
+	if len(sessionClients) == 0 {
+		delete(pr.Sessions, pc.sessionID)
+	}
+
+	if len(pr.Sessions) == 0 && !pr.RegistrationRequest.IsApp {
+		delete(hc.pages, pc.pageName)
 	}
 }
 
@@ -181,16 +230,21 @@ func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 		return err
 	}
 
+	hc.pagesLock.RLock()
+	defer hc.pagesLock.RUnlock()
+
+	pr, ok := hc.pages[payload.PageName]
+	if !ok {
+		return nil
+	}
+
 	// iterate through all session pipe clients
-	pageSessions, ok := hc.pageSessionClients[payload.PageName]
+	sessionClients, ok := pr.Sessions[payload.SessionID]
 	if ok {
-		sessionClients, ok := pageSessions[payload.SessionID]
-		if ok {
-			for client := range sessionClients {
-				eventMessage := fmt.Sprintf("%s %s %s",
-					payload.EventTarget, payload.EventName, payload.EventData)
-				client.emitEvent(eventMessage)
-			}
+		for client := range sessionClients {
+			eventMessage := fmt.Sprintf("%s %s %s",
+				payload.EventTarget, payload.EventName, payload.EventData)
+			client.emitEvent(eventMessage)
 		}
 	}
 
@@ -229,21 +283,31 @@ func (hc *HostClient) PageNewSessions(pageName string) chan string {
 func (hc *HostClient) CloseAppClients(pageName string) {
 	log.Debugln("Closing inactive app clients", pageName)
 
-	pageSessions, ok := hc.pageSessionClients[pageName]
-	if ok {
-		for _, clients := range pageSessions {
-			for client := range clients {
-				client.close()
-			}
+	hc.pagesLock.Lock()
+	defer hc.pagesLock.Unlock()
+
+	pr, ok := hc.pages[pageName]
+	if !ok {
+		return
+	}
+
+	for _, clients := range pr.Sessions {
+		for client := range clients {
+			client.close()
 		}
 	}
+
+	delete(hc.pages, pageName)
 }
 
 func (hc *HostClient) Close() {
 	log.Debugf("Closing host client %s\n", hc.wsURL)
 
-	for _, sessions := range hc.pageSessionClients {
-		for _, clients := range sessions {
+	hc.pagesLock.RLock()
+	defer hc.pagesLock.RUnlock()
+
+	for _, pr := range hc.pages {
+		for _, clients := range pr.Sessions {
 			for client := range clients {
 				client.close()
 			}

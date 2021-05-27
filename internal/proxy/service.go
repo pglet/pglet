@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -91,33 +90,23 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 
 	log.Println("Connecting to shared page:", pageName)
 
-	// call server
-	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result, err := hc.RegisterPage(ctx, &page.RegisterHostClientRequestPayload{
 		PageName:    pageName,
 		IsApp:       false,
 		AuthToken:   args.Token,
 		Permissions: args.Permissions,
 	})
 
-	// parse response
-	payload := &page.RegisterHostClientResponsePayload{}
-	err = json.Unmarshal(*result, payload)
-
 	if err != nil {
-		log.Errorln("Error parsing ConnectSharedPage response:", err)
+		log.Errorln("Error calling ConnectSharedPage:", err)
 		return err
 	}
 
-	if payload.Error != "" {
-		log.Errorln("Error calling ConnectSharedPage:", payload.Error)
-		return errors.New(payload.Error)
-	}
-
-	results.PageName = payload.PageName
-	results.PageURL = getPageURL(serverURL, payload.PageName)
+	results.PageName = result.PageName
+	results.PageURL = getPageURL(serverURL, result.PageName)
 
 	// create new pipeClient
-	pc, err := client.NewPipeClient(payload.PageName, payload.SessionID, hc, args.Uds, args.EmitAllEvents, args.TickerDuration)
+	pc, err := client.NewPipeClient(result.PageName, result.SessionID, hc, args.Uds, args.EmitAllEvents, args.TickerDuration)
 	if err != nil {
 		return err
 	}
@@ -151,31 +140,22 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 	log.Println("Connecting to app page:", pageName)
 
 	// call server
-	result := hc.Call(ctx, page.RegisterHostClientAction, &page.RegisterHostClientRequestPayload{
+	result, err := hc.RegisterPage(ctx, &page.RegisterHostClientRequestPayload{
 		PageName:    pageName,
 		IsApp:       true,
 		AuthToken:   args.Token,
 		Permissions: args.Permissions,
 	})
 
-	// parse response
-	payload := &page.RegisterHostClientResponsePayload{}
-	err = json.Unmarshal(*result, payload)
-
 	if err != nil {
-		log.Errorln("Error parsing ConnectAppPage response:", err)
+		log.Errorln("Error calling ConnectAppPage:", err)
 		return err
 	}
 
-	if payload.Error != "" {
-		log.Errorln("Error calling ConnectAppPage:", payload.Error)
-		return errors.New(payload.Error)
-	}
+	log.Println("Connected to app page:", result.PageName)
 
-	log.Println("Connected to app page:", payload.PageName)
-
-	results.PageName = payload.PageName
-	results.PageURL = getPageURL(serverURL, payload.PageName)
+	results.PageName = result.PageName
+	results.PageURL = getPageURL(serverURL, result.PageName)
 
 	return nil
 }
