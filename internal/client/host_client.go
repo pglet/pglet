@@ -97,8 +97,16 @@ func (hc *HostClient) readHandler(bytesMessage []byte) (err error) {
 	return
 }
 
-func (hc *HostClient) reconnectHandler() error {
-	return nil
+func (hc *HostClient) reconnectHandler(success bool) {
+
+	if success {
+		// resubscribe pages/apps
+		hc.pagesLock.Lock()
+		defer hc.pagesLock.Unlock()
+		for _, pr := range hc.pages {
+			hc.Call(context.Background(), page.RegisterHostClientAction, pr.RegistrationRequest)
+		}
+	}
 }
 
 func (hc *HostClient) RegisterPage(ctx context.Context, request *page.RegisterHostClientRequestPayload) (*page.RegisterHostClientResponsePayload, error) {

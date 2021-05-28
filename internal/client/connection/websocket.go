@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -9,21 +8,29 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	reconnectingAttempts = 30
+)
+
 type WebSocket struct {
-	sync.Mutex
-	connected        bool
-	wsURL            string
-	conn             *websocket.Conn
-	send             chan []byte
-	stopWriteLoop    chan bool
-	reconnectHandler ReconnectHandler
+	wsURL              string
+	conn               *websocket.Conn
+	send               chan []byte
+	reconnect          chan bool
+	resumeReadLoop     chan bool
+	resumeWriteLoop    chan bool
+	terminateWriteLoop chan bool
+	reconnectHandler   ReconnectHandler
 }
 
 func NewWebSocket(wsURL string) *WebSocket {
 	cws := &WebSocket{
-		wsURL:         wsURL,
-		send:          make(chan []byte),
-		stopWriteLoop: make(chan bool),
+		wsURL:              wsURL,
+		reconnect:          make(chan bool),
+		resumeReadLoop:     make(chan bool),
+		resumeWriteLoop:    make(chan bool),
+		terminateWriteLoop: make(chan bool),
+		send:               make(chan []byte),
 	}
 	return cws
 }
@@ -32,12 +39,14 @@ func (c *WebSocket) Start(readHandler ReadMessageHandler, reconnectHandler Recon
 
 	c.reconnectHandler = reconnectHandler
 
-	err = c.connect()
+	// initial connect
+	err = c.connect(1)
 	if err != nil {
-		return err
+		return
 	}
 
-	// start read/write loops
+	// start reconnect/read/write loops
+	go c.reconnectLoop()
 	go c.readLoop(readHandler)
 	go c.writeLoop()
 	return
@@ -53,14 +62,17 @@ func (c *WebSocket) readLoop(handler ReadMessageHandler) {
 		_, bytesMessage, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Errorln("WS read error:", err)
-			c.close()
-			err = c.connect()
-			if err != nil {
-				log.Errorln("error re-connecting WS on read:", err)
-				c.stopWriteLoop <- true
-				return
+			c.terminateWriteLoop <- true
+
+			select {
+			case c.reconnect <- true:
+			default:
+				// reconnect is in progress
 			}
-			log.Println("Re-connected WS on read")
+
+			<-c.resumeReadLoop
+			log.Debugln("Resumed WS read loop")
+			go c.writeLoop()
 			continue
 		}
 
@@ -85,62 +97,82 @@ func (c *WebSocket) writeLoop() {
 			}
 
 			log.Errorln("WS write error:", err)
-			c.close()
-			err = c.connect()
-			if err != nil {
-				log.Errorln("error re-connecting WS on write:", err)
-				return
+
+			select {
+			case c.reconnect <- true:
+			default:
+				// reconnect is in progress
 			}
-			log.Println("Re-connected WS on write")
-		case <-c.stopWriteLoop:
+
+			<-c.resumeWriteLoop
+			log.Debugln("Resumed WS write loop")
+
+		case <-c.terminateWriteLoop:
+			log.Debugln("Exiting WS write loop")
 			return
 		}
 	}
 }
 
-func (c *WebSocket) connect() (err error) {
-	c.Lock()
-	defer c.Unlock()
+func (c *WebSocket) reconnectLoop() {
 
-	if c.connected {
-		return
+	for {
+		<-c.reconnect
+
+		if c.conn != nil {
+			log.Println("Closing WS connection")
+			c.conn.Close()
+		}
+
+		err := c.connect(reconnectingAttempts)
+
+		if err != nil {
+			log.Errorf("Error reconnecting WS: %s", err)
+			return // TODO - what to do here?
+		}
+
+		log.Println("Re-connected WS")
+
+		select {
+		case c.resumeReadLoop <- true:
+		default:
+			// no listeners
+		}
+
+		select {
+		case c.resumeWriteLoop <- true:
+		default:
+			// no listeners
+		}
+
+		if c.reconnectHandler != nil {
+			c.reconnectHandler(err == nil)
+		}
 	}
+}
+
+func (c *WebSocket) connect(totalAttempts int) (err error) {
 
 	b := &backoff.Backoff{
 		Min:    1 * time.Second,
-		Max:    5 * time.Minute,
+		Max:    1 * time.Minute,
 		Jitter: true,
 	}
 
-	totalAttempts := 5
+	attempt := 1
 
 	for {
-		log.Println("Connecting via WebSockets to:", c.wsURL)
+		log.Printf("Connecting via WebSockets to %s (attempt %d of %d)", c.wsURL, attempt, totalAttempts)
 		c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
 
-		if err == nil {
-			c.connected = true
+		if err == nil || attempt == totalAttempts {
 			return
 		}
 
-		totalAttempts -= 1
-		if totalAttempts == 0 {
-			return
-		}
-
+		attempt += 1
 		d := b.Duration()
-		log.Println("%s, reconnecting in %s", err, d)
+		log.Printf("%s, reconnecting in %s", err, d)
 		time.Sleep(d)
 	}
-}
-
-func (c *WebSocket) close() {
-	c.Lock()
-	defer c.Unlock()
-	c.connected = false
-
-	if c.conn != nil {
-		log.Println("Closing WS connection")
-		c.conn.Close()
-	}
+	return
 }
