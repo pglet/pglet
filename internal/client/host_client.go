@@ -139,6 +139,9 @@ func (hc *HostClient) RegisterPage(ctx context.Context, request *page.RegisterHo
 	}
 	pr.RegistrationRequest = request
 	pr.RegistrationRequest.PageName = response.PageName
+	pr.RegistrationRequest.HostClientID = response.HostClientID
+
+	//log.Debugln("RegistrationRequest:", utils.ToJSONIndent(pr.RegistrationRequest))
 
 	return response, nil
 }
