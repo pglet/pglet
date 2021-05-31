@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/keegancsmith/rpc"
@@ -82,11 +81,7 @@ func startProxyService(local bool) {
 		arg = "server"
 	}
 
-	cmd := exec.Command(execPath, arg)
-
-	//if runtime.GOOS == "windows" {
-	//cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}
-	//}
+	cmd := getDetachedCmd(execPath, arg)
 
 	err := cmd.Start()
 
