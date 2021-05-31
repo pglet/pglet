@@ -57,11 +57,11 @@ func (c *WebSocket) Send(message []byte) {
 }
 
 func (c *WebSocket) readLoop(handler ReadMessageHandler) {
-	log.Debugln("Starting WS read loop")
+	log.Debugln("Starting WebSocket read loop")
 	for {
 		_, bytesMessage, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Errorln("WS read error:", err)
+			log.Errorln("WebSocket read error:", err)
 			c.terminateWriteLoop <- true
 
 			select {
@@ -71,7 +71,7 @@ func (c *WebSocket) readLoop(handler ReadMessageHandler) {
 			}
 
 			<-c.resumeReadLoop
-			log.Debugln("Resumed WS read loop")
+			log.Debugln("Resumed WebSocket read loop")
 			go c.writeLoop()
 			continue
 		}
@@ -81,7 +81,7 @@ func (c *WebSocket) readLoop(handler ReadMessageHandler) {
 }
 
 func (c *WebSocket) writeLoop() {
-	log.Debugln("Starting WS write loop")
+	log.Debugln("Starting WebSocket write loop")
 	for {
 		select {
 		case message := <-c.send:
@@ -96,7 +96,7 @@ func (c *WebSocket) writeLoop() {
 				}
 			}
 
-			log.Errorln("WS write error:", err)
+			log.Errorln("WebSocket write error:", err)
 
 			select {
 			case c.reconnect <- true:
@@ -105,10 +105,10 @@ func (c *WebSocket) writeLoop() {
 			}
 
 			<-c.resumeWriteLoop
-			log.Debugln("Resumed WS write loop")
+			log.Debugln("Resumed WebSocket write loop")
 
 		case <-c.terminateWriteLoop:
-			log.Debugln("Exiting WS write loop")
+			log.Debugln("Exiting WebSocket write loop")
 			return
 		}
 	}
@@ -120,18 +120,18 @@ func (c *WebSocket) reconnectLoop() {
 		<-c.reconnect
 
 		if c.conn != nil {
-			log.Println("Closing WS connection")
+			log.Println("Closing WebSocket connection")
 			c.conn.Close()
 		}
 
 		err := c.connect(reconnectingAttempts)
 
 		if err != nil {
-			log.Errorf("Error reconnecting WS: %s", err)
+			log.Errorf("Error reconnecting WebSocket: %s", err)
 			return // TODO - what to do here?
 		}
 
-		log.Println("Re-connected WS")
+		log.Println("Re-connected WebSocket")
 
 		select {
 		case c.resumeReadLoop <- true:
@@ -174,5 +174,4 @@ func (c *WebSocket) connect(totalAttempts int) (err error) {
 		log.Printf("%s, reconnecting in %s", err, d)
 		time.Sleep(d)
 	}
-	return
 }
