@@ -1,6 +1,12 @@
 package commands
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -27,9 +33,27 @@ func NewRootCmd() *cobra.Command {
 
 			log.SetLevel(level)
 
-			log.SetFormatter(&log.TextFormatter{
-				ForceColors: true,
-			})
+			formatter := &log.TextFormatter{}
+
+			if runtime.GOOS == "windows" {
+				formatter.ForceColors = true
+			}
+
+			if os.Getenv("PGLET_LOG_TO_FILE") == "true" {
+				logPath := "/var/log/pglet.log"
+				if runtime.GOOS == "windows" {
+					logPath = filepath.Join(os.TempDir(), "pglet.log")
+				}
+				pathMap := lfshook.PathMap{
+					logrus.InfoLevel:  logPath,
+					logrus.ErrorLevel: logPath,
+				}
+				log.AddHook(lfshook.NewHook(
+					pathMap,
+					&log.TextFormatter{}))
+			}
+
+			log.SetFormatter(formatter)
 		},
 	}
 

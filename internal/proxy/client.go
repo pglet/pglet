@@ -82,6 +82,8 @@ func startProxyService(local bool) {
 	}
 
 	cmd := getDetachedCmd(execPath, arg)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PGLET_LOG_TO_FILE=true")
 
 	err := cmd.Start()
 
