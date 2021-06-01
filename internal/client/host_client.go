@@ -276,7 +276,7 @@ func (hc *HostClient) notifySession(rawPayload *json.RawMessage) error {
 	payload := new(page.SessionCreatedPayload)
 	json.Unmarshal(*rawPayload, payload)
 
-	log.Printf("Notify %s subscribers about new session %s\n", payload.PageName, payload.SessionID)
+	log.Printf("Notify %s subscribers about new session %s", payload.PageName, payload.SessionID)
 	select {
 	case hc.PageNewSessions(payload.PageName) <- payload.SessionID:
 		// Event sent to subscriber
