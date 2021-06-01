@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/pglet/pglet/internal/config"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -39,7 +40,7 @@ func NewRootCmd() *cobra.Command {
 				formatter.ForceColors = true
 			}
 
-			if os.Getenv("PGLET_LOG_TO_FILE") == "true" {
+			if os.Getenv(config.LogToFileFlag) == "true" {
 				logPath := "/var/log/pglet.log"
 				if runtime.GOOS == "windows" {
 					logPath = filepath.Join(os.TempDir(), "pglet.log")

@@ -2,10 +2,12 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/keegancsmith/rpc"
+	"github.com/pglet/pglet/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -83,7 +85,7 @@ func startProxyService(local bool) {
 
 	cmd := getDetachedCmd(execPath, arg)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "PGLET_LOG_TO_FILE=true")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=true", config.LogToFileFlag))
 
 	err := cmd.Start()
 
