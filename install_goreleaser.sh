@@ -1,2 +1,2 @@
-curl -fsSL https://appveyordownloads.blob.core.windows.net/misc/goreleaser-m1.tar.gz -o /tmp/goreleaser-m1.tar.gz
-sudo tar zxf /tmp/goreleaser-m1.tar.gz -C /usr/local/bin
+curl -fsSL https://github.com/goreleaser/goreleaser/releases/download/v0.165.0/goreleaser_Linux_x86_64.tar.gz -o /tmp/goreleaser_Linux_x86_64.tar.gz
+sudo tar zxf /tmp/goreleaser_Linux_x86_64.tar.gz -C /usr/local/bin
