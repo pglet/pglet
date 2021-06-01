@@ -225,7 +225,7 @@ func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
 	go func() {
 		select {
 		case <-time.After((waitAppTimeoutSeconds + 1) * time.Second):
-			log.Debugln("App page has become inactive:", pageName)
+			log.Println("App page has become inactive:", pageName)
 			delete(ps.appTimers, key)
 			ps.handleInactiveApp(pageName, serverURL)
 		case <-canceled:
@@ -236,7 +236,7 @@ func (ps *Service) handleAppTimeout(pageName string, serverURL string) {
 }
 
 func (ps *Service) handleInactiveApp(pageName string, serverURL string) {
-	log.Debugln("Handling inactive app page:", pageName)
+	log.Println("Handling inactive app page:", pageName)
 
 	hc, err := ps.getHostClient(serverURL)
 	if err != nil {
