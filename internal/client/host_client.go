@@ -101,15 +101,24 @@ func (hc *HostClient) reconnectHandler(success bool) {
 
 	if success {
 		// resubscribe pages/apps
-		hc.pagesLock.Lock()
-		defer hc.pagesLock.Unlock()
+		log.Println("Re-subscribing to pages/apps on re-connect...")
 		for _, pr := range hc.pages {
-			hc.Call(context.Background(), page.RegisterHostClientAction, pr.RegistrationRequest)
+			_, err := hc.RegisterPage(context.Background(), pr.RegistrationRequest)
+			if err != nil {
+				log.Errorf("error registering page/app: %s", err)
+			}
 		}
 	}
 }
 
 func (hc *HostClient) RegisterPage(ctx context.Context, request *page.RegisterHostClientRequestPayload) (*page.RegisterHostClientResponsePayload, error) {
+
+	if request.IsApp {
+		log.Printf("Registering app: %s", request.PageName)
+	} else {
+		log.Printf("Registering page: %s", request.PageName)
+	}
+
 	// call server
 	result := hc.Call(ctx, page.RegisterHostClientAction, request)
 
