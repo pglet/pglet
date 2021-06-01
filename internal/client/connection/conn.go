@@ -1,8 +1,9 @@
 package connection
 
 type ReadMessageHandler func(message []byte) error
+type ReconnectHandler func(success bool)
 
 type Conn interface {
-	Start(handler ReadMessageHandler) (err error)
+	Start(readHandler ReadMessageHandler, reconnectHandler ReconnectHandler) (err error)
 	Send(message []byte)
 }

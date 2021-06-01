@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -17,30 +18,33 @@ import (
 	"github.com/pglet/pglet/internal/page/connection"
 	"github.com/pglet/pglet/internal/pubsub"
 	"github.com/pglet/pglet/internal/store"
+	"github.com/pglet/pglet/internal/utils"
 )
 
 type ClientRole string
 
 const (
-	None                    ClientRole = "None"
-	WebClient                          = "Web"
-	HostClient                         = "Host"
-	pageNotFoundMessage                = "Page not found or application is not running."
-	inactiveAppMessage                 = "Application is inactive. Please try refreshing this page later."
-	signinRequiredMessage              = "signin_required"
-	clientExpirationSeconds            = 20
+	None                         ClientRole = "None"
+	WebClient                               = "Web"
+	HostClient                              = "Host"
+	pageNotFoundMessage                     = "Page not found or application is not running."
+	inactiveAppMessage                      = "Application is inactive. Please try refreshing this page later."
+	signinRequiredMessage                   = "signin_required"
+	clientRefreshIntervalSeconds            = 5
+	clientExpirationSeconds                 = 30
 )
 
 type Client struct {
-	id           string
-	role         ClientRole
-	conn         connection.Conn
-	clientIP     string
-	principal    *auth.SecurityPrincipal
-	subscription chan []byte
-	sessions     map[string]*model.Session
-	pages        map[string]*model.Page
-	done         chan bool
+	id                   string
+	role                 ClientRole
+	conn                 connection.Conn
+	clientIP             string
+	principal            *auth.SecurityPrincipal
+	subscription         chan []byte
+	sessions             map[string]*model.Session
+	pages                map[string]*model.Page
+	exitSubscribe        chan bool
+	exitExtendExpiration chan bool
 }
 
 func autoID() string {
@@ -49,50 +53,55 @@ func autoID() string {
 
 func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPrincipal) *Client {
 	c := &Client{
-		id:        autoID(),
-		conn:      conn,
-		clientIP:  clientIP,
-		principal: principal,
-		sessions:  make(map[string]*model.Session),
-		pages:     make(map[string]*model.Page),
-		done:      make(chan bool, 1),
+		id:                   autoID(),
+		conn:                 conn,
+		clientIP:             clientIP,
+		principal:            principal,
+		sessions:             make(map[string]*model.Session),
+		pages:                make(map[string]*model.Page),
+		exitExtendExpiration: make(chan bool),
 	}
-
-	log.Println("Client IP:", clientIP)
-
-	go c.subscribe()
-	go c.extendExpiration()
 
 	go func() {
 		conn.Start(c.readHandler)
-		c.done <- true
 		c.unregister()
 	}()
 
-	log.Debugf("New Client %s is connected, total: %d\n", c.id, 0)
+	log.Debugf("New WebSocket client connected from %s: %s", clientIP, c.id)
 
 	return c
 }
 
-func (c *Client) subscribe() {
-	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
-	for {
-		select {
-		case msg, more := <-c.subscription:
-			if !more {
-				return
-			}
-			c.send(msg)
-		case <-c.done:
-			return
-		}
-	}
-}
+func (c *Client) register(role ClientRole) {
 
-func (c *Client) extendExpiration() {
-	for {
-		select {
-		case <-time.After(time.Duration(clientExpirationSeconds-2) * time.Second):
+	if c.role != "" {
+		return
+	}
+
+	log.Printf("Registering %s client: %s", role, c.id)
+
+	c.role = role
+
+	// subscribe PubSub
+	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
+	go func() {
+		for {
+			select {
+			case msg, more := <-c.subscription:
+				if !more {
+					log.Debugln("Exit subscribe():", c.id)
+					return
+				}
+				c.send(msg)
+			}
+		}
+	}()
+
+	// run sliding expiration
+	go func() {
+		ticker := time.NewTicker(time.Duration(clientRefreshIntervalSeconds) * time.Second)
+		defer ticker.Stop()
+		for {
 			// extend client expiration
 			store.SetClientExpiration(c.id, time.Now().Add(time.Duration(clientExpirationSeconds)*time.Second))
 
@@ -103,10 +112,15 @@ func (c *Client) extendExpiration() {
 					h.extendExpiration()
 				}
 			}
-		case <-c.done:
-			return
+
+			select {
+			case <-ticker.C:
+			case <-c.exitExtendExpiration:
+				log.Debugln("Exit extendExpiration():", c.id)
+				return
+			}
 		}
-	}
+	}()
 }
 
 func (c *Client) readHandler(message []byte) error {
@@ -150,15 +164,12 @@ func (c *Client) send(message []byte) {
 }
 
 func (c *Client) registerWebClient(message *Message) {
-	log.Println("Registering as web client")
-	payload := new(RegisterWebClientRequestPayload)
-	json.Unmarshal(message.Payload, payload)
-
-	// assign client role
-	c.role = WebClient
+	log.Println("registerWebClient()")
+	request := new(RegisterWebClientRequestPayload)
+	json.Unmarshal(message.Payload, request)
 
 	// subscribe as web client
-	page := store.GetPageByName(payload.PageName)
+	page := store.GetPageByName(request.PageName)
 
 	response := &RegisterWebClientResponsePayload{
 		Error: "",
@@ -186,9 +197,13 @@ func (c *Client) registerWebClient(message *Message) {
 			}
 
 			var sessionCreated bool
-			if payload.SessionID != "" {
+			if request.SessionID != "" {
+				sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP)
+				if err != nil {
+					log.Errorf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
+				}
 				// lookup for existing session
-				session = store.GetSession(page, payload.SessionID)
+				session = store.GetSession(page, sessionID)
 			}
 
 			// create new session
@@ -198,12 +213,13 @@ func (c *Client) registerWebClient(message *Message) {
 					goto response
 				}
 
-				session = newSession(page, uuid.New().String(), c.clientIP, payload.PageHash)
+				session = newSession(page, uuid.New().String(), c.clientIP, request.PageHash)
 				sessionCreated = true
 			} else {
 				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
 			}
 
+			c.register(WebClient)
 			c.registerSession(session)
 
 			if sessionCreated {
@@ -314,13 +330,19 @@ func (c *Client) registerWebClient(message *Message) {
 			// shared page
 			// retrieve zero session
 			session = store.GetSession(page, ZeroSession)
+			c.register(WebClient)
 			c.registerSession(session)
 
 			log.Debugf("Connected to zero session of %s page\n", page.Name)
 		}
 
+		sessionID, err := c.encryptSensitiveData(session.ID, c.clientIP)
+		if err != nil {
+			log.Errorf("error encrypting session.ID: %s", err)
+		}
+
 		response.Session = &SessionPayload{
-			ID:       session.ID,
+			ID:       sessionID,
 			Controls: store.GetAllSessionControls(session),
 		}
 	}
@@ -332,40 +354,49 @@ response:
 }
 
 func (c *Client) registerHostClient(message *Message) {
-	responsePayload := &RegisterHostClientResponsePayload{
-		SessionID: "",
-		PageName:  "",
-		Error:     "",
-	}
 
 	var err error
 	var page *model.Page
 	var pageName *model.PageName
 
-	log.Println("Registering as host client")
-	payload := new(RegisterHostClientRequestPayload)
-	json.Unmarshal(message.Payload, payload)
+	log.Println("registerHostClient()")
+	request := new(RegisterHostClientRequestPayload)
+	json.Unmarshal(message.Payload, request)
+
+	if request.HostClientID != "" {
+		hostClientID, err := c.decryptSensitiveData(request.HostClientID, c.clientIP)
+		if err != nil {
+			log.Errorf("error decrypting request.HostClientID %s from %s: %s", request.HostClientID, c.clientIP, err)
+		}
+		if hostClientID != "" && c.id != hostClientID {
+			log.Printf("Updating host client ID to %s", hostClientID)
+			c.id = hostClientID
+		}
+	}
+
+	response := &RegisterHostClientResponsePayload{
+		SessionID: "",
+		PageName:  "",
+		Error:     "",
+	}
 
 	if !config.AllowRemoteHostClients() && c.clientIP != "" {
 		err = fmt.Errorf("Remote host clients are not allowed")
 		goto response
-	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != payload.AuthToken {
+	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != request.AuthToken {
 		err = fmt.Errorf("Invalid auth token")
 		goto response
 	}
 
-	// assign client role
-	c.role = HostClient
-
-	pageName, err = model.ParsePageName(payload.PageName)
+	pageName, err = model.ParsePageName(request.PageName)
 	if err != nil {
 		goto response
 	}
 
-	responsePayload.PageName = pageName.String()
+	response.PageName = pageName.String()
 
 	// retrieve page and then create if not exists
-	page = store.GetPageByName(responsePayload.PageName)
+	page = store.GetPageByName(response.PageName)
 
 	if page == nil {
 		if pagesRateLimitReached(c.clientIP) {
@@ -380,30 +411,32 @@ func (c *Client) registerHostClient(message *Message) {
 		}
 
 		// create new page
-		page = model.NewPage(responsePayload.PageName, payload.IsApp, payload.Permissions, c.clientIP)
+		page = model.NewPage(response.PageName, request.IsApp, request.Permissions, c.clientIP)
 		store.AddPage(page)
 	}
 
-	// make sure unath client has access to a given page
+	// make sure unauth client has access to a given page
 	if config.CheckPageIP() && page.ClientIP != c.clientIP {
 		err = errors.New("Page name is already taken")
 		goto response
 	}
 
 	// update page permissions
-	if page.Permissions != payload.Permissions {
-		page.Permissions = payload.Permissions
+	if page.Permissions != request.Permissions {
+		page.Permissions = request.Permissions
 		store.UpdatePage(page)
 	}
 
 	// convert page to app
-	if !page.IsApp && payload.IsApp {
-		page.IsApp = payload.IsApp
+	if !page.IsApp && request.IsApp {
+		page.IsApp = request.IsApp
 		store.UpdatePage(page)
 
 		// delete zero session
 		store.DeleteSession(page.ID, ZeroSession)
 	}
+
+	c.register(HostClient)
 
 	if !page.IsApp {
 		// retrieve zero session
@@ -412,7 +445,7 @@ func (c *Client) registerHostClient(message *Message) {
 			session = newSession(page, ZeroSession, c.clientIP, "")
 		}
 		c.registerSession(session)
-		responsePayload.SessionID = session.ID
+		response.SessionID = session.ID
 	} else {
 		// register host client as an app server
 		c.registerPage(page)
@@ -421,10 +454,40 @@ func (c *Client) registerHostClient(message *Message) {
 response:
 
 	if err != nil {
-		responsePayload.Error = err.Error()
+		response.Error = err.Error()
+	} else {
+		hostClientID, err := c.encryptSensitiveData(c.id, c.clientIP)
+		if err != nil {
+			log.Errorf("error encrypting c.id: %s", err)
+		}
+		response.HostClientID = hostClientID
 	}
 
-	c.send(NewMessageData(message.ID, "", responsePayload))
+	c.send(NewMessageData(message.ID, "", response))
+}
+
+func (c *Client) encryptSensitiveData(data string, clientIP string) (string, error) {
+	result, err := utils.EncryptWithMasterKey([]byte(data + "|" + clientIP))
+	if err != nil {
+		return "", err
+	}
+	return utils.EncodeBase64(result), nil
+}
+
+func (c *Client) decryptSensitiveData(encrypted string, clientIP string) (string, error) {
+	bytes, err := utils.DecodeBase64(encrypted)
+	if err != nil {
+		return "", err
+	}
+	plain, err := utils.DecryptWithMasterKey(bytes)
+	if err != nil {
+		return "", err
+	}
+	pair := strings.Split(string(plain), "|")
+	if pair[1] != clientIP {
+		return "", errors.New("IP address does not match")
+	}
+	return pair[0], nil
 }
 
 func (c *Client) executeCommandFromHostClient(message *Message) {
@@ -607,25 +670,8 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 	page, ok := c.pages[payload.PageName]
 	if ok {
 		c.unregisterPage(page)
-	}
-}
 
-func (c *Client) registerPage(page *model.Page) {
-
-	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
-
-	store.AddPageHostClient(page.ID, c.id)
-	c.pages[page.Name] = page
-}
-
-func (c *Client) unregisterPage(page *model.Page) {
-	log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
-
-	store.RemovePageHostClient(page.ID, c.id)
-	delete(c.pages, page.Name)
-
-	// delete app sessions
-	if page.IsApp {
+		// delete app sessions
 		go func() {
 			clients := make([]string, 0)
 			for _, sessionID := range store.GetPageHostClientSessions(page.ID, c.id) {
@@ -667,6 +713,21 @@ func (c *Client) unregisterPage(page *model.Page) {
 	}
 }
 
+func (c *Client) registerPage(page *model.Page) {
+
+	log.Printf("Registering host client %s to handle '%s' sessions", c.id, page.Name)
+
+	store.AddPageHostClient(page.ID, c.id)
+	c.pages[page.Name] = page
+}
+
+func (c *Client) unregisterPage(page *model.Page) {
+	log.Printf("Unregistering host client %s from '%s' page", c.id, page.Name)
+
+	store.RemovePageHostClient(page.ID, c.id)
+	delete(c.pages, page.Name)
+}
+
 func (c *Client) registerSession(session *model.Session) {
 
 	log.Printf("Registering %v client %s to session %s:%s", c.role, c.id, session.Page.Name, session.ID)
@@ -684,10 +745,18 @@ func (c *Client) registerSession(session *model.Session) {
 
 func (c *Client) unregister() {
 
-	log.Printf("Unregistering client %s (%d sessions)", c.id, len(c.sessions))
+	log.Debugf("WebSocket client disconnected from %s: %s", c.clientIP, c.id)
+
+	if c.role == "" {
+		return
+	}
+
+	log.Printf("Unregistering %s client %s (%d sessions)", c.role, c.id, len(c.sessions))
 
 	// unsubscribe from pubsub
 	pubsub.Unsubscribe(c.subscription)
+
+	c.exitExtendExpiration <- true
 
 	// unregister from all sessions
 	for _, session := range c.sessions {

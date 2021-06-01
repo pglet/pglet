@@ -2,11 +2,12 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/keegancsmith/rpc"
+	"github.com/pglet/pglet/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,11 +83,9 @@ func startProxyService(local bool) {
 		arg = "server"
 	}
 
-	cmd := exec.Command(execPath, arg)
-
-	//if runtime.GOOS == "windows" {
-	//cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}
-	//}
+	cmd := getDetachedCmd(execPath, arg)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=true", config.LogToFileFlag))
 
 	err := cmd.Start()
 
