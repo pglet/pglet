@@ -86,7 +86,7 @@ func DeletePage(pageID int) {
 	}
 	cache.Remove(fmt.Sprintf(pageHostClientsKey, page.ID))
 	cache.Remove(fmt.Sprintf(pageKey, pageID))
-	cache.Remove(pagesKey, page.Name)
+	cache.HashRemove(pagesKey, page.Name)
 }
 
 //
