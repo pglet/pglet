@@ -285,7 +285,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimID
 		}
 
 		for k, v := range batchItem.command.Attrs {
-			if !model.IsSystemAttr(k) {
+			if !model.IsSystemAttr(k) && v != "" {
 				batchItem.control.SetAttr(k, v)
 			}
 		}

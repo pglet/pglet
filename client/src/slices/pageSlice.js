@@ -119,7 +119,17 @@ const changePropsInternal = (state, allProps) => {
     allProps.forEach(props => {
         const ctrl = state.controls[props.i];
         if (ctrl) {
-            Object.assign(ctrl, props)
+            Object.getOwnPropertyNames(props).forEach(propName => {
+                if (propName === 'i') {
+                    return
+                }
+                let v = props[propName]
+                if (v === null || v === '') {
+                    delete ctrl[propName]
+                } else {
+                    ctrl[propName] = v
+                }
+            })
         }
     })    
 }

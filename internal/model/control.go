@@ -43,7 +43,13 @@ func (ctl *Control) GetAttr(name string) interface{} {
 }
 
 func (ctl *Control) SetAttr(name string, value interface{}) {
-	(*ctl)[name] = value
+	if sval, ok := value.(string); ok {
+		if sval != "" {
+			(*ctl)[name] = sval
+		} else {
+			delete((*ctl), name)
+		}
+	}
 }
 
 func (ctl *Control) AppendAttr(name string, value string) {
