@@ -46,6 +46,7 @@ func NewRootCmd() *cobra.Command {
 					logPath = filepath.Join(os.TempDir(), "pglet.log")
 				}
 				pathMap := lfshook.PathMap{
+					logrus.DebugLevel: logPath,
 					logrus.InfoLevel:  logPath,
 					logrus.ErrorLevel: logPath,
 				}
