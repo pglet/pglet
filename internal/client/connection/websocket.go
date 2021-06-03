@@ -10,27 +10,41 @@ import (
 
 const (
 	reconnectingAttempts = 30
+
+	// Time allowed to write a message to the peer.
+	//writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	//pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = 60 * time.Second
+
+	// Wait time for pong response
+	pongTimeout = 5 * time.Second
 )
 
 type WebSocket struct {
 	wsURL              string
 	conn               *websocket.Conn
 	send               chan []byte
-	reconnect          chan bool
+	startReconnect     chan bool
 	resumeReadLoop     chan bool
 	resumeWriteLoop    chan bool
 	terminateWriteLoop chan bool
 	reconnectHandler   ReconnectHandler
+	pongReceived       chan bool
 }
 
 func NewWebSocket(wsURL string) *WebSocket {
 	cws := &WebSocket{
 		wsURL:              wsURL,
-		reconnect:          make(chan bool),
+		startReconnect:     make(chan bool),
 		resumeReadLoop:     make(chan bool),
 		resumeWriteLoop:    make(chan bool),
 		terminateWriteLoop: make(chan bool),
 		send:               make(chan []byte),
+		pongReceived:       make(chan bool),
 	}
 	return cws
 }
@@ -62,13 +76,14 @@ func (c *WebSocket) readLoop(handler ReadMessageHandler) {
 		_, bytesMessage, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Errorln("WebSocket read error:", err)
-			c.terminateWriteLoop <- true
 
 			select {
-			case c.reconnect <- true:
+			case c.terminateWriteLoop <- true:
 			default:
-				// reconnect is in progress
+				// already terminated
 			}
+
+			c.reconnect()
 
 			<-c.resumeReadLoop
 			log.Debugln("Resumed WebSocket read loop")
@@ -82,6 +97,11 @@ func (c *WebSocket) readLoop(handler ReadMessageHandler) {
 
 func (c *WebSocket) writeLoop() {
 	log.Debugln("Starting WebSocket write loop")
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		log.Debugln("Exiting WebSocket write loop")
+		ticker.Stop()
+	}()
 	for {
 		select {
 		case message := <-c.send:
@@ -97,27 +117,50 @@ func (c *WebSocket) writeLoop() {
 			}
 
 			log.Errorln("WebSocket write error:", err)
-
-			select {
-			case c.reconnect <- true:
-			default:
-				// reconnect is in progress
-			}
+			c.reconnect()
 
 			<-c.resumeWriteLoop
 			log.Debugln("Resumed WebSocket write loop")
 
+		case <-ticker.C:
+			log.Debugln("Sending Ping")
+
+			pongTimeout := time.NewTimer(pongTimeout)
+			go func() {
+				select {
+				case <-pongTimeout.C:
+					// re-connect
+					log.Warnln("Pong receiving timeout")
+					c.reconnect()
+				case <-c.pongReceived:
+					// cancel
+					log.Println("Pong received")
+				}
+			}()
+
+			//c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Errorf("Error sending WebSocket PING message: %v", err)
+				return
+			}
 		case <-c.terminateWriteLoop:
-			log.Debugln("Exiting WebSocket write loop")
 			return
 		}
+	}
+}
+
+func (c *WebSocket) reconnect() {
+	select {
+	case c.startReconnect <- true:
+	default:
+		// reconnect is in progress
 	}
 }
 
 func (c *WebSocket) reconnectLoop() {
 
 	for {
-		<-c.reconnect
+		<-c.startReconnect
 
 		if c.conn != nil {
 			log.Println("Closing WebSocket connection")
@@ -165,7 +208,16 @@ func (c *WebSocket) connect(totalAttempts int) (err error) {
 		log.Printf("Connecting via WebSockets to %s (attempt %d of %d)", c.wsURL, attempt, totalAttempts)
 		c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
 
-		if err == nil || attempt == totalAttempts {
+		if err == nil {
+			c.conn.SetPongHandler(func(string) error {
+				c.pongReceived <- true
+				return nil
+			})
+			return
+		}
+
+		if attempt == totalAttempts {
+			log.Printf("Failed to re-connect after %d attempts", totalAttempts)
 			return
 		}
 
