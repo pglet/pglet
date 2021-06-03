@@ -12,16 +12,13 @@ const (
 	reconnectingAttempts = 30
 
 	// Time allowed to write a message to the peer.
-	//writeWait = 10 * time.Second
+	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	//pongWait = 60 * time.Second
+	pongWait = 60 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = 60 * time.Second
-
-	// Wait time for pong response
-	pongTimeout = 5 * time.Second
+	pingPeriod = (pongWait * 9) / 10
 )
 
 type WebSocket struct {
@@ -33,7 +30,6 @@ type WebSocket struct {
 	resumeWriteLoop    chan bool
 	terminateWriteLoop chan bool
 	reconnectHandler   ReconnectHandler
-	pongReceived       chan bool
 }
 
 func NewWebSocket(wsURL string) *WebSocket {
@@ -44,7 +40,6 @@ func NewWebSocket(wsURL string) *WebSocket {
 		resumeWriteLoop:    make(chan bool),
 		terminateWriteLoop: make(chan bool),
 		send:               make(chan []byte),
-		pongReceived:       make(chan bool),
 	}
 	return cws
 }
@@ -105,6 +100,7 @@ func (c *WebSocket) writeLoop() {
 	for {
 		select {
 		case message := <-c.send:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err == nil {
 				_, err = w.Write(message)
@@ -124,23 +120,9 @@ func (c *WebSocket) writeLoop() {
 
 		case <-ticker.C:
 			log.Debugln("Sending Ping")
-
-			pongTimeout := time.NewTimer(pongTimeout)
-			go func() {
-				select {
-				case <-pongTimeout.C:
-					// re-connect
-					log.Warnln("Pong receiving timeout")
-					c.reconnect()
-				case <-c.pongReceived:
-					// cancel
-					log.Println("Pong received")
-				}
-			}()
-
-			//c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Errorf("Error sending WebSocket PING message: %v", err)
+				log.Errorf("Error sending WebSocket Ping message: %v", err)
 				return
 			}
 		case <-c.terminateWriteLoop:
@@ -209,8 +191,10 @@ func (c *WebSocket) connect(totalAttempts int) (err error) {
 		c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
 
 		if err == nil {
+			c.conn.SetReadDeadline(time.Now().Add(pongWait))
 			c.conn.SetPongHandler(func(string) error {
-				c.pongReceived <- true
+				log.Debugln("Pong received")
+				c.conn.SetReadDeadline(time.Now().Add(pongWait))
 				return nil
 			})
 			return
