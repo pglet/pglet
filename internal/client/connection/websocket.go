@@ -132,7 +132,7 @@ func (c *WebSocket) writeLoop() {
 					c.reconnect()
 				case <-c.pongReceived:
 					// cancel
-					log.Println("Pong received")
+					log.Debugln("Pong received")
 				}
 			}()
 
