@@ -34,11 +34,15 @@ func NewRootCmd() *cobra.Command {
 
 			log.SetLevel(level)
 
-			formatter := &log.TextFormatter{}
+			formatter := &log.TextFormatter{
+				FullTimestamp: true,
+			}
 
 			if runtime.GOOS == "windows" {
 				formatter.ForceColors = true
 			}
+
+			log.SetFormatter(formatter)
 
 			if os.Getenv(config.LogToFileFlag) == "true" {
 				logPath := "/var/log/pglet.log"
@@ -46,6 +50,7 @@ func NewRootCmd() *cobra.Command {
 					logPath = filepath.Join(os.TempDir(), "pglet.log")
 				}
 				pathMap := lfshook.PathMap{
+					logrus.DebugLevel: logPath,
 					logrus.InfoLevel:  logPath,
 					logrus.ErrorLevel: logPath,
 				}
@@ -53,8 +58,6 @@ func NewRootCmd() *cobra.Command {
 					pathMap,
 					&log.TextFormatter{}))
 			}
-
-			log.SetFormatter(formatter)
 		},
 	}
 

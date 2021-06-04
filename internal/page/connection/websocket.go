@@ -29,7 +29,7 @@ func NewWebSocket(conn *websocket.Conn) *WebSocket {
 	cws := &WebSocket{
 		conn: conn,
 		send: make(chan []byte, 10),
-		done: make(chan bool, 1),
+		done: make(chan bool),
 	}
 	return cws
 }
@@ -47,8 +47,9 @@ func (c *WebSocket) Send(message []byte) {
 
 func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 	defer func() {
-		c.done <- true
-		c.conn.Close()
+		log.Println("Exiting WebSocket read loop")
+		close(c.send)
+		c.close()
 	}()
 	c.conn.SetReadLimit(int64(config.MaxWebSocketMessageSize()))
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -68,7 +69,7 @@ func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 
 		err = readHandler(message)
 		if err != nil {
-			log.Errorf("error processing message: %v", err)
+			log.Errorf("error processing WebSocket message: %v", err)
 			break
 		}
 	}
@@ -77,40 +78,50 @@ func (c *WebSocket) readLoop(readHandler ReadMessageHandler) {
 func (c *WebSocket) writeLoop() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		log.Println("Exiting WebSocket write loop")
 		ticker.Stop()
-		c.conn.Close()
+		c.close()
 	}()
 	for {
 		select {
 		case message, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
+				log.Errorf("Error creating WebSocket message writer: %v", err)
 				return
 			}
-			w.Write(message)
-
-			// // Add queued messages to the current websocket message.
-			// n := len(c.send)
-			// for i := 0; i < n; i++ {
-			// 	w.Write(<-c.send)
-			// }
+			_, err = w.Write(message)
+			if err != nil {
+				log.Errorf("Error writing WebSocket message: %v", err)
+				return
+			}
 
 			if err := w.Close(); err != nil {
+				log.Errorf("Error closing WebSocket message writer: %v", err)
 				return
 			}
 		case <-ticker.C:
 			log.Traceln("send ping")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Errorf("Error sending WebSocket PING message: %v", err)
 				return
 			}
 		}
+	}
+}
+
+func (c *WebSocket) close() {
+	c.conn.Close()
+
+	select {
+	case c.done <- true:
+	default:
+		// no listeners
 	}
 }

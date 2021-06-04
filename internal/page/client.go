@@ -31,7 +31,7 @@ const (
 	inactiveAppMessage                      = "Application is inactive. Please try refreshing this page later."
 	signinRequiredMessage                   = "signin_required"
 	clientRefreshIntervalSeconds            = 5
-	clientExpirationSeconds                 = 30
+	clientExpirationSeconds                 = 120
 )
 
 type Client struct {
