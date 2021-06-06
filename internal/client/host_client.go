@@ -219,7 +219,7 @@ func (hc *HostClient) RegisterPipeClient(pc *PipeClient) error {
 }
 
 func (hc *HostClient) UnregisterPipeClient(pc *PipeClient) {
-	log.Debugf("Unregister pipe client for %s:%s\n", pc.pageName, pc.sessionID)
+	log.Debugf("Unregister pipe client for %s:%s", pc.pageName, pc.sessionID)
 
 	hc.pagesLock.Lock()
 	defer hc.pagesLock.Unlock()
@@ -250,22 +250,21 @@ func (hc *HostClient) broadcastPageEvent(rawPayload *json.RawMessage) error {
 		return err
 	}
 
+	clients := make([]*PipeClient, 0)
+
 	hc.pagesLock.RLock()
-	defer hc.pagesLock.RUnlock()
-
-	pr, ok := hc.pages[payload.PageName]
-	if !ok {
-		return nil
-	}
-
-	// iterate through all session pipe clients
-	sessionClients, ok := pr.Sessions[payload.SessionID]
-	if ok {
-		for client := range sessionClients {
-			eventMessage := fmt.Sprintf("%s %s %s",
-				payload.EventTarget, payload.EventName, payload.EventData)
-			client.emitEvent(eventMessage)
+	if pr, ok := hc.pages[payload.PageName]; ok {
+		if sessionClients, ok := pr.Sessions[payload.SessionID]; ok {
+			for client := range sessionClients {
+				clients = append(clients, client)
+			}
 		}
+	}
+	hc.pagesLock.RUnlock()
+
+	// send event to clients
+	for _, client := range clients {
+		client.emitEvent(fmt.Sprintf("%s %s %s", payload.EventTarget, payload.EventName, payload.EventData))
 	}
 
 	return nil
@@ -306,8 +305,7 @@ func (hc *HostClient) CloseAppClients(pageName string) {
 	clients := make([]*PipeClient, 0)
 
 	hc.pagesLock.Lock()
-	pr, ok := hc.pages[pageName]
-	if ok {
+	if pr, ok := hc.pages[pageName]; ok {
 		for _, sessionClients := range pr.Sessions {
 			for client := range sessionClients {
 				clients = append(clients, client)

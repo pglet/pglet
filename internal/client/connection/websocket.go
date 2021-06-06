@@ -17,8 +17,11 @@ const (
 	// Wait time for pong response
 	pongTimeout = 5 * time.Second
 
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
 	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = 50 * time.Second
+	pingPeriod = (pongWait * 9) / 10
 )
 
 type WebSocket struct {
@@ -207,7 +210,9 @@ func (c *WebSocket) connect(totalAttempts int) (err error) {
 		c.conn, _, err = websocket.DefaultDialer.Dial(c.wsURL, nil)
 
 		if err == nil {
+			c.conn.SetReadDeadline(time.Now().Add(pongWait))
 			c.conn.SetPongHandler(func(string) error {
+				c.conn.SetReadDeadline(time.Now().Add(pongWait))
 				c.pongReceived <- true
 				return nil
 			})
