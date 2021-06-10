@@ -116,7 +116,7 @@ type ReplacePageControlsPayload struct {
 }
 
 type UpdateControlPropsPayload struct {
-	Props []map[string]interface{} `json:"props"`
+	Props []map[string]string `json:"props"`
 }
 
 type AppendControlPropsPayload struct {

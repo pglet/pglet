@@ -280,7 +280,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimID
 		affectedParents[parentID] = true
 
 		if parentAt != -1 {
-			batchItem.control.SetAttr("at", parentAt)
+			batchItem.control.SetAttr("at", strconv.Itoa(parentAt))
 			topParentAt++
 		}
 
@@ -426,7 +426,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 	}
 
 	payload := &UpdateControlPropsPayload{
-		Props: make([]map[string]interface{}, 0, 0),
+		Props: make([]map[string]string, 0, 0),
 	}
 
 	for _, batchCmd := range batch {
@@ -451,7 +451,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 			}
 		}
 
-		props := make(map[string]interface{})
+		props := make(map[string]string)
 		props["i"] = id
 
 		// set control properties, except system ones
@@ -738,12 +738,12 @@ func (h *sessionHandler) signout(cmd *command.Command) (result string, err error
 	return "", nil
 }
 
-func (h *sessionHandler) updateControlProps(props []map[string]interface{}) error {
+func (h *sessionHandler) updateControlProps(props []map[string]string) error {
 	sl := h.lockSession()
 	defer sl.Unlock()
 
 	for _, p := range props {
-		id := p["i"].(string)
+		id := p["i"]
 		if ctrl := h.getControl(id); ctrl != nil {
 
 			// patch control properties
