@@ -2,7 +2,7 @@ import { Theme, isDark, createTheme, IStyle } from '@fluentui/react';
 import { BaseSlots, ThemeGenerator, themeRulesStandardCreator } from '@fluentui/react/lib/ThemeGenerator';
 
 export const lightThemeColor = {
-    primary: '#8e16c9',
+    primary: '#4e00e4',
     text: '#020203',
     background: '#ffffff'
 }
@@ -15,14 +15,14 @@ export const darkThemeColor = {
 
 export function buildTheme(standardTheme:any, themePrimaryColor:any, themeTextColor:any, themeBackgroundColor:any) : Theme {
 
-    let primaryColor = darkThemeColor.primary;
-    let textColor = darkThemeColor.text;
-    let backgroundColor = darkThemeColor.background;
+    let primaryColor = lightThemeColor.primary;
+    let textColor = lightThemeColor.text;
+    let backgroundColor = lightThemeColor.background;
 
-    if (standardTheme && standardTheme.toLowerCase() === 'light') {
-        primaryColor = lightThemeColor.primary;
-        textColor = lightThemeColor.text;
-        backgroundColor = lightThemeColor.background;
+    if (standardTheme && standardTheme.toLowerCase() === 'dark') {
+        primaryColor = darkThemeColor.primary;
+        textColor = darkThemeColor.text;
+        backgroundColor = darkThemeColor.background;
     }
 
     if (themePrimaryColor) {
