@@ -209,6 +209,14 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimID
 	}
 
 	// sub-commands
+	for _, childCmd := range cmd.Commands {
+		childCmd.Name = "add"
+		batch = append(batch, &addCommandBatchItem{
+			command: childCmd,
+		})
+	}
+
+	// non-parsed sub-commands
 	for _, line := range cmd.Lines {
 		if utils.WhiteSpaceOnly(line) {
 			continue
@@ -412,6 +420,12 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 	}
 
 	// sub-commands
+	for _, childCmd := range cmd.Commands {
+		childCmd.Name = "set"
+		batch = append(batch, childCmd)
+	}
+
+	// non-parsed sub-commands
 	for _, line := range cmd.Lines {
 		if utils.WhiteSpaceOnly(line) {
 			continue
@@ -494,6 +508,12 @@ func (h *sessionHandler) appendHandlerInternal(cmd *command.Command) (result *Ap
 	}
 
 	// sub-commands
+	for _, childCmd := range cmd.Commands {
+		childCmd.Name = "append"
+		batch = append(batch, childCmd)
+	}
+
+	// non-parsed sub-commands
 	for _, line := range cmd.Lines {
 		if utils.WhiteSpaceOnly(line) {
 			continue
