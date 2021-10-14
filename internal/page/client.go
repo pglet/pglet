@@ -31,7 +31,7 @@ const (
 	inactiveAppMessage                      = "Application is inactive. Please try refreshing this page later."
 	signinRequiredMessage                   = "signin_required"
 	clientRefreshIntervalSeconds            = 5
-	clientExpirationSeconds                 = 120
+	clientExpirationSeconds                 = 20
 )
 
 type Client struct {
@@ -63,8 +63,8 @@ func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPr
 	}
 
 	go func() {
-		conn.Start(c.readHandler)
-		c.unregister()
+		normalClosure := conn.Start(c.readHandler)
+		c.unregister(normalClosure)
 	}()
 
 	log.Debugf("New WebSocket client connected from %s: %s", clientIP, c.id)
@@ -673,7 +673,7 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 
 		// delete app sessions
 		go func() {
-			clients := make([]string, 0)
+			webClients := make([]string, 0)
 			for _, sessionID := range store.GetPageHostClientSessions(page.ID, c.id) {
 				session := &model.Session{
 					Page: page,
@@ -683,7 +683,7 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 
 				sessionClients := store.GetSessionWebClients(session.Page.ID, session.ID)
 				for _, clientID := range sessionClients {
-					clients = append(clients, clientID)
+					webClients = append(webClients, clientID)
 					store.RemoveSessionWebClient(session.Page.ID, session.ID, clientID)
 				}
 
@@ -701,14 +701,7 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 				store.DeletePage(page.ID)
 			}
 
-			for _, clientID := range clients {
-				log.Debugln("Notify client which app become inactive:", clientID)
-
-				msg := NewMessageData("", AppBecomeInactiveAction, &AppBecomeInactivePayload{
-					Message: inactiveAppMessage,
-				})
-				pubsub.Send(clientChannelName(clientID), msg)
-			}
+			notifyInactiveWebClients(webClients)
 		}()
 	}
 }
@@ -743,9 +736,9 @@ func (c *Client) registerSession(session *model.Session) {
 	h.extendExpiration()
 }
 
-func (c *Client) unregister() {
+func (c *Client) unregister(normalClosure bool) {
 
-	log.Debugf("WebSocket client disconnected from %s: %s", c.clientIP, c.id)
+	log.Debugf("WebSocket client disconnected (normal closure=%t) from %s: %s", normalClosure, c.clientIP, c.id)
 
 	if c.role == "" {
 		return
@@ -772,6 +765,11 @@ func (c *Client) unregister() {
 	// unregister from all pages
 	for _, page := range c.pages {
 		c.unregisterPage(page)
+	}
+
+	// expire client immediately
+	if normalClosure {
+		deleteExpiredClient(c.id)
 	}
 }
 
