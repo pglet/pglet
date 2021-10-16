@@ -48,7 +48,7 @@ Response:
 The message is sent to a host client when a new app session is started.
 
 ```json
-"id": "",
+"id": "", // always empty
 "action": "sessionCreated",
 "payload": {
     "pageName": "",
@@ -67,15 +67,18 @@ Request from a host client:
     "pageName": "",
     "sessionID": "",
     "command": {
-        "Indent": 0,
-        "Name": "add" // mandatory command name
-        "Values": ["value_1", "value_2", ...],
-        "Attrs": {
+        "indent": 0,
+        "name": "add" // mandatory command name
+        "values": ["value_1", "value_2", ...],
+        "attrs": {
             "attr_1": "value_1",
             "attr_2": "value_2",
             ...
-        }
-        "Lines": ["line1", ...]
+        },
+        "lines": ["line1", ...],
+        "commands": [
+            // sub-commands
+        ]        
     }
 }
 ```
@@ -103,15 +106,18 @@ Request from a host client:
     "sessionID": "",
     "commands": [
         {
-            "Indent": 0,
-            "Name": "add"
-            "Values": ["value_1", "value_2", ...],
-            "Attrs": {
+            "indent": 0,
+            "name": "add"
+            "values": ["value_1", "value_2", ...],
+            "attrs": {
                 "attr_1": "value_1",
                 "attr_2": "value_2",
                 ...
             }
-            "Lines": ["line1", ...]
+            "lines": ["line1", ...],
+            "commands": [
+                // sub-commands
+            ]
         },
         ...
     ]
