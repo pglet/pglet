@@ -23,8 +23,6 @@ builds:
     ignore:
       - goos: windows
         goarch: arm
-      - goos: windows
-        goarch: arm64
 
 dockers:
   -
@@ -42,7 +40,7 @@ dockers:
 
     skip_push: true
     dockerfile: Dockerfile
-    use_buildx: true
+    use: buildx
 
     # Template of the docker build flags.
     build_flag_templates:
