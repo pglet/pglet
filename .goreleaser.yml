@@ -38,12 +38,12 @@ builds:
 
 dockers:
   -
+    ids:
+    - pglet-server
+    
     goos: linux
     goarch: amd64
     goarm: ''
-
-    ids:
-    - pglet-server
 
     image_templates:
     - "pglet/server:latest"
