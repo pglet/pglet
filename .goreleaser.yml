@@ -69,12 +69,12 @@ archives:
     id: pglet-server-tars    
     builds:
     - pglet-server
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
   -
     id: pglet-tars    
     builds:
     - pglet
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"    
+    name_template: "pglet-{{ .Version }}-{{ .Os }}-{{ .Arch }}"    
 
 release:
   prerelease: auto
