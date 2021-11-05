@@ -4,6 +4,7 @@ builds:
   # server
   - id: pglet-server
     main: cmd/pglet-server/main.go
+    binary: pglet-server
     env:
       - CGO_ENABLED=0  
     flags:
@@ -18,6 +19,7 @@ builds:
   # CLI
   - id: pglet
     main: cmd/pglet/main.go
+    binary: pglet
     env:
       - CGO_ENABLED=0  
     flags:
@@ -63,8 +65,16 @@ dockers:
     - "--platform=linux/amd64"
 
 archives:
-  - id: zip
+  -
+    id: pglet-server-tars    
+    builds:
+    - pglet-server
     name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+  -
+    id: pglet-tars    
+    builds:
+    - pglet
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"    
 
 release:
   prerelease: auto
