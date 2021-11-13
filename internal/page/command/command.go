@@ -56,11 +56,12 @@ var (
 )
 
 type Command struct {
-	Indent int
-	Name   string // mandatory command name
-	Values []string
-	Attrs  map[string]string
-	Lines  []string
+	Indent   int
+	Name     string // mandatory command name
+	Values   []string
+	Attrs    map[string]string
+	Lines    []string
+	Commands []*Command
 }
 
 type CommandMetadata struct {

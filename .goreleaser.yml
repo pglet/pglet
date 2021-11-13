@@ -1,39 +1,49 @@
 project_name: pglet
 
 builds:
-  - id: pglet
-    main: cmd/pglet/main.go
+  # server
+  - id: pglet-server
+    main: cmd/pglet-server/main.go
+    binary: pglet-server
     env:
       - CGO_ENABLED=0  
     flags:
       - -tags=release
     ldflags: >
       -X github.com/pglet/pglet/internal/commands.version={{.Version}}
-      -X github.com/pglet/pglet/internal/commands.commit={{.ShortCommit}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+  # CLI
+  - id: pglet
+    main: cmd/pglet/main.go
+    binary: pglet
+    env:
+      - CGO_ENABLED=0  
+    flags:
+      - -tags=release
+    ldflags: >
+      -X github.com/pglet/pglet/internal/commands.version={{.Version}}
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm
       - arm64
     goarm:
       - 7
-    ignore:
-      - goos: windows
-        goarch: arm
-      - goos: windows
-        goarch: arm64
 
 dockers:
   -
+    ids:
+    - pglet-server
+    
     goos: linux
     goarch: amd64
     goarm: ''
-
-    ids:
-    - pglet
 
     image_templates:
     - "pglet/server:latest"
@@ -42,7 +52,7 @@ dockers:
 
     skip_push: true
     dockerfile: Dockerfile
-    use_buildx: true
+    use: buildx
 
     # Template of the docker build flags.
     build_flag_templates:
@@ -55,14 +65,16 @@ dockers:
     - "--platform=linux/amd64"
 
 archives:
-  - id: binary
-    format: binary
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-  - id: zip
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        format: zip    
+  -
+    id: pglet-server-tars    
+    builds:
+    - pglet-server
+    name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+  -
+    id: pglet-tars    
+    builds:
+    - pglet
+    name_template: "pglet-{{ .Version }}-{{ .Os }}-{{ .Arch }}"    
 
 release:
   prerelease: auto

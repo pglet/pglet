@@ -13,11 +13,11 @@ import (
 
 func RunBackgroundTasks(ctx context.Context) {
 	log.Println("Starting background tasks...")
-	go CleanupPagesAndSessions()
-	go CleanupExpiredClients()
+	go cleanupPagesAndSessions()
+	go cleanupExpiredClients()
 }
 
-func CleanupPagesAndSessions() {
+func cleanupPagesAndSessions() {
 	log.Println("Start background task to cleanup old pages and sessions")
 
 	ticker := time.NewTicker(10 * time.Second)
@@ -58,7 +58,7 @@ func CleanupPagesAndSessions() {
 	}
 }
 
-func CleanupExpiredClients() {
+func cleanupExpiredClients() {
 	log.Println("Start background task to cleanup expired clients")
 
 	ticker := time.NewTicker(20 * time.Second)
@@ -67,19 +67,24 @@ func CleanupExpiredClients() {
 
 		clients := store.GetExpiredClients()
 		for _, clientID := range clients {
-			log.Debugln("Delete expired client:", clientID)
-			webClients := store.DeleteExpiredClient(clientID)
-
-			go func() {
-				for _, clientID := range webClients {
-					log.Debugln("Notify client which app become inactive:", clientID)
-
-					msg := NewMessageData("", AppBecomeInactiveAction, &AppBecomeInactivePayload{
-						Message: inactiveAppMessage,
-					})
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
-			}()
+			deleteExpiredClient(clientID)
 		}
+	}
+}
+
+func deleteExpiredClient(clientID string) {
+	log.Debugln("Delete expired client:", clientID)
+	webClients := store.DeleteExpiredClient(clientID)
+	go notifyInactiveWebClients(webClients)
+}
+
+func notifyInactiveWebClients(webClients []string) {
+	for _, clientID := range webClients {
+		log.Debugln("Notify client which app become inactive:", clientID)
+
+		msg := NewMessageData("", AppBecomeInactiveAction, &AppBecomeInactivePayload{
+			Message: inactiveAppMessage,
+		})
+		pubsub.Send(clientChannelName(clientID), msg)
 	}
 }

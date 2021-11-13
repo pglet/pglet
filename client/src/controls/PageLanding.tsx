@@ -36,7 +36,7 @@ export const PageLanding = () => {
     }
 
     React.useEffect(() => {
-        updateTheme('dark');
+        updateTheme('light');
         ws.registerWebClient(fullPageName, getWindowHash());
 
     }, [fullPageName, ws])

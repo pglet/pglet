@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/pglet/pglet/internal/utils"
 )
@@ -60,9 +61,11 @@ func (ctl *Control) ID() string {
 }
 
 func (ctl *Control) At() int {
-	at, ok := (*ctl)["at"].(int)
-	if ok {
-		return at
+	at, ok := (*ctl)["at"].(string)
+	if ok && len(at) > 0 {
+		if a, err := strconv.Atoi(at); err == nil {
+			return a
+		}
 	}
 	return -1
 }

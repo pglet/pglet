@@ -17,10 +17,10 @@ func NewLocal(readCh chan []byte, writeCh chan []byte) *Local {
 	return cws
 }
 
-func (c *Local) Start(handler ReadMessageHandler) {
+func (c *Local) Start(handler ReadMessageHandler) bool {
 	// start read loop
 	go c.readLoop(handler)
-	<-c.done
+	return <-c.done
 }
 
 func (c *Local) readLoop(readHandler ReadMessageHandler) {

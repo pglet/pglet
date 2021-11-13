@@ -126,6 +126,7 @@ func GetClientSessions(clientID string) []string {
 }
 
 func DeleteExpiredClient(clientID string) []string {
+	cache.SortedSetRemove(clientsExpiredKey, clientID)
 	clients := make([]string, 0)
 	for _, fullSessionID := range GetClientSessions(clientID) {
 		pageID, sessionID := model.ParseSessionID(fullSessionID)
