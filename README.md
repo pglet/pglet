@@ -1,8 +1,8 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/1y807vxsh8s6ia2k/branch/master?svg=true)](https://ci.appveyor.com/project/pglet/pglet/branch/master)
 
-# Pglet - Web UI framework for backend developers
+# Pglet - Web UI framework for back-end developers
 
-Build web apps like a frontend pro in the language you already know. No knowledge of HTML, CSS or JavaScript required.
+Build web apps like a front-end pro in the language you already know. No knowledge of HTML, CSS or JavaScript is required.
 
 ## What is Pglet
 
@@ -51,11 +51,11 @@ and instantly make your app available on the web!
 
 ## How it works
 
-Pglet UI does not become embedded into your program, but is being served by an out-of-process Pglet server. Application state and control flow logic lives in your persistent-process program while UI changes and events are communicated to Pglet server via IPC-based [protocol](https://pglet.io/docs/reference/protocol). It allows writing web app as a standalone monolith without any knowledge of request/response model, routing, templating or state management. Pglet server can be run locally, self-hosted in your local network or used as a [hosted service](https://pglet.io/docs/pglet-service).
+Pglet UI does not become embedded into your program but is served by an out-of-process Pglet server. Application state and control flow logic lives in your persistent-process program while communicating UI changes and events to the Pglet server via IPC-based [protocol](https://pglet.io/docs/reference/protocol). It allows writing web app as a standalone monolith without knowledge of the request/response model, routing, templating, or state management. Pglet server can be run locally, self-hosted in your local network or as a [hosted service](https://pglet.io/docs/pglet-service).
 
-In a classic client-server architecture front-end communicates to a one or more back-end services. Pglet implements an opposite approach where multiple back-end services scattered across internal network behind a firewall and communicate to a centralized Pglet web server, i.e. front-end service, installed in DMZ or [hosted as a service](https://pglet.io/docs/pglet-service). This design gives a number of advantages:
+In a classic client-server architecture, the front-end communicates to one or more back-end services. Pglet implements an opposite approach where multiple back-end services are scattered across an internal network behind a firewall and communicate to a centralized Pglet web server, i.e., front-end service, installed in DMZ or [hosted as a service](https://pglet.io/docs/pglet-service). This design gives several advantages:
 
-* Secure by design - your internal services and critical data stay behind the firewall and not accessible from the outside world.
+* Secure by design - your internal services and critical data stay behind the firewall and are not accessible from the outside world.
 * Apps running next to services and data they process - faster/cheaper access and maximum security.
 * Zero deployment - run apps on any server in your network or your development machine, no need to deploy apps to a web server.
 
