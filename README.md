@@ -8,7 +8,7 @@ Build web apps like a front-end pro in the language you already know. No knowled
 
 Pglet (*"piglet"*) is a rich user interface (UI) framework for scripts and programs written in any language. [Python](https://pglet.io/docs/tutorials/python), [Bash](https://pglet.io/docs/tutorials/bash), [PowerShell](https://pglet.io/docs/tutorials/powershell) and [Node.js](https://pglet.io/docs/tutorials/node) are already supported and other languages can be easily added via [Pglet protocol](https://pglet.io/docs/reference/protocol).
 
-Pglet renders web UI, so you can easily build web apps with your favorite language. Knowledge of HTML/CSS/JavaScript is not required as you build UI with [controls](https://pglet.io/docs/reference/controls). Pglet controls are built with [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
+Pglet renders web UI, so you can easily build web apps with your favorite language. Knowledge of HTML/CSS/JavaScript is not required as you build UI with [controls](https://pglet.io/docs/controls). Pglet controls are built with [Fluent UI React](https://developer.microsoft.com/en-us/fluentui#/controls/web) to ensure your programs look cool and professional.
 
 ## Hello world in Bash
 
