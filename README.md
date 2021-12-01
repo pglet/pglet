@@ -22,7 +22,7 @@ Create `hello.sh` with the following contents:
 
 ```bash
 . pglet.sh
-pglet_page
+PGLET_LOCAL=true pglet_page
 pglet_add "text value='Hello, world!'"
 ```
 
@@ -32,11 +32,11 @@ Run `sh hello.sh` and in a new browser window you'll get:
 
 Here is a page served by a local instance of Pglet server started in the background on your computer.
 
-Now, add `PGLET_WEB=true` before `pglet_page`:
+Now, remove `PGLET_LOCAL=true` before `pglet_page`:
 
 ```bash
 . pglet.sh
-PGLET_WEB=true pglet_page
+pglet_page
 pglet_add "text value='Hello, world!'"
 ```
 
