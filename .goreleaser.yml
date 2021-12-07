@@ -76,10 +76,6 @@ archives:
     builds:
     - pglet-server
     name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-  - id: pglet-server-zips
-    builds:
-    - pglet-server
-    name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip
