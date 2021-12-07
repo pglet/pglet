@@ -19,7 +19,6 @@ require (
 	github.com/gosimple/slug v1.9.0
 	github.com/jpillora/backoff v1.0.0
 	github.com/keegancsmith/rpc v1.3.0
-	github.com/pglet/npipe v0.0.0-20200920205735-40be968c9c38
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
@@ -30,5 +29,4 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	google.golang.org/api v0.47.0 // indirect
 	google.golang.org/genproto v0.0.0-20210518161634-ec7691c0a37d
-	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
