@@ -13,8 +13,14 @@ builds:
       -X github.com/pglet/pglet/internal/commands.version={{.Version}}
     goos:
       - linux
+      - darwin
+      - windows
     goarch:
       - amd64
+      - arm
+      - arm64
+    goarm:
+      - 7      
 
   # CLI
   - id: pglet
