@@ -1,12 +1,9 @@
+//go:build !windows
+
 package commands
 
 import (
 	"github.com/spf13/cobra"
-)
-
-var (
-	version  = "unknown"
-	LogLevel string
 )
 
 func NewClientRootCmd() *cobra.Command {

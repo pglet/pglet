@@ -1,3 +1,5 @@
+//go:build !windows
+
 package connection
 
 type ReadMessageHandler func(message []byte) error

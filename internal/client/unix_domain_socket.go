@@ -1,3 +1,5 @@
+//go:build !windows
+
 package client
 
 import (
@@ -14,7 +16,6 @@ import (
 
 const (
 	coreFxSocketPrefix = "CoreFxPipe_"
-	readsize           = 64 << 10
 )
 
 type unixDomainSocket struct {
