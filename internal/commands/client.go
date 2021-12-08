@@ -1,18 +1,20 @@
-//go:build !windows
-
 package commands
 
 import (
 	"sync"
 
+	"github.com/alexflint/go-filemutex"
 	"github.com/pglet/pglet/internal/cache"
 	"github.com/pglet/pglet/internal/config"
 	"github.com/pglet/pglet/internal/proxy"
 	"github.com/pglet/pglet/internal/server"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 func newClientCommand() *cobra.Command {
+
+	var serverPort int
 
 	var cmd = &cobra.Command{
 		Use:   "client",
@@ -25,7 +27,7 @@ func newClientCommand() *cobra.Command {
 			if err != nil {
 				log.Fatalln("Cannot create mutex - directory did not exist or file could not be created")
 			}
-		
+
 			err = m.TryLock()
 			if err != nil {
 				log.Fatalln("Another Pglet Server process has already started")
@@ -43,6 +45,8 @@ func newClientCommand() *cobra.Command {
 			waitGroup.Wait()
 		},
 	}
+
+	cmd.Flags().IntVarP(&serverPort, "port", "p", config.ServerPort(), "port on which the server will listen")
 
 	return cmd
 }
