@@ -15,7 +15,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/alexflint/go-filemutex"
 	"github.com/keegancsmith/rpc"
 	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/internal/page"
@@ -28,13 +27,11 @@ const (
 )
 
 var (
-	sockAddr     string
-	lockFilename string
+	sockAddr string
 )
 
 func init() {
 	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
-	lockFilename = filepath.Join(os.TempDir(), "pglet.lock")
 }
 
 // Service manages connections to a shared page or app.
@@ -258,18 +255,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	log.Println("Starting Client service...")
 
-	m, err := filemutex.New(lockFilename)
-	if err != nil {
-		log.Fatalln("Directory did not exist or file could not be created")
-	}
-
-	err = m.TryLock()
-	if err != nil {
-		log.Fatalln("Another Client service process has started")
-	}
-
-	defer m.Unlock()
-
 	if err := os.RemoveAll(sockAddr); err != nil {
 		log.Fatal(err)
 	}
@@ -304,7 +289,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		cancel()
 	}()
 
-	if err = srv.Shutdown(ctxShutDown); err != nil {
+	if err := srv.Shutdown(ctxShutDown); err != nil {
 		log.Fatalf("Client service shutdown failed:%+s", err)
 	}
 

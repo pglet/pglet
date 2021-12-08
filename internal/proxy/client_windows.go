@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package proxy
@@ -7,7 +8,7 @@ import (
 	"syscall"
 )
 
-func getDetachedCmd(name string, arg ...string) *exec.Cmd {
+func GetDetachedCmd(name string, arg ...string) *exec.Cmd {
 	cmd := exec.Command(name, arg...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
