@@ -1,1 +1,0 @@
-go install %GO_TAGS% github.com/pglet/pglet/cmd/pglet-server

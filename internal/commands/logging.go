@@ -11,11 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	version  = "unknown"
-	LogLevel string
-)
-
 func configLogging() {
 
 	level := log.FatalLevel // default logging level

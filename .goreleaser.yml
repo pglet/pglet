@@ -1,10 +1,9 @@
 project_name: pglet
 
 builds:
-  # server
-  - id: pglet-server
-    main: cmd/pglet-server/main.go
-    binary: pglet-server
+  - id: pglet
+    main: cmd/pglet/main.go
+    binary: pglet
     env:
       - CGO_ENABLED=0  
     flags:
@@ -20,32 +19,12 @@ builds:
       - arm
       - arm64
     goarm:
-      - 7      
-
-  # CLI
-  - id: pglet
-    main: cmd/pglet/main.go
-    binary: pglet
-    env:
-      - CGO_ENABLED=0  
-    flags:
-      - -tags=release
-    ldflags: >
-      -X github.com/pglet/pglet/internal/commands.version={{.Version}}
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-      - arm
-      - arm64
-    goarm:
       - 7
 
 dockers:
   -
     ids:
-    - pglet-server
+    - pglet
     
     goos: linux
     goarch: amd64
@@ -72,18 +51,13 @@ dockers:
 
 archives:
   -
-    id: pglet-server-tars
+    id: pglet-tars
     builds:
-    - pglet-server
+    - pglet
     name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
-  -
-    id: pglet-tars    
-    builds:
-    - pglet
-    name_template: "pglet-{{ .Version }}-{{ .Os }}-{{ .Arch }}"    
+        format: zip 
 
 release:
   prerelease: auto

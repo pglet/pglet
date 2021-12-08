@@ -1,5 +1,3 @@
-//go:build !windows
-
 package client
 
 type pipe interface {
