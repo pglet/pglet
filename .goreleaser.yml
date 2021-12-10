@@ -9,7 +9,7 @@ builds:
     flags:
       - -tags=release
     ldflags: >
-      -X github.com/pglet/pglet/internal/commands.version={{.Version}}
+      -w -X github.com/pglet/pglet/internal/commands.version={{.Version}}
     goos:
       - linux
       - darwin
@@ -50,11 +50,16 @@ dockers:
     - "--platform=linux/amd64"
 
 archives:
+  - id: pglet-binaries
+    builds:
+    - pglet  
+    format: binary
+    name_template: "pglet-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
   -
     id: pglet-tars
     builds:
     - pglet
-    name_template: "pglet-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "pglet-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip 
