@@ -9,7 +9,7 @@ builds:
     flags:
       - -tags=release
     ldflags: >
-      -w -X github.com/pglet/pglet/internal/commands.version={{.Version}}
+      -s -w -X github.com/pglet/pglet/internal/commands.version={{.Version}}
     goos:
       - linux
       - darwin
