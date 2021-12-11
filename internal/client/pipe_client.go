@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"runtime"
 	"strings"
@@ -41,7 +40,7 @@ func NewPipeClient(pageName string, sessionID string, hc *HostClient, uds bool, 
 	if uds && runtime.GOOS != "windows" {
 		p, err = newUnixDomainSocket(id)
 	} else {
-		err = errors.New("Pglet client unsupported platform: " + runtime.GOOS)
+		p, err = newNamedPipe(id)
 	}
 
 	if err != nil {
