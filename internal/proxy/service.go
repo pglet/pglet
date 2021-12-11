@@ -1,3 +1,5 @@
+//go:build !windows
+
 package proxy
 
 import (
@@ -8,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -25,14 +26,6 @@ const (
 	pgletIoURL            = "https://console.pglet.io"
 	waitAppTimeoutSeconds = 5
 )
-
-var (
-	sockAddr string
-)
-
-func init() {
-	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
-}
 
 // Service manages connections to a shared page or app.
 type Service struct {

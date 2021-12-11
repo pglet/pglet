@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/keegancsmith/rpc"
@@ -17,7 +18,12 @@ const (
 
 var (
 	browserOpened = false
+	sockAddr      string
 )
+
+func init() {
+	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
+}
 
 type Client struct {
 	client *rpc.Client
