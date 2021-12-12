@@ -380,7 +380,7 @@ func (c *Client) registerHostClient(message *Message) {
 		Error:     "",
 	}
 
-	if !config.AllowRemoteHostClients() && c.clientIP != "" {
+	if !config.AllowRemoteHostClients() && c.clientIP != "" && c.clientIP != "::1" && c.clientIP != "127.0.0.1" {
 		err = fmt.Errorf("Remote host clients are not allowed")
 		goto response
 	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != request.AuthToken {
