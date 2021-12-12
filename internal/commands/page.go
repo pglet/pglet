@@ -14,7 +14,7 @@ import (
 
 func newPageCommand() *cobra.Command {
 
-	var local bool
+	var web bool
 	var server string
 	var token string
 	var permissions string
@@ -39,7 +39,7 @@ func newPageCommand() *cobra.Command {
 
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
 				PageName:       pageName,
-				Local:          local,
+				Web:            web,
 				Server:         server,
 				Token:          token,
 				Permissions:    permissions,
@@ -61,7 +61,7 @@ func newPageCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&local, "local", "", false, "run the page on the local instance of Pglet server")
+	cmd.Flags().BoolVarP(&web, "web", "", false, "run the page on the hosted Pglet service")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&permissions, "permissions", "", "", "comma-separated list of users and groups allowed to access this app")

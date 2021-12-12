@@ -66,7 +66,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	ps.handleAppTimeout(pageName, serverURL)
 
@@ -321,9 +321,9 @@ func buildWSEndPointURL(serverURL string) string {
 	return u.String()
 }
 
-func getServerURL(local bool, server string) (string, error) {
+func getServerURL(web bool, server string) (string, error) {
 
-	if server == "" && !local {
+	if server == "" && web {
 		return pgletIoURL, nil
 	} else if server == "" {
 		return "", nil
