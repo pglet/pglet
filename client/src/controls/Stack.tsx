@@ -25,8 +25,8 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     // stack props
     const stackProps: IStackProps = {
-        horizontal: control.horizontal ? control.horizontal : false,
-        verticalFill: control.verticalfill ? control.verticalfill : false,
+        horizontal: isTrue(control.horizontal),
+        verticalFill: isTrue(control.verticalfill),
         // horizontalAlign: control.horizontalalign ? control.horizontalalign : "start",
         // verticalAlign: control.verticalalign ? control.verticalalign : "start",
         wrap: isTrue(control.wrap),
