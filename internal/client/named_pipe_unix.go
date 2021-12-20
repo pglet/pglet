@@ -1,4 +1,4 @@
-// +build !windows
+//go:build !windows
 
 package client
 
@@ -10,10 +10,6 @@ import (
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	readsize = 64 << 10
 )
 
 type namedPipe struct {

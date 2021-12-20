@@ -42,6 +42,27 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
 
   React.useEffect(() => {
 
+    // handle resize
+    let resizeTimeout:any = null;
+    function handleResize() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        //console.log("window size:", window.innerHeight, window.innerWidth);
+        const payload: any = [{
+          i: "page",
+          width: String(window.innerWidth)
+        },
+        {
+          i: "page",
+          height: String(window.innerHeight)
+        }];
+    
+        dispatch(changeProps(payload));
+        ws.updateControlProps(payload);
+        ws.pageEventFromWeb("page", 'resize', hash);
+      }, 250)
+    }
+
     // theme
     updateTheme(control.theme, control.themeprimarycolor, control.themetextcolor, control.themebackgroundcolor);
     
@@ -58,9 +79,11 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
     }
 
     window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener("resize", handleResize);
     }
     // eslint-disable-next-line
   }, [control, ws]);

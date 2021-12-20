@@ -51,7 +51,8 @@ type addCommandBatchItem struct {
 }
 
 // NewSession creates a new instance of Session.
-func newSession(page *model.Page, id string, clientIP string, pageHash string) *model.Session {
+func newSession(page *model.Page, id string, clientIP string,
+	pageHash string, pageWidth string, pageHeight string) *model.Session {
 	s := &model.Session{}
 	s.Page = page
 	s.ID = id
@@ -62,6 +63,8 @@ func newSession(page *model.Page, id string, clientIP string, pageHash string) *
 	h := newSessionHandler(s)
 	p := model.NewControl("page", "", ReservedPageID)
 	p.SetAttr("hash", pageHash)
+	p.SetAttr("width", pageWidth)
+	p.SetAttr("height", pageHeight)
 	h.addControl(p)
 
 	return s

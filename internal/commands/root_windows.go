@@ -1,3 +1,5 @@
+//go:build windows
+
 package commands
 
 import (
@@ -6,10 +8,11 @@ import (
 
 var (
 	version  = "unknown"
+	commit   = "unknown"
 	LogLevel string
 )
 
-func NewClientRootCmd() *cobra.Command {
+func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pglet",
 		Short:   "Pglet",
@@ -24,9 +27,7 @@ func NewClientRootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "l", "info", "verbosity level for logs")
 
 	cmd.AddCommand(
-		newPageCommand(),
-		newAppCommand(),
-		newClientCommand(),
+		newServerCommand(),
 	)
 
 	return cmd

@@ -119,6 +119,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
             payload: {
                 pageName: pageName,
                 pageHash: pageHash,
+                pageWidth: String(window.innerWidth),
+                pageHeight: String(window.innerHeight),
                 sessionID: cookies.get(`sid-${pageName}#${pageHash}`)
             }
         }
@@ -145,7 +147,7 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
 
     const updateControlProps = (props: any) => {
 
-        //console.log("ws.updateControlProps()")
+        //console.log("ws.updateControlProps()", props)
         var msg = {
             action: "updateControlProps",
             payload: {

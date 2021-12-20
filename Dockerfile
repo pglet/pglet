@@ -2,5 +2,5 @@ FROM gcr.io/distroless/base
 ENV PGLET_SERVER_PORT=8080
 ENV PGLET_ALLOW_REMOTE_HOST_CLIENTS=true
 EXPOSE 8080
-COPY pglet-server /
-ENTRYPOINT [ "/pglet-server" ]
+COPY pglet /
+ENTRYPOINT [ "/pglet", "server" ]

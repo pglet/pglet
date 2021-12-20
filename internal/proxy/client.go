@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/keegancsmith/rpc"
@@ -17,7 +18,12 @@ const (
 
 var (
 	browserOpened = false
+	sockAddr      string
 )
+
+func init() {
+	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
+}
 
 type Client struct {
 	client *rpc.Client
@@ -25,7 +31,7 @@ type Client struct {
 
 type ConnectPageArgs struct {
 	PageName       string
-	Local          bool
+	Web            bool
 	Server         string
 	Token          string
 	Permissions    string
@@ -40,14 +46,14 @@ type ConnectPageResults struct {
 	PageURL  string
 }
 
-func (proxy *Client) Start(local bool) {
+func (proxy *Client) Start() {
 	var err error
 
 	for i := 1; i <= connectAttempts; i++ {
 		proxy.client, err = rpc.DialHTTP("unix", sockAddr)
 		if err != nil {
 			// start Proxy service
-			startProxyService(local)
+			startProxyService()
 			time.Sleep(200 * time.Millisecond)
 		} else {
 			return
@@ -72,18 +78,13 @@ func (proxy *Client) WaitAppSession(ctx context.Context, args *ConnectPageArgs) 
 	return
 }
 
-func startProxyService(local bool) {
+func startProxyService() {
 	log.Traceln("Starting Pglet server")
 
 	// run server
 	execPath, _ := os.Executable()
 
-	arg := "client"
-	if local {
-		arg = "server"
-	}
-
-	cmd := getDetachedCmd(execPath, arg)
+	cmd := GetDetachedCmd(execPath, "client")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=true", config.LogToFileFlag))
 

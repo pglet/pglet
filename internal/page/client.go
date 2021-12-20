@@ -213,7 +213,8 @@ func (c *Client) registerWebClient(message *Message) {
 					goto response
 				}
 
-				session = newSession(page, uuid.New().String(), c.clientIP, request.PageHash)
+				session = newSession(page, uuid.New().String(), c.clientIP,
+					request.PageHash, request.PageWidth, request.PageHeight)
 				sessionCreated = true
 			} else {
 				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
@@ -380,7 +381,7 @@ func (c *Client) registerHostClient(message *Message) {
 		Error:     "",
 	}
 
-	if !config.AllowRemoteHostClients() && c.clientIP != "" {
+	if !config.AllowRemoteHostClients() && c.clientIP != "" && c.clientIP != "::1" && c.clientIP != "127.0.0.1" {
 		err = fmt.Errorf("Remote host clients are not allowed")
 		goto response
 	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != request.AuthToken {
@@ -442,7 +443,7 @@ func (c *Client) registerHostClient(message *Message) {
 		// retrieve zero session
 		session := store.GetSession(page, ZeroSession)
 		if session == nil {
-			session = newSession(page, ZeroSession, c.clientIP, "")
+			session = newSession(page, ZeroSession, c.clientIP, "", "", "")
 		}
 		c.registerSession(session)
 		response.SessionID = session.ID

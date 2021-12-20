@@ -1,3 +1,5 @@
+//go:build !windows
+
 package proxy
 
 import (
@@ -8,14 +10,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/alexflint/go-filemutex"
 	"github.com/keegancsmith/rpc"
 	"github.com/pglet/pglet/internal/client"
 	"github.com/pglet/pglet/internal/page"
@@ -23,19 +23,9 @@ import (
 )
 
 const (
-	pgletIoURL            = "https://console.pglet.io"
+	pgletIoURL            = "https://app.pglet.io"
 	waitAppTimeoutSeconds = 5
 )
-
-var (
-	sockAddr     string
-	lockFilename string
-)
-
-func init() {
-	sockAddr = filepath.Join(os.TempDir(), "pglet.sock")
-	lockFilename = filepath.Join(os.TempDir(), "pglet.lock")
-}
 
 // Service manages connections to a shared page or app.
 type Service struct {
@@ -76,7 +66,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -125,7 +115,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	if err != nil {
 		return err
@@ -163,7 +153,7 @@ func (ps *Service) ConnectAppPage(ctx context.Context, args *ConnectPageArgs, re
 func (ps *Service) WaitAppSession(ctx context.Context, args *ConnectPageArgs, results *ConnectPageResults) error {
 
 	pageName := args.PageName
-	serverURL, err := getServerURL(args.Local, args.Server)
+	serverURL, err := getServerURL(args.Web, args.Server)
 
 	ps.handleAppTimeout(pageName, serverURL)
 
@@ -258,18 +248,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	log.Println("Starting Client service...")
 
-	m, err := filemutex.New(lockFilename)
-	if err != nil {
-		log.Fatalln("Directory did not exist or file could not be created")
-	}
-
-	err = m.TryLock()
-	if err != nil {
-		log.Fatalln("Another Client service process has started")
-	}
-
-	defer m.Unlock()
-
 	if err := os.RemoveAll(sockAddr); err != nil {
 		log.Fatal(err)
 	}
@@ -304,7 +282,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		cancel()
 	}()
 
-	if err = srv.Shutdown(ctxShutDown); err != nil {
+	if err := srv.Shutdown(ctxShutDown); err != nil {
 		log.Fatalf("Client service shutdown failed:%+s", err)
 	}
 
@@ -343,9 +321,9 @@ func buildWSEndPointURL(serverURL string) string {
 	return u.String()
 }
 
-func getServerURL(local bool, server string) (string, error) {
+func getServerURL(web bool, server string) (string, error) {
 
-	if server == "" && !local {
+	if server == "" && web {
 		return pgletIoURL, nil
 	} else if server == "" {
 		return "", nil

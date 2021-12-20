@@ -1,3 +1,5 @@
+//go:build !windows
+
 package client
 
 import (
@@ -18,6 +20,7 @@ import (
 const (
 	pageChangeEventPrefix = "page change"
 	pageCloseEvent        = "page close "
+	readsize              = 64 << 10
 )
 
 type PipeClient struct {
