@@ -75,9 +75,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup, serverPort int) {
 	router := gin.Default()
 
 	if config.TrustedProxies() != nil && len(config.TrustedProxies()) > 0 {
-		router.TrustedProxies = config.TrustedProxies()
-		log.Println("Trusted proxies:", router.TrustedProxies)
-		prepareTrustedCIDRs(router)
+		log.Println("Trusted proxies:", config.TrustedProxies())
+		router.SetTrustedProxies(config.TrustedProxies())
 	}
 
 	// force SSL
@@ -190,7 +189,7 @@ func websocketHandler(c *gin.Context) {
 	}
 
 	wsc := page_connection.NewWebSocket(conn)
-	page.NewClient(wsc, ClientIP(c), principal)
+	page.NewClient(wsc, c.ClientIP(), principal)
 }
 
 func getSecurityPrincipal(c *gin.Context) (*auth.SecurityPrincipal, error) {
@@ -204,7 +203,7 @@ func getSecurityPrincipal(c *gin.Context) (*auth.SecurityPrincipal, error) {
 		principal = store.GetSecurityPrincipal(principalID)
 		if principal == nil {
 			return nil, nil
-		} else if principal.ClientIP != ClientIP(c) || principal.UserAgentHash != utils.SHA1(c.Request.UserAgent()) {
+		} else if principal.ClientIP != c.ClientIP() || principal.UserAgentHash != utils.SHA1(c.Request.UserAgent()) {
 			log.Errorln("Principal not found or its IP address or User Agent do not match")
 			store.DeleteSecurityPrincipal(principalID)
 		} else {
