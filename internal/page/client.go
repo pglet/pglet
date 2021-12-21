@@ -67,7 +67,7 @@ func NewClient(conn connection.Conn, clientIP string, principal *auth.SecurityPr
 		c.unregister(normalClosure)
 	}()
 
-	log.Debugf("New WebSocket client connected from %s: %s", clientIP, c.id)
+	log.Printf("New WebSocket client connected from %s: %s", clientIP, c.id)
 
 	return c
 }

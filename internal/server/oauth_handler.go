@@ -94,7 +94,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		}
 
 		// create new principal and update its details from API
-		principal := auth.NewPrincipal(authProvider, ClientIP(c), c.Request.UserAgent(), state.GroupsEnabled)
+		principal := auth.NewPrincipal(authProvider, c.ClientIP(), c.Request.UserAgent(), state.GroupsEnabled)
 		principal.SetToken(token)
 		err = principal.UpdateDetails()
 
