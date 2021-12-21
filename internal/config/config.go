@@ -27,7 +27,7 @@ const (
 	defaultServerPort              = 5000
 	serverPort                     = "SERVER_PORT"
 	forceSSL                       = "FORCE_SSL"
-	defaultWebSocketMaxMessageSize = 65535
+	defaultWebSocketMaxMessageSize = 2097152 // 2 MB
 	wsMaxMessageSize               = "WS_MAX_MESSAGE_SIZE"
 
 	// pages/sessions
