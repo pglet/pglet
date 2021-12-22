@@ -160,7 +160,9 @@ func (h *sessionHandler) executeBatch(commands []*command.Command) (results []st
 	}
 
 	// broadcast all message to clients
-	h.broadcastCommandToWebClients(NewMessage("", PageControlsBatchAction, messages))
+	if len(messages) > 0 {
+		h.broadcastCommandToWebClients(NewMessage("", PageControlsBatchAction, messages))
+	}
 
 	return results, nil
 }

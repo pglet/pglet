@@ -59,7 +59,7 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
     
         dispatch(changeProps(payload));
         ws.updateControlProps(payload);
-        ws.pageEventFromWeb("page", 'resize', hash);
+        ws.pageEventFromWeb("page", 'resize', `${window.innerWidth} ${window.innerHeight}`);
       }, 250)
     }
 
