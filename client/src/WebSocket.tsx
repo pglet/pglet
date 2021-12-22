@@ -119,8 +119,8 @@ export const WebSocketProvider: React.FC<React.ReactNode> = ({children}) => {
             payload: {
                 pageName: pageName,
                 pageHash: pageHash,
-                pageWidth: String(window.innerWidth),
-                pageHeight: String(window.innerHeight),
+                winWidth: String(window.innerWidth),
+                winHeight: String(window.innerHeight),
                 sessionID: cookies.get(`sid-${pageName}#${pageHash}`)
             }
         }

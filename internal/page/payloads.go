@@ -49,11 +49,11 @@ type RegisterHostClientResponsePayload struct {
 }
 
 type RegisterWebClientRequestPayload struct {
-	PageName   string `json:"pageName"`
-	PageHash   string `json:"pageHash"`
-	PageWidth  string `json:"pageWidth"`
-	PageHeight string `json:"pageHeight"`
-	SessionID  string `json:"sessionID"`
+	PageName  string `json:"pageName"`
+	PageHash  string `json:"pageHash"`
+	WinWidth  string `json:"winWidth"`
+	WinHeight string `json:"winHeight"`
+	SessionID string `json:"sessionID"`
 }
 
 type RegisterWebClientResponsePayload struct {

@@ -175,7 +175,7 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
    },
     styles: {
       root: {
-        backgroundColor: 'red',
+        //backgroundColor: 'red',
         //width: control.width !== undefined ? control.width : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,

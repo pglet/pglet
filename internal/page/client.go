@@ -214,7 +214,7 @@ func (c *Client) registerWebClient(message *Message) {
 				}
 
 				session = newSession(page, uuid.New().String(), c.clientIP,
-					request.PageHash, request.PageWidth, request.PageHeight)
+					request.PageHash, request.WinWidth, request.WinHeight)
 				sessionCreated = true
 			} else {
 				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)

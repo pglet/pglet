@@ -50,11 +50,11 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
         //console.log("window size:", window.innerHeight, window.innerWidth);
         const payload: any = [{
           i: "page",
-          width: String(window.innerWidth)
+          win_width: String(window.innerWidth)
         },
         {
           i: "page",
-          height: String(window.innerHeight)
+          win_height: String(window.innerHeight)
         }];
     
         dispatch(changeProps(payload));
