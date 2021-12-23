@@ -180,69 +180,19 @@ func (c *Client) registerWebClient(message *Message) {
 	} else {
 		var session *model.Session
 
-		// check permissions
-		if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
-			log.Debugln("Required page permissions:", page.Permissions)
-			response.Error = signinRequiredMessage
-			response.SigninOptions = auth.GetSigninOptions(page.Permissions)
-			goto response
+		// func: check if "Sign in required" response should be sent
+		requireSignin := func() bool {
+			if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
+				log.Debugln("Required page permissions:", page.Permissions)
+				response.Error = signinRequiredMessage
+				response.SigninOptions = auth.GetSigninOptions(page.Permissions)
+				return true
+			}
+			return false
 		}
 
-		if page.IsApp {
-			// app page
-
-			if len(store.GetPageHostClients(page.ID)) == 0 {
-				response.Error = inactiveAppMessage
-				goto response
-			}
-
-			var sessionCreated bool
-			if request.SessionID != "" {
-				sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP)
-				if err != nil {
-					log.Errorf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
-				}
-				// lookup for existing session
-				session = store.GetSession(page, sessionID)
-			}
-
-			// create new session
-			if session == nil {
-				if sessionsRateLimitReached(c.clientIP) {
-					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
-					goto response
-				}
-
-				session = newSession(page, uuid.New().String(), c.clientIP,
-					request.PageHash, request.WinWidth, request.WinHeight)
-				sessionCreated = true
-			} else {
-				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
-			}
-
-			c.register(WebClient)
-			c.registerSession(session)
-
-			if sessionCreated {
-
-				// pick connected host client from page pool and notify about new session created
-				msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
-					PageName:  page.Name,
-					SessionID: session.ID,
-				})
-
-				// TODO
-				// pick first host client for now
-				// in the future we will implement load distribution algorithm
-				for _, clientID := range store.GetPageHostClients(page.ID) {
-					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
-					pubsub.Send(clientChannelName(clientID), msg)
-					break
-				}
-
-				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
-			}
-
+		// func: update session's principal and notify page of sign in/sign out events
+		updateSessionPrincipal := func() {
 			userProps := map[string]string{
 				"userid":       "",
 				"userlogin":    "",
@@ -264,14 +214,16 @@ func (c *Client) registerWebClient(message *Message) {
 				}
 			}
 
-			// update page's user details
-			pctl := store.GetSessionControl(session, "page")
-			for k, v := range userProps {
-				pctl.SetAttr(k, v)
-			}
-			store.SetSessionControl(session, pctl)
+			if session.PrincipalID != principalID && !(session.PrincipalID == "" && principalID == "") {
 
-			if session.PrincipalID != principalID {
+				log.Debugf("Updating session principal for %s:%s\n", page.Name, session.ID)
+
+				pctl := store.GetSessionControl(session, "page")
+				for k, v := range userProps {
+					pctl.SetAttr(k, v)
+				}
+				store.SetSessionControl(session, pctl)
+
 				// update session's principal
 				store.SetSessionPrincipalID(session, principalID)
 
@@ -326,9 +278,82 @@ func (c *Client) registerWebClient(message *Message) {
 					pubsub.Send(clientChannelName(clientID), msg)
 				}
 			}
+		}
+
+		if page.IsApp {
+			// app page
+
+			if len(store.GetPageHostClients(page.ID)) == 0 {
+				response.Error = inactiveAppMessage
+				goto response
+			}
+
+			// lookup for existing session
+			if request.SessionID != "" {
+				if sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP); err == nil {
+					session = store.GetSession(page, sessionID)
+				} else {
+					log.Errorf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
+				}
+			}
+
+			var sessionCreated bool
+
+			if session == nil {
+				// create new session
+				if sessionsRateLimitReached(c.clientIP) {
+					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
+					goto response
+				}
+
+				if requireSignin() {
+					goto response
+				}
+
+				session = newSession(page, uuid.New().String(), c.clientIP,
+					request.PageHash, request.WinWidth, request.WinHeight)
+				sessionCreated = true
+			} else {
+				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
+
+				updateSessionPrincipal()
+
+				if requireSignin() {
+					goto response
+				}
+			}
+
+			c.register(WebClient)
+			c.registerSession(session)
+
+			if sessionCreated {
+				// pick connected host client from page pool and notify about new session created
+				msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
+					PageName:  page.Name,
+					SessionID: session.ID,
+				})
+
+				// TODO
+				// pick first host client for now
+				// in the future we will implement load distribution algorithm
+				for _, clientID := range store.GetPageHostClients(page.ID) {
+					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
+					pubsub.Send(clientChannelName(clientID), msg)
+					break
+				}
+
+				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
+
+				updateSessionPrincipal()
+			}
 
 		} else {
 			// shared page
+
+			if requireSignin() {
+				goto response
+			}
+
 			// retrieve zero session
 			session = store.GetSession(page, ZeroSession)
 			c.register(WebClient)
