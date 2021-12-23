@@ -2,13 +2,13 @@ import { Theme, isDark, createTheme, IStyle } from '@fluentui/react';
 import { BaseSlots, ThemeGenerator, themeRulesStandardCreator } from '@fluentui/react/lib/ThemeGenerator';
 
 export const lightThemeColor = {
-    primary: '#4e00e4',
+    primary: '#6529d6',
     text: '#020203',
     background: '#ffffff'
 }
 
 export const darkThemeColor = {
-    primary: '#cd75ff',
+    primary: '#8f87ff',
     text: '#cdd0d4',
     background: '#24292e'
 }
