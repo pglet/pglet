@@ -112,6 +112,10 @@ func (pc *namedPipe) eventLoop() {
 	defer os.Remove(pc.eventPipeName)
 
 	for {
+		if pc.eventPipeName == "" {
+			return
+		}
+
 		output, err := openFifo(pc.eventPipeName, os.O_WRONLY)
 		if err != nil {
 			log.Error(err)
@@ -131,6 +135,8 @@ func (pc *namedPipe) close() {
 
 	os.Remove(pc.commandPipeName)
 	os.Remove(pc.eventPipeName)
+
+	pc.eventPipeName = ""
 }
 
 func createFifo(filename string) (err error) {
