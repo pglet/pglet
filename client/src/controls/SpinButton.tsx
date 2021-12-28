@@ -2,7 +2,7 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { SpinButton, ISpinButtonProps } from '@fluentui/react';
+import { SpinButton, ISpinButtonProps, Position } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, isTrue } from './Utils'
 
@@ -37,10 +37,19 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
 
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
+  let labelPosition: Position | undefined = undefined;
+  switch (control.labelposition ? control.labelposition.toLowerCase() : '') {
+    case 'left': labelPosition = Position.start; break;
+    case 'top': labelPosition = Position.top; break;
+    case 'right': labelPosition = Position.end; break;
+    case 'bottom': labelPosition = Position.bottom; break;
+  }
+
   const props: ISpinButtonProps = {
     id: getId(control.f ? control.f : control.i),
     defaultValue: control.value ? control.value : undefined,
     label: control.label ? control.label : undefined,
+    labelPosition: labelPosition,
     min: control.min ? parseInt(control.min) : undefined,
     max: control.max ? parseInt(control.max) : undefined,
     step: control.step ? parseFloat(control.step) : undefined,
