@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 
@@ -28,6 +29,7 @@ func newServerCommand() *cobra.Command {
 
 	var serverPort int
 	var background bool
+	var attachedProcess bool
 
 	var cmd = &cobra.Command{
 		Use:   "server",
@@ -36,7 +38,7 @@ func newServerCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if background {
-				startServerService()
+				startServerService(attachedProcess)
 				return
 			}
 
@@ -65,17 +67,23 @@ func newServerCommand() *cobra.Command {
 
 	cmd.Flags().IntVarP(&serverPort, "port", "p", config.ServerPort(), "port on which the server will listen")
 	cmd.Flags().BoolVarP(&background, "background", "b", false, "run server in background")
+	cmd.Flags().BoolVarP(&attachedProcess, "attached", "a", false, "attach background server process to the parent one")
 
 	return cmd
 }
 
-func startServerService() {
+func startServerService(attached bool) {
 	log.Traceln("Starting Pglet Server")
 
 	// run server
 	execPath, _ := os.Executable()
 
-	cmd := proxy.GetDetachedCmd(execPath, "server")
+	var cmd *exec.Cmd
+	if attached {
+		cmd = exec.Command(execPath, "server")
+	} else {
+		cmd = proxy.GetDetachedCmd(execPath, "server")
+	}
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=true", config.LogToFileFlag))
 
