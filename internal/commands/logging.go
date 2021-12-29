@@ -14,6 +14,12 @@ import (
 func configLogging() {
 
 	level := log.FatalLevel // default logging level
+
+	envLogLevel := os.Getenv(config.LogLevelFlag)
+	if envLogLevel != "" {
+		LogLevel = envLogLevel
+	}
+
 	level, err := log.ParseLevel(LogLevel)
 
 	if err != nil {
@@ -33,7 +39,7 @@ func configLogging() {
 	log.SetFormatter(formatter)
 
 	if os.Getenv(config.LogToFileFlag) == "true" {
-		logPath := "/var/log/pglet.log"
+		logPath := "/tmp/pglet.log"
 		if runtime.GOOS == "windows" {
 			logPath = filepath.Join(os.TempDir(), "pglet.log")
 		}

@@ -16,6 +16,7 @@ import (
 
 const (
 	LogToFileFlag = "PGLET_LOG_TO_FILE"
+	LogLevelFlag  = "PGLET_LOG_LEVEL"
 
 	// Google Secret Manager
 	googleSecretManagerProject = "GOOGLE_SECRET_MANAGER_PROJECT"
