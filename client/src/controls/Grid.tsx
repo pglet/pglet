@@ -206,10 +206,12 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   useEffect(() => {
     if (control.selectedindices) {
       control.selectedindices.split(' ').forEach((idx: number) => {
-        _selection.setIndexSelected(idx, true, false)
+        if (idx > -1 && idx < items.length) {
+          _selection.setIndexSelected(idx, true, false)
+        }
       });
     }
-    _selection.setChangeEvents(true, false);
+    _selection.setChangeEvents(true, true);
   })
 
   // selection mode
