@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
@@ -187,11 +187,30 @@ export const Grid = React.memo<IControlProps>(({control, parentDisabled}) => {
   const _selection = new Selection({
     onSelectionChanged: () => {
       const ids = _selection.getSelection().map((elem: any) => (elem.i)).join(' ');
-      console.log("onSelectionChanged:", ids);
+      const indices = _selection.getSelectedIndices().map(i => i.toString()).join(' ');
+      console.log("onSelectionChanged:", ids, indices);
+
+      let payload = {
+        i: control.i,
+        selectedindices: indices
+      }
+      dispatch(changeProps([payload]));
+      ws.updateControlProps([payload]);
       ws.pageEventFromWeb(control.i, 'select', ids)
     },
     getKey: (item: any) => item.i.toString()
   });
+
+  _selection.setChangeEvents(false, false);
+
+  useEffect(() => {
+    if (control.selectedindices) {
+      control.selectedindices.split(' ').forEach((idx: number) => {
+        _selection.setIndexSelected(idx, true, false)
+      });
+    }
+    _selection.setChangeEvents(true, false);
+  })
 
   // selection mode
   gridProps.selectionMode = SelectionMode.none;
