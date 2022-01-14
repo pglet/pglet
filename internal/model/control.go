@@ -104,6 +104,15 @@ func (ctl *Control) GetChildrenIds() []string {
 	return result
 }
 
+func (ctl *Control) CopyChildren(srcCtl *Control) {
+	ids, _ := (*srcCtl)["c"].([]interface{})
+	copy := make([]string, len(ids))
+	for i, id := range ids {
+		copy[i] = id.(string)
+	}
+	(*ctl)["c"] = copy
+}
+
 func IsSystemAttr(attr string) bool {
 	return utils.ContainsString(systemAttrs, attr)
 }

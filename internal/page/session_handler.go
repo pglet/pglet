@@ -794,32 +794,38 @@ func (h *sessionHandler) nextControlID() string {
 
 // addControl adds a control to a page
 func (h *sessionHandler) addControl(ctrl *model.Control) error {
-	if h.getControl(ctrl.ID()) != nil {
-		return nil
+
+	existingControl := h.getControl(ctrl.ID())
+
+	if existingControl != nil {
+		ctrl.CopyChildren(existingControl)
 	}
+
 	err := store.SetSessionControl(h.session, ctrl)
 	if err != nil {
 		return err
 	}
 
 	// find parent
-	parentID := ctrl.ParentID()
-	if parentID != "" {
-		parentctrl := h.getControl(parentID)
+	if existingControl == nil {
+		parentID := ctrl.ParentID()
+		if parentID != "" {
+			parentctrl := h.getControl(parentID)
 
-		if parentctrl == nil {
-			return fmt.Errorf("parent control with id '%s' not found", parentID)
-		}
+			if parentctrl == nil {
+				return fmt.Errorf("parent control with id '%s' not found", parentID)
+			}
 
-		// update parent's childIds
-		if at := ctrl.At(); at != -1 {
-			parentctrl.InsertChildID(ctrl.ID(), at)
-		} else {
-			parentctrl.AddChildID(ctrl.ID())
-		}
-		err = store.SetSessionControl(h.session, parentctrl)
-		if err != nil {
-			return err
+			// update parent's childIds
+			if at := ctrl.At(); at != -1 {
+				parentctrl.InsertChildID(ctrl.ID(), at)
+			} else {
+				parentctrl.AddChildID(ctrl.ID())
+			}
+			err = store.SetSessionControl(h.session, parentctrl)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
