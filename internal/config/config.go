@@ -25,7 +25,7 @@ const (
 	// general settings
 	appURL                         = "APP_URL"
 	defaultAppURL                  = "http://localhost:3000"
-	defaultServerPort              = 5000
+	defaultServerPort              = 8550
 	serverPort                     = "SERVER_PORT"
 	forceSSL                       = "FORCE_SSL"
 	defaultWebSocketMaxMessageSize = 2097152 // 2 MB
