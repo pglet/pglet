@@ -6,12 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	version  = "unknown"
-	commit   = "unknown"
-	LogLevel string
-)
-
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pglet",
