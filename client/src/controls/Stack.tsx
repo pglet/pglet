@@ -49,6 +49,7 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
                 borderBottom: control.borderbottom ? control.borderbottom : undefined,
                 overflowX: isTrue(control.scrollx) ? "auto" : undefined,
                 overflowY: isTrue(control.scrolly) ? "auto" : undefined,
+                overflow: control.borderradius ? "hidden" : undefined
             }
         },
     };

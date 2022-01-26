@@ -2,18 +2,19 @@ import React from 'react'
 import { shallowEqual, useSelector, useDispatch } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import useTitle from '../hooks/useTitle'
-import { Stack, IStackProps, IStackTokens } from '@fluentui/react';
+import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { Signin } from './Signin'
 import { ISigninProps, IPageProps } from './Control.types'
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
-import { defaultPixels, getWindowHash, isFalse, isTrue } from './Utils'
+import { defaultPixels, getThemeColor, getWindowHash, isFalse, isTrue } from './Utils'
 
 export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
-
+  const theme = useTheme();
+  
   // page title
   let title = `${pageName} - pglet`;
   if (control.title) {
@@ -106,7 +107,8 @@ export const Page = React.memo<IPageProps>(({ control, pageName, updateTheme }) 
         width: control.width ? defaultPixels(control.width) : "100%",
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding ? defaultPixels(control.padding) : "10px",
-        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
+        backgroundColor: control.bgcolor ? getThemeColor(theme, control.bgcolor) : undefined,
       }
     },
   };

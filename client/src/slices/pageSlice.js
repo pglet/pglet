@@ -141,18 +141,21 @@ const addControls = (state, controls) => {
             firstParentId = ctrl.p;
         }
 
-        if (!state.controls[ctrl.i]) {
-            state.controls[ctrl.i] = ctrl;
+        const existingControl = state.controls[ctrl.i];
+        
+        state.controls[ctrl.i] = ctrl;
+        if (existingControl) {
+            state.controls[ctrl.i].c = existingControl.c
+        }
 
-            if (ctrl.p === firstParentId) {
-                // root control
-                if (typeof ctrl.at === 'undefined') {
-                    // append to the end
-                    state.controls[ctrl.p].c.push(ctrl.i)
-                } else {
-                    // insert at specified position
-                    state.controls[ctrl.p].c.splice(ctrl.at, 0, ctrl.i)
-                }
+        if (ctrl.p === firstParentId && !existingControl) {
+            // root control
+            if (typeof ctrl.at === 'undefined') {
+                // append to the end
+                state.controls[ctrl.p].c.push(ctrl.i)
+            } else {
+                // insert at specified position
+                state.controls[ctrl.p].c.splice(ctrl.at, 0, ctrl.i)
             }
         }
     })

@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	Port int = 5000
+	Port int = 8550
 )
 
 var upgrader = websocket.Upgrader{

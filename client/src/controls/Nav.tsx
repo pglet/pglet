@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
@@ -11,6 +11,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
   const dispatch = useDispatch();
   const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
+  const [prevSelectedKey, setPrevSelectedKey] = React.useState<string | undefined>();
 
   const navItems = useSelector<any, any>((state: any) => {
     function getNavLinks(parent: any): any {
@@ -92,10 +93,9 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
 
   const handleLinkClick = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
 
-    //console.log("ITEM:", item!.links!.length);
-
     const selectedKey = item!.key as string
-    if (selectedKey === undefined) {
+
+    if (selectedKey === undefined || prevSelectedKey === selectedKey) {
       return
     }
 
@@ -109,9 +109,16 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     dispatch(changeProps(payload));
     ws.updateControlProps(payload);
     ws.pageEventFromWeb(control.i, 'change', selectedKey)
+    setPrevSelectedKey(selectedKey)
   }
 
-  navProps.selectedKey = control.value !== undefined ? control.value : "";
+  const selectedKey = control.value !== undefined ? control.value : "";
+
+  useEffect(() => {
+    setPrevSelectedKey(selectedKey)
+  }, [selectedKey])
+
+  navProps.selectedKey = selectedKey;
 
   return <Nav {...navProps} onLinkClick={handleLinkClick} onLinkExpandClick={handleExpandLink} />;
 })
