@@ -4,11 +4,11 @@ import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, isTrue } from './Utils'
+import { getThemeColor, defaultPixels, isTrue, getId } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-    //console.log("Render stack", control.i);
+    console.log("Render stack", control.i);
 
     const theme = useTheme();
 
@@ -64,6 +64,20 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     if (isTrue(control.onsubmit)) {
         stackProps.onKeyPress = handleKeyPress;
+    }
+
+    if (isTrue(control.autoscroll)) {
+        const id = getId(control.i);
+
+        stackProps.id = id;
+
+        window.requestAnimationFrame(() => {
+            console.log("window.requestAnimationFrame()")
+            const div = document.getElementById(id);
+            if (div != null) {
+                div.scrollTop = div.scrollHeight - div.clientHeight;
+            }
+        });
     }
 
     const stackTokens: IStackTokens = {

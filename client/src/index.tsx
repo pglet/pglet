@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './App';
-import { mergeStyles, initializeIcons  } from '@fluentui/react';
+import { mergeStyles, initializeIcons } from '@fluentui/react';
 import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux'
 import rootReducer from './rootReducer'
-import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit'
+import { configureStore } from '@reduxjs/toolkit'
 import { WebSocketProvider } from './WebSocket';
 
 initializeIcons();
@@ -23,15 +23,15 @@ mergeStyles({
 
 const store = configureStore({
   reducer: rootReducer,
-  middleware: [...getDefaultMiddleware({immutableCheck: false, serializableCheck: false })]
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware({ immutableCheck: false, serializableCheck: false })
 });
 
 ReactDOM.render(
-    <Provider store={store}>
-      <WebSocketProvider>
-        <App />
-      </WebSocketProvider>
-    </Provider>,
+  <Provider store={store}>
+    <WebSocketProvider>
+      <App />
+    </WebSocketProvider>
+  </Provider>,
   document.getElementById('root')
 );
 
