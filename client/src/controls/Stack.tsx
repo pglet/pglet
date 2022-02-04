@@ -8,7 +8,7 @@ import { getThemeColor, defaultPixels, isTrue, getId } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-    console.log("Render stack", control.i);
+    //console.log("Render stack", control.i);
 
     const theme = useTheme();
 
@@ -72,7 +72,7 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
         stackProps.id = id;
 
         window.requestAnimationFrame(() => {
-            console.log("window.requestAnimationFrame()")
+            //console.log("window.requestAnimationFrame()")
             const div = document.getElementById(id);
             if (div != null) {
                 div.scrollTop = div.scrollHeight - div.clientHeight;

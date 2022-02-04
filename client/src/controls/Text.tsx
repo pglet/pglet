@@ -11,6 +11,8 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
 
   // https://developer.microsoft.com/en-us/fluentui#/controls/web/references/ifontstyles#IFontStyles
 
+  //console.log("Render text", control.i);
+
   const textAlign = control.align !== undefined ? control.align : undefined;
   const verticalAlign = control.verticalalign !== undefined ? control.verticalalign : undefined;
   let display = undefined;
@@ -104,6 +106,6 @@ export const MyText = React.memo<IControlProps>(({ control }) => {
   if (isTrue(control.markdown)) {
     return <Text className={className}><ReactMarkdown plugins={[gfm]} children={control.value} /></Text>;
   } else {
-    return <Text {...textProps}>{ isTrue(control.pre) ? <pre>{control.value}</pre> : control.value }</Text>;
+    return <Text {...textProps}>{isTrue(control.pre) ? <pre>{control.value}</pre> : control.value}</Text>;
   }
 })
