@@ -194,11 +194,12 @@ func (c *Client) registerWebClient(message *Message) {
 		// func: update session's principal and notify page of sign in/sign out events
 		updateSessionPrincipal := func() {
 			userProps := map[string]string{
-				"userid":       "",
-				"userlogin":    "",
-				"username":     "",
-				"useremail":    "",
-				"userclientip": "",
+				"userauthprovider": "",
+				"userid":           "",
+				"userlogin":        "",
+				"username":         "",
+				"useremail":        "",
+				"userclientip":     "",
 			}
 
 			principalID := ""
@@ -206,11 +207,12 @@ func (c *Client) registerWebClient(message *Message) {
 				principalID = c.principal.UID
 
 				userProps = map[string]string{
-					"userid":       c.principal.ID,
-					"userlogin":    c.principal.Login,
-					"username":     c.principal.Name,
-					"useremail":    c.principal.Email,
-					"userclientip": c.principal.ClientIP,
+					"userauthprovider": c.principal.AuthProvider,
+					"userid":           c.principal.ID,
+					"userlogin":        c.principal.Login,
+					"username":         c.principal.Name,
+					"useremail":        c.principal.Email,
+					"userclientip":     c.principal.ClientIP,
 				}
 			}
 
