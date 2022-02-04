@@ -63,8 +63,8 @@ func newSession(page *model.Page, id string, clientIP string,
 	h := newSessionHandler(s)
 	p := model.NewControl("page", "", ReservedPageID)
 	p.SetAttr("hash", pageHash)
-	p.SetAttr("win_width", winWidth)
-	p.SetAttr("win_height", winHeight)
+	p.SetAttr("winwidth", winWidth)
+	p.SetAttr("winheight", winHeight)
 	h.addControl(p)
 
 	return s
