@@ -108,11 +108,11 @@ export const Page = () => {
         //console.log("window size:", window.innerHeight, window.innerWidth);
         const payload: any = [{
           i: "page",
-          win_width: String(window.innerWidth)
+          winwidth: String(window.innerWidth)
         },
         {
           i: "page",
-          win_height: String(window.innerHeight)
+          winheight: String(window.innerHeight)
         }];
 
         dispatch(changeProps(payload));
