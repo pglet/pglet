@@ -468,6 +468,8 @@ func (c *Client) registerHostClient(message *Message) {
 		session := store.GetSession(page, ZeroSession)
 		if session == nil {
 			session = newSession(page, ZeroSession, c.clientIP, "", "", "")
+		} else if !request.Update {
+			cleanPage(session)
 		}
 		c.registerSession(session)
 		response.SessionID = session.ID
@@ -489,6 +491,32 @@ response:
 	}
 
 	c.send(NewMessageData(message.ID, "", response))
+}
+
+func cleanPage(session *model.Session) {
+	handler := newSessionHandler(session)
+	handler.executeBatch([]*command.Command{
+		{
+			Name:   "clean",
+			Values: []string{"page"},
+		},
+		{
+			Name:   "set",
+			Values: []string{"page"},
+			Attrs: map[string]string{
+				"verticalFill":         "",
+				"horizontalAlign":      "",
+				"verticalAlign":        "",
+				"gap":                  "",
+				"padding":              "",
+				"bgcolor":              "",
+				"theme":                "",
+				"themePrimaryColor":    "",
+				"themeTextColor":       "",
+				"themeBackgroundColor": "",
+			},
+		},
+	})
 }
 
 func (c *Client) encryptSensitiveData(data string, clientIP string) (string, error) {

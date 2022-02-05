@@ -13,6 +13,10 @@ var (
 		"to",
 		"from",
 		"at",
+		"t",
+		"p",
+		"i",
+		"c",
 	}
 )
 
@@ -25,7 +29,7 @@ func NewControl(controlType string, parentID string, id string) *Control {
 	ctl["t"] = controlType
 	ctl["p"] = parentID
 	ctl["i"] = id
-	ctl["c"] = make([]string, 0, 0)
+	ctl["c"] = make([]string, 0)
 	return &ctl
 }
 
@@ -53,6 +57,14 @@ func (ctl *Control) SetAttr(name string, value string) {
 
 func (ctl *Control) AppendAttr(name string, value string) {
 	(*ctl)[name] = (*ctl)[name].(string) + value
+}
+
+func (ctl *Control) CleanAttrs() {
+	for name := range *ctl {
+		if !IsSystemAttr(name) {
+			delete((*ctl), name)
+		}
+	}
 }
 
 // ID returns control's ID.
@@ -92,7 +104,7 @@ func (ctl *Control) RemoveChild(childID string) {
 }
 
 func (ctl *Control) RemoveChildren() {
-	(*ctl)["c"] = make([][]interface{}, 0, 0)
+	(*ctl)["c"] = make([][]interface{}, 0)
 }
 
 func (ctl *Control) GetChildrenIds() []string {
