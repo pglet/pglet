@@ -25,8 +25,8 @@ type ClientRole string
 
 const (
 	None                         ClientRole = "None"
-	WebClient                               = "Web"
-	HostClient                              = "Host"
+	WebClient                    ClientRole = "Web"
+	HostClient                   ClientRole = "Host"
 	pageNotFoundMessage                     = "Page not found or application is not running."
 	inactiveAppMessage                      = "Application is inactive. Please try refreshing this page later."
 	signinRequiredMessage                   = "signin_required"
@@ -43,7 +43,6 @@ type Client struct {
 	subscription         chan []byte
 	sessions             map[string]*model.Session
 	pages                map[string]*model.Page
-	exitSubscribe        chan bool
 	exitExtendExpiration chan bool
 }
 
@@ -86,14 +85,12 @@ func (c *Client) register(role ClientRole) {
 	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
 	go func() {
 		for {
-			select {
-			case msg, more := <-c.subscription:
-				if !more {
-					log.Debugln("Exit subscribe():", c.id)
-					return
-				}
-				c.send(msg)
+			msg, more := <-c.subscription
+			if !more {
+				log.Debugln("Exit subscribe():", c.id)
+				return
 			}
+			c.send(msg)
 		}
 	}()
 
@@ -409,10 +406,10 @@ func (c *Client) registerHostClient(message *Message) {
 	}
 
 	if !config.AllowRemoteHostClients() && c.clientIP != "" && c.clientIP != "::1" && c.clientIP != "127.0.0.1" {
-		err = fmt.Errorf("Remote host clients are not allowed")
+		err = fmt.Errorf("remote host clients are not allowed")
 		goto response
 	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != request.AuthToken {
-		err = fmt.Errorf("Invalid auth token")
+		err = fmt.Errorf("invalid auth token")
 		goto response
 	}
 
@@ -428,13 +425,13 @@ func (c *Client) registerHostClient(message *Message) {
 
 	if page == nil {
 		if pagesRateLimitReached(c.clientIP) {
-			err = fmt.Errorf("A limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
+			err = fmt.Errorf("a limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
 			goto response
 		}
 
 		// filter page name
 		if pageName.IsReserved() {
-			err = fmt.Errorf("Account or page name is reserved")
+			err = fmt.Errorf("account or page name is reserved")
 			goto response
 		}
 
@@ -445,7 +442,7 @@ func (c *Client) registerHostClient(message *Message) {
 
 	// make sure unauth client has access to a given page
 	if config.CheckPageIP() && page.ClientIP != c.clientIP {
-		err = errors.New("Page name is already taken")
+		err = errors.New("page name is already taken")
 		goto response
 	}
 
@@ -715,9 +712,7 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 					store.RemoveSessionWebClient(session.Page.ID, session.ID, clientID)
 				}
 
-				if _, ok := c.sessions[sessionID]; ok {
-					delete(c.sessions, sessionID)
-				}
+				delete(c.sessions, sessionID)
 
 				log.Debugln("Delete inactive app session:", page.ID, sessionID)
 				store.DeleteSession(page.ID, sessionID)
