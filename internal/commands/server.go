@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	defaultPort  int = 8550
 	lockFilename string
 )
 

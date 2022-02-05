@@ -47,11 +47,11 @@ func ParsePageName(pageName string) (*PageName, error) {
 
 	p.Account = slug.Make(p.Account)
 	if len(p.Account) > maxSlugSize {
-		return nil, fmt.Errorf("Account name exceeds the maximum allowed size of %d symbols", maxSlugSize)
+		return nil, fmt.Errorf("account name exceeds the maximum allowed size of %d symbols", maxSlugSize)
 	}
 	p.Name = slug.Make(p.Name)
 	if len(p.Name) > maxSlugSize {
-		return nil, fmt.Errorf("Page name exceeds the maximum allowed size of %d symbols", maxSlugSize)
+		return nil, fmt.Errorf("page name exceeds the maximum allowed size of %d symbols", maxSlugSize)
 	}
 
 	return p, nil
