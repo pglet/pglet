@@ -7,7 +7,6 @@ import (
 
 	"github.com/pglet/pglet/internal/config"
 	"github.com/rifflock/lfshook"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,9 +43,9 @@ func configLogging() {
 			logPath = filepath.Join(os.TempDir(), "pglet.log")
 		}
 		pathMap := lfshook.PathMap{
-			logrus.DebugLevel: logPath,
-			logrus.InfoLevel:  logPath,
-			logrus.ErrorLevel: logPath,
+			log.DebugLevel: logPath,
+			log.InfoLevel:  logPath,
+			log.ErrorLevel: logPath,
 		}
 		log.AddHook(lfshook.NewHook(
 			pathMap,

@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/pglet/pglet/internal/config"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 func (p *SecurityPrincipal) updateFromGitHub() error {
@@ -30,7 +29,7 @@ func (p *SecurityPrincipal) updateFromGitHub() error {
 
 	// GitHub client
 	oauthConfig := GetOauthConfig(p.AuthProvider, p.Groups != nil)
-	client := github.NewClient(oauthConfig.Client(oauth2.NoContext, token))
+	client := github.NewClient(oauthConfig.Client(context.Background(), token))
 
 	// read user details
 	githubUser, _, err := client.Users.Get(context.Background(), "")

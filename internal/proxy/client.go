@@ -17,8 +17,7 @@ const (
 )
 
 var (
-	browserOpened = false
-	sockAddr      string
+	sockAddr string
 )
 
 func init() {

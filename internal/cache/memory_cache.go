@@ -70,10 +70,7 @@ func (c *memoryCache) exists(key string) bool {
 	defer c.RUnlock()
 
 	entry := c.getEntry(key)
-	if entry != nil {
-		return true
-	}
-	return false
+	return entry != nil
 }
 
 func (c *memoryCache) getString(key string) string {

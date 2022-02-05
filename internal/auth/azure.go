@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/pglet/pglet/internal/auth/msgraph"
 	"github.com/pglet/pglet/internal/utils"
-	"golang.org/x/oauth2"
 )
 
 func (p *SecurityPrincipal) updateFromAzure() error {
@@ -25,7 +25,7 @@ func (p *SecurityPrincipal) updateFromAzure() error {
 
 	// GitHub client
 	oauthConfig := GetOauthConfig(p.AuthProvider, p.Groups != nil)
-	client := oauthConfig.Client(oauth2.NoContext, token)
+	client := oauthConfig.Client(context.Background(), token)
 
 	// get user details
 	// https://docs.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http

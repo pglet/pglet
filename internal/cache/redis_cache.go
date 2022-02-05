@@ -203,7 +203,7 @@ func (c *redisCache) inc(key string, by int, expires time.Duration) int {
 	if expires > 0 {
 		conn.Send("EXPIRE", key, expires.Seconds())
 	}
-	value, err := redis.MultiBulk(conn.Do("EXEC"))
+	value, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -239,7 +239,7 @@ func SetSessionControl(session *model.Session, ctrl *model.Control) error {
 		fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
 		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj, config.LimitSessionSizeBytes())
 	if !success {
-		return fmt.Errorf("Session %d:%s size exceeds the maximum of %d bytes", session.Page.ID, session.ID, config.LimitSessionSizeBytes())
+		return fmt.Errorf("session %d:%s size exceeds the maximum of %d bytes", session.Page.ID, session.ID, config.LimitSessionSizeBytes())
 	}
 	return nil
 }
