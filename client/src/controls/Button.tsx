@@ -10,12 +10,14 @@ import {
   IconButton,
   ActionButton,
   IButtonProps,
-  IContextualMenuProps } from '@fluentui/react';
+  IContextualMenuProps,
+  IButton
+} from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 import { getMenuProps } from './MenuItem'
 
-export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const Button = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const theme = useTheme();
@@ -54,13 +56,13 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     primary: isTrue(control.compound) && isTrue(control.primary) ? true : undefined,
     split: isTrue(control.split) ? true : undefined,
     menuProps: menuProps,
-    styles: {    
+    styles: {
       root: {
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: defaultPixels(height),
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
-      },    
+      },
     }
   };
 
@@ -95,5 +97,15 @@ export const Button = React.memo<IControlProps>(({control, parentDisabled}) => {
     ws.pageEventFromWeb(control.i, 'click', control.data)
   }
 
-  return <ButtonType onClick={handleClick} {...buttonProps} />;
+  const ctrlRef = React.useRef<IButton | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <ButtonType componentRef={ctrlRef} onClick={handleClick} {...buttonProps} />;
 })

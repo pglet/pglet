@@ -11,7 +11,6 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
-  const [focused, setFocused] = React.useState<boolean>(false);
 
   let disabled = isTrue(control.disabled) || parentDisabled;
 
@@ -81,15 +80,16 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     }
   }
 
-  const tfRef = React.useRef<ITextField | null>(null);
+  const ctrlRef = React.useRef<ITextField | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (isTrue(control.focused) && !focused) {
       //console.log("setFocus", tfRef.current)
-      tfRef.current?.focus();
+      ctrlRef.current?.focus();
       setFocused(true);
     }
   }, [control.focused, focused]);
 
-  return <TextField componentRef={tfRef} {...textFieldProps} onChange={handleChange} />;
+  return <TextField componentRef={ctrlRef} {...textFieldProps} onChange={handleChange} />;
 })
