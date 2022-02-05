@@ -480,7 +480,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 		for n, v := range batchCmd.Attrs {
 			if !model.IsSystemAttr(n) {
 				ctrl.SetAttr(n, v)
-				props[n] = v
+				props[strings.ToLower(n)] = v
 			}
 		}
 		err = store.SetSessionControl(h.session, ctrl)

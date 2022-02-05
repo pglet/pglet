@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/pglet/pglet/internal/utils"
 )
@@ -44,19 +45,21 @@ func NewControlFromJSON(jsonCtrl string) (*Control, error) {
 }
 
 func (ctl *Control) GetAttr(name string) interface{} {
-	return (*ctl)[name]
+	return (*ctl)[strings.ToLower(name)]
 }
 
 func (ctl *Control) SetAttr(name string, value string) {
+	lname := strings.ToLower(name)
 	if value != "" {
-		(*ctl)[name] = value
+		(*ctl)[lname] = value
 	} else {
-		delete((*ctl), name)
+		delete((*ctl), lname)
 	}
 }
 
 func (ctl *Control) AppendAttr(name string, value string) {
-	(*ctl)[name] = (*ctl)[name].(string) + value
+	lname := strings.ToLower(name)
+	(*ctl)[lname] = (*ctl)[lname].(string) + value
 }
 
 func (ctl *Control) CleanAttrs() {
@@ -125,6 +128,6 @@ func (ctl *Control) CopyChildren(srcCtl *Control) {
 	(*ctl)["c"] = copy
 }
 
-func IsSystemAttr(attr string) bool {
-	return utils.ContainsString(systemAttrs, attr)
+func IsSystemAttr(name string) bool {
+	return utils.ContainsString(systemAttrs, strings.ToLower(name))
 }
