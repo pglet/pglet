@@ -85,7 +85,6 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
 
   React.useEffect(() => {
     if (isTrue(control.focused) && !focused) {
-      //console.log("setFocus", tfRef.current)
       ctrlRef.current?.focus();
       setFocused(true);
     }
