@@ -2,11 +2,11 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Slider, ISliderProps } from '@fluentui/react';
+import { Slider, ISliderProps, ISlider } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, isTrue } from './Utils'
 
-export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MySlider = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
@@ -73,5 +73,15 @@ export const MySlider = React.memo<IControlProps>(({control, parentDisabled}) =>
     sliderProps.originFromZero = true;
   }
 
-  return <Slider {...sliderProps} onChange={handleChange}></Slider>;
+  const ctrlRef = React.useRef<ISlider | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <Slider componentRef={ctrlRef} {...sliderProps} onChange={handleChange}></Slider>;
 })

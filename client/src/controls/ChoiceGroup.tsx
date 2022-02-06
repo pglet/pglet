@@ -2,7 +2,7 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { ChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
+import { ChoiceGroup, IChoiceGroup, IChoiceGroupOption, IChoiceGroupProps, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
@@ -30,7 +30,7 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
       // unbound control
       payload["i"] = control.i
       payload["value"] = selectedKey
-    }    
+    }
 
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
@@ -54,29 +54,39 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
 
   choiceProps.options = useSelector<any, IChoiceGroupOption[]>((state: any) =>
     (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
-    .filter((oc: any) => oc.t === 'option')
-    .map((oc: any) => {
-      let option: any = {
-        key: oc.key ? oc.key : oc.text,
-        text: oc.text ? oc.text : oc.key,
-      }
-      if (oc.icon) {
-        option.iconProps = {
-          iconName: oc.icon
+      .filter((oc: any) => oc.t === 'option')
+      .map((oc: any) => {
+        let option: any = {
+          key: oc.key ? oc.key : oc.text,
+          text: oc.text ? oc.text : oc.key,
         }
+        if (oc.icon) {
+          option.iconProps = {
+            iconName: oc.icon
+          }
 
-        if (oc.iconcolor !== undefined) {
-          option.iconProps!.styles = {
+          if (oc.iconcolor !== undefined) {
+            option.iconProps!.styles = {
               root: {
-                  color: getThemeColor(theme, oc.iconcolor)
+                color: getThemeColor(theme, oc.iconcolor)
               }
+            }
           }
         }
-      }
-      return option;
-    }), shallowEqual);
+        return option;
+      }), shallowEqual);
 
   choiceProps.selectedKey = control.value !== undefined ? control.value : "";
 
-  return <ChoiceGroup {...choiceProps} onChange={handleChange} />;
+  const ctrlRef = React.useRef<IChoiceGroup | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <ChoiceGroup componentRef={ctrlRef} {...choiceProps} onChange={handleChange} />;
 })

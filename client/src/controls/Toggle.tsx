@@ -2,11 +2,11 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Toggle, IToggleProps } from '@fluentui/react';
+import { Toggle, IToggleProps, IToggle } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, isTrue } from './Utils'
 
-export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyToggle = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
@@ -30,7 +30,7 @@ export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) =>
         payload["i"] = control.i
         payload["value"] = val
       }
-  
+
       dispatch(changeProps([payload]));
       ws.updateControlProps([payload]);
       ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${val}` : val)
@@ -50,10 +50,20 @@ export const MyToggle = React.memo<IControlProps>(({control, parentDisabled}) =>
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
-        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined   
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       }
     }
   };
 
-  return <Toggle {...toggleProps} onChange={handleChange} />;
+  const ctrlRef = React.useRef<IToggle | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <Toggle componentRef={ctrlRef} {...toggleProps} onChange={handleChange} />;
 })

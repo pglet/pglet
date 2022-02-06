@@ -2,11 +2,11 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { SpinButton, ISpinButtonProps, Position } from '@fluentui/react';
+import { SpinButton, ISpinButtonProps, Position, ISpinButton } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, isTrue } from './Utils'
 
-export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MySpinButton = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
@@ -26,7 +26,7 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
       // unbound control
       payload["i"] = control.i
       payload["value"] = newValue
-    }    
+    }
 
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
@@ -70,5 +70,15 @@ export const MySpinButton = React.memo<IControlProps>(({control, parentDisabled}
     }
   }
 
-  return <SpinButton {...props} onChange={handleChange}></SpinButton>;
+  const ctrlRef = React.useRef<ISpinButton | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <SpinButton componentRef={ctrlRef} {...props} onChange={handleChange}></SpinButton>;
 })

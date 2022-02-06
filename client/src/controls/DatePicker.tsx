@@ -1,12 +1,12 @@
 import React from 'react'
-import { DatePicker, getId, IDatePickerProps } from '@fluentui/react';
+import { DatePicker, getId, IDatePicker, IDatePickerProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, isTrue, parseDate } from './Utils'
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux';
 import { changeProps } from '../slices/pageSlice';
 
-export const MyDatePicker = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyDatePicker = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
@@ -18,7 +18,7 @@ export const MyDatePicker = React.memo<IControlProps>(({control, parentDisabled}
     if (newValue === undefined) {
       newValue = "";
     }
-    
+
     let payload: any = {}
     if (control.f) {
       // binding redirect
@@ -34,8 +34,8 @@ export const MyDatePicker = React.memo<IControlProps>(({control, parentDisabled}
     dispatch(changeProps([payload]));
     ws.updateControlProps([payload]);
     ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
-  }  
-  
+  }
+
   const pickerProps: IDatePickerProps = {
     id: getId(control.f ? control.f : control.i),
     value: control.value ? parseDate(control.value) : undefined,
@@ -50,8 +50,18 @@ export const MyDatePicker = React.memo<IControlProps>(({control, parentDisabled}
       root: {
         width: control.width !== undefined ? defaultPixels(control.width) : undefined
       }
-    }    
+    }
   };
 
-  return <DatePicker {...pickerProps} onSelectDate={handleSelectDate} />;
+  const ctrlRef = React.useRef<IDatePicker | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <DatePicker componentRef={ctrlRef} {...pickerProps} onSelectDate={handleSelectDate} />;
 })
