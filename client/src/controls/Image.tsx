@@ -1,9 +1,11 @@
 import React from 'react'
-import { Image, IImageProps, ImageFit } from '@fluentui/react';
+import { Image, IImageProps, ImageFit, mergeStyles, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, isTrue } from './Utils'
+import { defaultPixels, getThemeColor, isTrue } from './Utils'
 
-export const MyImage = React.memo<IControlProps>(({control}) => {
+export const MyImage = React.memo<IControlProps>(({ control }) => {
+
+  const theme = useTheme();
 
   let fit: ImageFit | undefined = undefined;
   switch (control.fit ? control.fit.toLowerCase() : '') {
@@ -22,7 +24,13 @@ export const MyImage = React.memo<IControlProps>(({control}) => {
     width: control.width !== undefined ? defaultPixels(control.width) : undefined,
     height: control.height !== undefined ? defaultPixels(control.height) : undefined,
     imageFit: fit,
-    maximizeFrame: isTrue(control.maximizeframe)
+    maximizeFrame: isTrue(control.maximizeframe),
+    className: mergeStyles({
+      borderWidth: control.borderwidth ? defaultPixels(control.borderwidth) : undefined,
+      borderColor: control.bordercolor ? getThemeColor(theme, control.bordercolor) : undefined,
+      borderStyle: control.borderstyle ? control.borderstyle : undefined,
+      borderRadius: control.borderradius ? defaultPixels(control.borderradius) : undefined
+    })
   };
 
   return <Image {...imgProps} />;
