@@ -165,217 +165,241 @@ func (c *Client) registerWebClient(message *Message) {
 	request := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, request)
 
-	// subscribe as web client
-	page := store.GetPageByName(request.PageName)
+	// register logic
+	session, sessionCreated, response := c.registerWebClientCore(request)
 
-	response := &RegisterWebClientResponsePayload{
+	// send response message
+	responseMsg := NewMessageData(message.ID, RegisterWebClientAction, response)
+	c.send(responseMsg)
+
+	if response.Error == "" && !sessionCreated {
+		// send "connect" event to existing session
+		msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+			PageName:    session.Page.Name,
+			SessionID:   session.ID,
+			EventTarget: "page",
+			EventName:   "connect",
+			EventData:   "",
+		})
+
+		for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
+			pubsub.Send(clientChannelName(clientID), msg)
+		}
+	}
+}
+
+func (c *Client) registerWebClientCore(request *RegisterWebClientRequestPayload) (
+	session *model.Session,
+	sessionCreated bool,
+	response *RegisterWebClientResponsePayload) {
+
+	response = &RegisterWebClientResponsePayload{
 		Error: "",
 	}
 
+	sessionCreated = false
+
+	// get page
+	page := store.GetPageByName(request.PageName)
 	if page == nil {
 		response.Error = pageNotFoundMessage
-	} else {
-		var session *model.Session
+		return
+	}
 
-		// func: check if "Sign in required" response should be sent
-		requireSignin := func() bool {
-			if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
-				log.Debugln("Required page permissions:", page.Permissions)
-				response.Error = signinRequiredMessage
-				response.SigninOptions = auth.GetSigninOptions(page.Permissions)
-				return true
-			}
-			return false
+	// func: check if "Sign in required" response should be sent
+	requireSignin := func() bool {
+		if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
+			log.Debugln("Required page permissions:", page.Permissions)
+			response.Error = signinRequiredMessage
+			response.SigninOptions = auth.GetSigninOptions(page.Permissions)
+			return true
+		}
+		return false
+	}
+
+	// func: update session's principal and notify page of sign in/sign out events
+	updateSessionPrincipal := func() {
+		userProps := map[string]string{
+			"userauthprovider": "",
+			"userid":           "",
+			"userlogin":        "",
+			"username":         "",
+			"useremail":        "",
+			"userclientip":     "",
 		}
 
-		// func: update session's principal and notify page of sign in/sign out events
-		updateSessionPrincipal := func() {
-			userProps := map[string]string{
-				"userauthprovider": "",
-				"userid":           "",
-				"userlogin":        "",
-				"username":         "",
-				"useremail":        "",
-				"userclientip":     "",
+		principalID := ""
+		if c.principal != nil {
+			principalID = c.principal.UID
+
+			userProps = map[string]string{
+				"userauthprovider": c.principal.AuthProvider,
+				"userid":           c.principal.ID,
+				"userlogin":        c.principal.Login,
+				"username":         c.principal.Name,
+				"useremail":        c.principal.Email,
+				"userclientip":     c.principal.ClientIP,
 			}
+		}
 
-			principalID := ""
-			if c.principal != nil {
-				principalID = c.principal.UID
+		if session.PrincipalID != principalID && !(session.PrincipalID == "" && principalID == "") {
 
-				userProps = map[string]string{
-					"userauthprovider": c.principal.AuthProvider,
-					"userid":           c.principal.ID,
-					"userlogin":        c.principal.Login,
-					"username":         c.principal.Name,
-					"useremail":        c.principal.Email,
-					"userclientip":     c.principal.ClientIP,
-				}
+			log.Debugf("Updating session principal for %s:%s\n", page.Name, session.ID)
+
+			pctl := store.GetSessionControl(session, "page")
+			for k, v := range userProps {
+				pctl.SetAttr(k, v)
 			}
+			store.SetSessionControl(session, pctl)
 
-			if session.PrincipalID != principalID && !(session.PrincipalID == "" && principalID == "") {
+			// update session's principal
+			store.SetSessionPrincipalID(session, principalID)
 
-				log.Debugf("Updating session principal for %s:%s\n", page.Name, session.ID)
+			authEventName := "signout"
 
+			if session.PrincipalID != "" {
+
+				authEventName = "signin"
+
+				// hide signin dialog
 				pctl := store.GetSessionControl(session, "page")
-				for k, v := range userProps {
-					pctl.SetAttr(k, v)
-				}
+				pctl.SetAttr("signin", "")
 				store.SetSessionControl(session, pctl)
-
-				// update session's principal
-				store.SetSessionPrincipalID(session, principalID)
-
-				authEventName := "signout"
-
-				if session.PrincipalID != "" {
-
-					authEventName = "signin"
-
-					// hide signin dialog
-					pctl := store.GetSessionControl(session, "page")
-					pctl.SetAttr("signin", "")
-					store.SetSessionControl(session, pctl)
-				}
-
-				changeEventProps := map[string]interface{}{
-					"i":      "page",
-					"signin": "",
-				}
-
-				// inject user props
-				for k, v := range userProps {
-					changeEventProps[k] = v
-				}
-
-				eventData := []map[string]interface{}{
-					changeEventProps,
-				}
-
-				data, _ := json.Marshal(eventData)
-				msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-					PageName:    session.Page.Name,
-					SessionID:   session.ID,
-					EventTarget: "page",
-					EventName:   "change",
-					EventData:   string(data),
-				})
-
-				for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
-
-				// fire "page.signin/signout" event
-				msg = NewMessageData("", PageEventToHostAction, &PageEventPayload{
-					PageName:    page.Name,
-					SessionID:   session.ID,
-					EventTarget: "page",
-					EventName:   authEventName,
-				})
-
-				for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
-			}
-		}
-
-		if page.IsApp {
-			// app page
-
-			if len(store.GetPageHostClients(page.ID)) == 0 {
-				response.Error = inactiveAppMessage
-				goto response
 			}
 
-			// lookup for existing session
-			if request.SessionID != "" {
-				if sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP); err == nil {
-					session = store.GetSession(page, sessionID)
-				} else {
-					log.Errorf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
-				}
+			changeEventProps := map[string]interface{}{
+				"i":      "page",
+				"signin": "",
 			}
 
-			var sessionCreated bool
-
-			if session == nil {
-				// create new session
-				if sessionsRateLimitReached(c.clientIP) {
-					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
-					goto response
-				}
-
-				if requireSignin() {
-					goto response
-				}
-
-				session = newSession(page, uuid.New().String(), c.clientIP,
-					request.PageHash, request.WinWidth, request.WinHeight)
-				sessionCreated = true
-			} else {
-				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
-
-				updateSessionPrincipal()
-
-				if requireSignin() {
-					goto response
-				}
+			// inject user props
+			for k, v := range userProps {
+				changeEventProps[k] = v
 			}
 
-			c.register(WebClient)
-			c.registerSession(session)
-
-			if sessionCreated {
-				// pick connected host client from page pool and notify about new session created
-				msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
-					PageName:  page.Name,
-					SessionID: session.ID,
-				})
-
-				// TODO
-				// pick first host client for now
-				// in the future we will implement load distribution algorithm
-				for _, clientID := range store.GetPageHostClients(page.ID) {
-					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
-					pubsub.Send(clientChannelName(clientID), msg)
-					break
-				}
-
-				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
-
-				updateSessionPrincipal()
+			eventData := []map[string]interface{}{
+				changeEventProps,
 			}
 
-		} else {
-			// shared page
+			data, _ := json.Marshal(eventData)
+			msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+				PageName:    session.Page.Name,
+				SessionID:   session.ID,
+				EventTarget: "page",
+				EventName:   "change",
+				EventData:   string(data),
+			})
 
-			if requireSignin() {
-				goto response
+			for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
+				pubsub.Send(clientChannelName(clientID), msg)
 			}
 
-			// retrieve zero session
-			session = store.GetSession(page, ZeroSession)
-			c.register(WebClient)
-			c.registerSession(session)
+			// fire "page.signin/signout" event
+			msg = NewMessageData("", PageEventToHostAction, &PageEventPayload{
+				PageName:    page.Name,
+				SessionID:   session.ID,
+				EventTarget: "page",
+				EventName:   authEventName,
+			})
 
-			log.Debugf("Connected to zero session of %s page\n", page.Name)
-		}
-
-		sessionID, err := c.encryptSensitiveData(session.ID, c.clientIP)
-		if err != nil {
-			log.Errorf("error encrypting session.ID: %s", err)
-		}
-
-		response.Session = &SessionPayload{
-			ID:       sessionID,
-			Controls: store.GetAllSessionControls(session),
+			for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
+				pubsub.Send(clientChannelName(clientID), msg)
+			}
 		}
 	}
 
-response:
+	// is it app page?
+	if page.IsApp {
+		if len(store.GetPageHostClients(page.ID)) == 0 {
+			response.Error = inactiveAppMessage
+			return
+		}
 
-	responseMsg := NewMessageData(message.ID, RegisterWebClientAction, response)
-	c.send(responseMsg)
+		// lookup for existing session
+		if request.SessionID != "" {
+			if sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP); err == nil {
+				session = store.GetSession(page, sessionID)
+			} else {
+				response.Error = fmt.Sprintf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
+				return
+			}
+		}
+
+		if session == nil {
+			// create new session
+			if sessionsRateLimitReached(c.clientIP) {
+				response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
+				return
+			}
+
+			if requireSignin() {
+				return
+			}
+
+			session = newSession(page, uuid.New().String(), c.clientIP,
+				request.PageHash, request.WinWidth, request.WinHeight)
+			sessionCreated = true
+		} else {
+			log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
+
+			updateSessionPrincipal()
+
+			if requireSignin() {
+				return
+			}
+		}
+
+		c.register(WebClient)
+		c.registerSession(session)
+
+		if sessionCreated {
+			// pick connected host client from page pool and notify about new session created
+			msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
+				PageName:  page.Name,
+				SessionID: session.ID,
+			})
+
+			// TODO
+			// pick first host client for now
+			// in the future we will implement load distribution algorithm
+			for _, clientID := range store.GetPageHostClients(page.ID) {
+				store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
+				pubsub.Send(clientChannelName(clientID), msg)
+				break
+			}
+
+			log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
+
+			updateSessionPrincipal()
+		}
+
+	} else {
+		// shared page
+
+		if requireSignin() {
+			return
+		}
+
+		// retrieve zero session
+		session = store.GetSession(page, ZeroSession)
+		c.register(WebClient)
+		c.registerSession(session)
+
+		log.Debugf("Connected to zero session of %s page\n", page.Name)
+	}
+
+	sessionID, err := c.encryptSensitiveData(session.ID, c.clientIP)
+	if err != nil {
+		response.Error = fmt.Sprintf("error encrypting session.ID: %s", err)
+		return
+	}
+
+	response.Session = &SessionPayload{
+		ID:       sessionID,
+		Controls: store.GetAllSessionControls(session),
+	}
+
+	return
 }
 
 func (c *Client) registerHostClient(message *Message) {
@@ -824,7 +848,7 @@ func (c *Client) unregister(normalClosure bool) {
 
 	// expire client immediately
 	if normalClosure {
-		deleteExpiredClient(c.id)
+		deleteExpiredClient(c.id, true)
 	}
 }
 
