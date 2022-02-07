@@ -646,6 +646,8 @@ func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
 
 	// send response
 	c.send(NewMessageData(message.ID, "", responsePayload))
+
+	log.Debugf("Page commands batch response to %s - %v\n", c.id, responsePayload)
 }
 
 func (c *Client) processPageEventFromWebClient(message *Message) {
