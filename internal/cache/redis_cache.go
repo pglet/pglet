@@ -347,14 +347,15 @@ func (c *redisCache) setAdd(key string, value string) {
 	}
 }
 
-func (c *redisCache) setRemove(key string, value string) {
+func (c *redisCache) setRemove(key string, value string) int {
 	conn := c.pool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("SREM", key, value)
+	result, err := redis.Int(conn.Do("SREM", key, value))
 	if err != nil {
 		log.Fatal(err)
 	}
+	return result
 }
 
 //
