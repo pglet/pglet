@@ -173,18 +173,21 @@ func (c *Client) registerWebClient(message *Message) {
 	c.send(responseMsg)
 
 	if response.Error == "" && !sessionCreated {
-		// send "connect" event to existing session
-		msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-			PageName:    session.Page.Name,
-			SessionID:   session.ID,
-			EventTarget: "page",
-			EventName:   "connect",
-			EventData:   "",
-		})
+		sendPageEventToSession(session, "connect", "")
+	}
+}
 
-		for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
-			pubsub.Send(clientChannelName(clientID), msg)
-		}
+func sendPageEventToSession(session *model.Session, eventName string, eventData string) {
+	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+		PageName:    session.Page.Name,
+		SessionID:   session.ID,
+		EventTarget: "page",
+		EventName:   eventName,
+		EventData:   eventData,
+	})
+
+	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
+		pubsub.Send(clientChannelName(clientID), msg)
 	}
 }
 
@@ -282,29 +285,12 @@ func (c *Client) registerWebClientCore(request *RegisterWebClientRequestPayload)
 			}
 
 			data, _ := json.Marshal(eventData)
-			msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-				PageName:    session.Page.Name,
-				SessionID:   session.ID,
-				EventTarget: "page",
-				EventName:   "change",
-				EventData:   string(data),
-			})
 
-			for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-				pubsub.Send(clientChannelName(clientID), msg)
-			}
+			// update page props
+			sendPageEventToSession(session, "change", string(data))
 
 			// fire "page.signin/signout" event
-			msg = NewMessageData("", PageEventToHostAction, &PageEventPayload{
-				PageName:    page.Name,
-				SessionID:   session.ID,
-				EventTarget: "page",
-				EventName:   authEventName,
-			})
-
-			for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-				pubsub.Send(clientChannelName(clientID), msg)
-			}
+			sendPageEventToSession(session, authEventName, "")
 		}
 	}
 
@@ -716,18 +702,9 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		return err
 	}
 
+	// update page props
 	data, _ := json.Marshal(payload.Props)
-	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-		PageName:    session.Page.Name,
-		SessionID:   session.ID,
-		EventTarget: "page",
-		EventName:   "change",
-		EventData:   string(data),
-	})
-
-	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
-		pubsub.Send(clientChannelName(clientID), msg)
-	}
+	sendPageEventToSession(session, "change", string(data))
 
 	// re-send the message to all connected web clients
 	go func() {
@@ -836,6 +813,7 @@ func (c *Client) unregister(normalClosure bool) {
 
 		if c.role == WebClient {
 			store.RemoveSessionWebClient(session.Page.ID, session.ID, c.id)
+			sendPageEventToSession(session, "disconnect", "")
 		} else {
 			store.RemoveSessionHostClient(session.Page.ID, session.ID, c.id)
 		}

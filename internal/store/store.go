@@ -125,9 +125,11 @@ func GetClientSessions(clientID string) []string {
 	return cache.SetGet(fmt.Sprintf(clientSessionsKey, clientID))
 }
 
-func DeleteExpiredClient(clientID string) []string {
-	cache.SortedSetRemove(clientsExpiredKey, clientID)
-	clients := make([]string, 0)
+func DeleteExpiredClient(clientID string, removeExpiredClient bool) (webClients []string) {
+	if removeExpiredClient {
+		cache.SortedSetRemove(clientsExpiredKey, clientID)
+	}
+	webClients = make([]string, 0)
 	for _, fullSessionID := range GetClientSessions(clientID) {
 		pageID, sessionID := model.ParseSessionID(fullSessionID)
 		cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
@@ -141,7 +143,7 @@ func DeleteExpiredClient(clientID string) []string {
 
 				sessionClients := GetSessionWebClients(pageID, sessionID)
 				for _, clientID := range sessionClients {
-					clients = append(clients, clientID)
+					webClients = append(webClients, clientID)
 					RemoveSessionWebClient(pageID, sessionID, clientID)
 				}
 
@@ -155,8 +157,7 @@ func DeleteExpiredClient(clientID string) []string {
 		}
 	}
 	cache.Remove(fmt.Sprintf(clientSessionsKey, clientID))
-	cache.SortedSetRemove(clientsExpiredKey, clientID)
-	return clients
+	return
 }
 
 //

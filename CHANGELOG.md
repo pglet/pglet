@@ -19,6 +19,9 @@
   * `Toggle.focused`
 * New `page` properties:
   * `userAuthProvider`
+* New `page` events:
+  * `connect` - web client connected
+  * `disconnect` - web client disconnected
 * New `IFrame` properties:
   * `borderWidth`
   * `borderColor`
@@ -50,10 +53,6 @@
   * `borderTop`
   * `borderBottom`
 
-Removed control properties:
-
-
-
-Fixes:
+Bug fixes:
 
 * Duplicate React rendering when loading a page.
