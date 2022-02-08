@@ -59,7 +59,7 @@ export const MyComboBox = React.memo<IControlProps>(({ control, parentDisabled }
 
   const handleChange = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption | undefined, index?: number | undefined, value?: string | undefined) => {
 
-    console.log("ComboBox.change:", option);
+    //console.log("ComboBox.change:", option);
 
     let selectedKey = option?.key as string;
 
@@ -107,14 +107,14 @@ export const MyComboBox = React.memo<IControlProps>(({ control, parentDisabled }
   }) : [];
   const value = control.value ?? "";
 
-  console.log("--selectAll:", selectAll)
+  //console.log("--selectAll:", selectAll)
   if (selectAll) {
     values.push(comboboxProps.options
       .filter(option => option.itemType === SelectableOptionMenuItemType.SelectAll)[0].key as string)
   }
 
-  console.log("values:", control.i, values)
-  console.log("value:", control.i, values)
+  //console.log("values:", control.i, values)
+  //console.log("value:", control.i, values)
   comboboxProps.selectedKey = multiSelect ? values : value;
 
   const handleFocus = () => {
