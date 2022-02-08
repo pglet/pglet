@@ -38,6 +38,18 @@
   * `borderColor`
   * `borderStyle`
   * `borderRadius`
+* New `Persona` control:
+  * `imageUrl`
+  * `imageAlt`
+  * `initialsColor`
+  * `initialsTextColor`
+  * `text`
+  * `secondaryText`
+  * `tertiaryText`
+  * `optionalText`
+  * `size`
+  * `presence`
+  * `hideDetails`
 
 * Removed `IFrame` properties:
   * `border`
