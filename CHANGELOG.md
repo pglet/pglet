@@ -30,6 +30,7 @@
 * New `page` properties:
   * `userAuthProvider`
 * New `page` events:
+  * `resize`
   * `connect` - web client connected
   * `disconnect` - web client disconnected
 * New `IFrame` properties:
@@ -42,6 +43,8 @@
   * `borderWidth`
   * `borderColor`
   * `borderStyle`
+* New `Stack` events:
+  * `submit`
 * New `Image` properties:
   * `fit` = `none`, `contain`, `cover`, `center`, `centerContain`, `centerCover`
   * `borderWidth`

@@ -59,26 +59,25 @@ export const MyComboBox = React.memo<IControlProps>(({ control, parentDisabled }
 
   const handleChange = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption | undefined, index?: number | undefined, value?: string | undefined) => {
 
-    //console.log("ComboBox.change:", option);
+    // console.log("ComboBox.change option:", option);
+    // console.log("ComboBox.change value:", value);
 
-    let selectedKey = option?.key as string;
+    let selectedKey = option?.key as string ?? value;
 
-    if (multiSelect) {
+    if (multiSelect && option) {
       let keys = selectedKeys;
       //console.log("Keys:", keys)
 
-      if (option) {
-        if (option?.itemType === SelectableOptionMenuItemType.SelectAll) {
-          setSelectAll(option?.selected)
-          keys = option?.selected ? comboboxProps.options
-            .filter(option => option.itemType === SelectableOptionMenuItemType.Normal)
-            .map(option => option.key as string) : [];
-        } else {
-          keys = option?.selected ? [...keys, option!.key as string] : keys.filter(k => k !== option!.key);
-          setSelectedKeys(keys);
-          setSelectAll(keys.length === comboboxProps.options
-            .filter(option => option.itemType === SelectableOptionMenuItemType.Normal).length)
-        }
+      if (option?.itemType === SelectableOptionMenuItemType.SelectAll) {
+        setSelectAll(option?.selected)
+        keys = option?.selected ? comboboxProps.options
+          .filter(option => option.itemType === SelectableOptionMenuItemType.Normal)
+          .map(option => option.key as string) : [];
+      } else {
+        keys = option?.selected ? [...keys, option!.key as string] : keys.filter(k => k !== option!.key);
+        setSelectedKeys(keys);
+        setSelectAll(keys.length === comboboxProps.options
+          .filter(option => option.itemType === SelectableOptionMenuItemType.Normal).length)
       }
 
       selectedKey = keys.join(",")
@@ -108,13 +107,25 @@ export const MyComboBox = React.memo<IControlProps>(({ control, parentDisabled }
   const value = control.value ?? "";
 
   //console.log("--selectAll:", selectAll)
-  if (selectAll) {
-    values.push(comboboxProps.options
-      .filter(option => option.itemType === SelectableOptionMenuItemType.SelectAll)[0].key as string)
+  const selectAllOption = comboboxProps.options.filter(option => option.itemType === SelectableOptionMenuItemType.SelectAll);
+  if (selectAll && selectAllOption.length > 0) {
+    values.push(selectAllOption[0].key as string)
   }
 
-  //console.log("values:", control.i, values)
-  //console.log("value:", control.i, values)
+  if (comboboxProps.allowFreeform) {
+    // add missing items from values
+    values.forEach(v => {
+      if (!comboboxProps.options.some(opt => opt.key === v)) {
+        comboboxProps.options.push({
+          key: v,
+          text: v
+        })
+      }
+    });
+  }
+
+  // console.log("values:", control.i, values)
+  // console.log("value:", control.i, values)
   comboboxProps.selectedKey = multiSelect ? values : value;
 
   const handleFocus = () => {
