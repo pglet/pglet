@@ -34,6 +34,7 @@ import { MyPieChart } from './PieChart'
 import { MyLineChart } from './LineChart'
 import { MyPersona } from './Persona'
 import { isFalse } from './Utils'
+import { MyComboBox } from './ComboBox'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -44,6 +45,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'checkbox': MyCheckbox,
         'toggle': MyToggle,
         'dropdown': MyDropdown,
+        'combobox': MyComboBox,
         'choicegroup': MyChoiceGroup,
         'progress': Progress,
         'spinner': MySpinner,
