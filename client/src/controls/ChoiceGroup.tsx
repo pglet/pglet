@@ -78,6 +78,14 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
 
   choiceProps.selectedKey = control.value !== undefined ? control.value : "";
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<IChoiceGroup | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -88,5 +96,10 @@ export const MyChoiceGroup = React.memo<IControlProps>(({ control, parentDisable
     }
   }, [control.focused, focused]);
 
-  return <ChoiceGroup componentRef={ctrlRef} {...choiceProps} onChange={handleChange} />;
+  return <ChoiceGroup componentRef={ctrlRef}
+    {...choiceProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

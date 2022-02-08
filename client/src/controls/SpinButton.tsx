@@ -70,6 +70,14 @@ export const MySpinButton = React.memo<IControlProps>(({ control, parentDisabled
     }
   }
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<ISpinButton | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -80,5 +88,11 @@ export const MySpinButton = React.memo<IControlProps>(({ control, parentDisabled
     }
   }, [control.focused, focused]);
 
-  return <SpinButton componentRef={ctrlRef} {...props} onChange={handleChange}></SpinButton>;
+  return <SpinButton
+    componentRef={ctrlRef}
+    {...props}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

@@ -121,5 +121,5 @@ export const Button = React.memo<IControlProps>(({ control, parentDisabled }) =>
     onClick={handleClick}
     onFocus={handleFocus}
     onBlur={handleBlur}
-  />;
+  />
 })

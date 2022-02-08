@@ -63,6 +63,14 @@ export const MyDropdown = React.memo<IControlProps>(({ control, parentDisabled }
 
   dropdownProps.selectedKey = control.value !== undefined ? control.value : "";
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<IDropdown | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -73,5 +81,11 @@ export const MyDropdown = React.memo<IControlProps>(({ control, parentDisabled }
     }
   }, [control.focused, focused]);
 
-  return <Dropdown componentRef={ctrlRef} {...dropdownProps} onChange={handleChange} />;
+  return <Dropdown
+    componentRef={ctrlRef}
+    {...dropdownProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

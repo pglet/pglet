@@ -17,6 +17,16 @@
   * `SpinButton.focused`
   * `Textbox.focused`
   * `Toggle.focused`
+* `focus` and `blur` events for the following input controls:
+  * `Button`
+  * `ChoiceGroup`
+  * `DatePicker`
+  * `Dropdown`
+  * `SearchBox`
+  * `Slider`
+  * `SpinButton`
+  * `Textbox`
+  * `Toggle`
 * New `page` properties:
   * `userAuthProvider`
 * New `page` events:

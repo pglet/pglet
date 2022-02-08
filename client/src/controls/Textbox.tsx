@@ -103,5 +103,5 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     {...textFieldProps}
     onChange={handleChange}
     onFocus={handleFocus}
-    onBlur={handleBlur} />;
+    onBlur={handleBlur} />
 })

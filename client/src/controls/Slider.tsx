@@ -73,6 +73,14 @@ export const MySlider = React.memo<IControlProps>(({ control, parentDisabled }) 
     sliderProps.originFromZero = true;
   }
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<ISlider | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -83,5 +91,11 @@ export const MySlider = React.memo<IControlProps>(({ control, parentDisabled }) 
     }
   }, [control.focused, focused]);
 
-  return <Slider componentRef={ctrlRef} {...sliderProps} onChange={handleChange}></Slider>;
+  return <Slider
+    componentRef={ctrlRef}
+    {...sliderProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

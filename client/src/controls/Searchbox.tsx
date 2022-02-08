@@ -83,6 +83,14 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     }
   }
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<ISearchBox | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -93,8 +101,13 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     }
   }, [control.focused, focused]);
 
-  return <SearchBox componentRef={ctrlRef} {...props}
+  return <SearchBox
+    componentRef={ctrlRef}
+    {...props}
     onChange={handleChange}
     onClear={handleClear}
-    onSearch={handleSearch} />;
+    onSearch={handleSearch}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

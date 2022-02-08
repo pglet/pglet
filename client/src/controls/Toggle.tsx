@@ -55,6 +55,14 @@ export const MyToggle = React.memo<IControlProps>(({ control, parentDisabled }) 
     }
   };
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<IToggle | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -65,5 +73,11 @@ export const MyToggle = React.memo<IControlProps>(({ control, parentDisabled }) 
     }
   }, [control.focused, focused]);
 
-  return <Toggle componentRef={ctrlRef} {...toggleProps} onChange={handleChange} />;
+  return <Toggle
+    componentRef={ctrlRef}
+    {...toggleProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

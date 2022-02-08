@@ -53,6 +53,14 @@ export const MyDatePicker = React.memo<IControlProps>(({ control, parentDisabled
     }
   };
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<IDatePicker | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -63,5 +71,11 @@ export const MyDatePicker = React.memo<IControlProps>(({ control, parentDisabled
     }
   }, [control.focused, focused]);
 
-  return <DatePicker componentRef={ctrlRef} {...pickerProps} onSelectDate={handleSelectDate} />;
+  return <DatePicker
+    componentRef={ctrlRef}
+    {...pickerProps}
+    onSelectDate={handleSelectDate}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })
