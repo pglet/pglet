@@ -2,7 +2,7 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { Dropdown, IDropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
+import { Dropdown, DropdownMenuItemType, IDropdown, IDropdownOption, IDropdownProps } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, isTrue } from './Utils'
 
@@ -53,12 +53,22 @@ export const MyDropdown = React.memo<IControlProps>(({ control, parentDisabled }
     }
   };
 
+  const getItemType = (t: string) => {
+    switch (t ? t.toLowerCase() : '') {
+      case 'divider': return DropdownMenuItemType.Divider;
+      case 'header': return DropdownMenuItemType.Header;
+      default: return DropdownMenuItemType.Normal;
+    }
+  }
+
   dropdownProps.options = useSelector<any, IDropdownOption[]>((state: any) =>
     (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
       .filter((oc: any) => oc.t === 'option')
       .map((oc: any) => ({
         key: oc.key ? oc.key : oc.text,
-        text: oc.text ? oc.text : oc.key
+        text: oc.text ? oc.text : oc.key,
+        itemType: getItemType(oc.itemtype),
+        disabled: isTrue(oc.disabled)
       })), shallowEqual);
 
   dropdownProps.selectedKey = control.value !== undefined ? control.value : "";

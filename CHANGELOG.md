@@ -48,6 +48,9 @@
   * `borderColor`
   * `borderStyle`
   * `borderRadius`
+* New `Dropdown.Option` properties:
+  * `itemType` (`normal`, `divider`, `header`)
+  * `disabled`
 * New `Persona` control:
   * `imageUrl`
   * `imageAlt`
@@ -60,6 +63,20 @@
   * `size`
   * `presence`
   * `hideDetails`
+* New `ComboBox` control:
+  * `label`
+  * `value`
+  * `placeholder`
+  * `error_message`
+  * `focused`
+  * `multi_select`
+  * `allow_free_form`
+  * `auto_complete`
+  * `options`:
+    * `key`
+    * `text`
+    * `itemType` (`normal`, `divider`, `header`, `select_all`)
+    * `disabled`
 
 * Removed `IFrame` properties:
   * `border`
