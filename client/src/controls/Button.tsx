@@ -97,6 +97,14 @@ export const Button = React.memo<IControlProps>(({ control, parentDisabled }) =>
     ws.pageEventFromWeb(control.i, 'click', control.data)
   }
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const ctrlRef = React.useRef<IButton | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
@@ -107,5 +115,11 @@ export const Button = React.memo<IControlProps>(({ control, parentDisabled }) =>
     }
   }, [control.focused, focused]);
 
-  return <ButtonType componentRef={ctrlRef} onClick={handleClick} {...buttonProps} />;
+  return <ButtonType
+    componentRef={ctrlRef}
+    {...buttonProps}
+    onClick={handleClick}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />;
 })

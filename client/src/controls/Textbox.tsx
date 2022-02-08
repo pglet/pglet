@@ -36,6 +36,14 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     }
   }
 
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
   const textFieldProps: ITextFieldProps = {
     id: getId(control.f ? control.f : control.i),
     value: control.value ? control.value : "",
@@ -90,5 +98,10 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     }
   }, [control.focused, focused]);
 
-  return <TextField componentRef={ctrlRef} {...textFieldProps} onChange={handleChange} />;
+  return <TextField
+    componentRef={ctrlRef}
+    {...textFieldProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur} />;
 })
