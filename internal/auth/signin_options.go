@@ -40,7 +40,7 @@ func GetSigninOptions(permissions string) *SigninOptions {
 		opts.GoogleEnabled = opts.GoogleEnabled || authType == "" || authType == GoogleAuth
 
 		// check if the requested permission is a group
-		if strings.Index(permission, "/") != -1 {
+		if strings.Contains(permission, "/") {
 			opts.GitHubGroupScope = opts.GitHubGroupScope || (opts.GitHubEnabled && authType == "" || authType == GitHubAuth)
 			opts.AzureGroupScope = opts.AzureGroupScope || (opts.AzureEnabled && authType == "" || authType == AzureAuth)
 			opts.GoogleGroupScope = opts.GoogleGroupScope || (opts.GoogleEnabled && authType == "" || authType == GoogleAuth)

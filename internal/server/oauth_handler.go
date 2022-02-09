@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/pglet/pglet/internal/store"
 	"github.com/pglet/pglet/internal/utils"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -77,7 +77,7 @@ func oauthHandler(c *gin.Context, authProvider string) {
 		oauthConfig := auth.GetOauthConfig(authProvider, state.GroupsEnabled)
 
 		// request token
-		token, err := oauthConfig.Exchange(oauth2.NoContext, code)
+		token, err := oauthConfig.Exchange(context.Background(), code)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return

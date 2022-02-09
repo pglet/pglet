@@ -55,7 +55,7 @@ func (ps *Service) getHostClient(serverURL string) (*client.HostClient, error) {
 		err := hc.Start()
 
 		if err != nil {
-			return nil, fmt.Errorf("Cannot connect to %s: %v", wsURL, err)
+			return nil, fmt.Errorf("cannot connect to %s: %v", wsURL, err)
 		}
 		ps.hostClients[wsURL] = hc
 	}

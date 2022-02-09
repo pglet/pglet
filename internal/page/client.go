@@ -25,8 +25,8 @@ type ClientRole string
 
 const (
 	None                         ClientRole = "None"
-	WebClient                               = "Web"
-	HostClient                              = "Host"
+	WebClient                    ClientRole = "Web"
+	HostClient                   ClientRole = "Host"
 	pageNotFoundMessage                     = "Page not found or application is not running."
 	inactiveAppMessage                      = "Application is inactive. Please try refreshing this page later."
 	signinRequiredMessage                   = "signin_required"
@@ -43,7 +43,6 @@ type Client struct {
 	subscription         chan []byte
 	sessions             map[string]*model.Session
 	pages                map[string]*model.Page
-	exitSubscribe        chan bool
 	exitExtendExpiration chan bool
 }
 
@@ -86,14 +85,12 @@ func (c *Client) register(role ClientRole) {
 	c.subscription = pubsub.Subscribe(clientChannelName(c.id))
 	go func() {
 		for {
-			select {
-			case msg, more := <-c.subscription:
-				if !more {
-					log.Debugln("Exit subscribe():", c.id)
-					return
-				}
-				c.send(msg)
+			msg, more := <-c.subscription
+			if !more {
+				log.Debugln("Exit subscribe():", c.id)
+				return
 			}
+			c.send(msg)
 		}
 	}()
 
@@ -168,215 +165,227 @@ func (c *Client) registerWebClient(message *Message) {
 	request := new(RegisterWebClientRequestPayload)
 	json.Unmarshal(message.Payload, request)
 
-	// subscribe as web client
-	page := store.GetPageByName(request.PageName)
+	// register logic
+	session, sessionCreated, response := c.registerWebClientCore(request)
 
-	response := &RegisterWebClientResponsePayload{
+	// send response message
+	responseMsg := NewMessageData(message.ID, RegisterWebClientAction, response)
+	c.send(responseMsg)
+
+	if response.Error == "" && !sessionCreated {
+		sendPageEventToSession(session, "connect", "")
+	}
+}
+
+func sendPageEventToSession(session *model.Session, eventName string, eventData string) {
+	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
+		PageName:    session.Page.Name,
+		SessionID:   session.ID,
+		EventTarget: "page",
+		EventName:   eventName,
+		EventData:   eventData,
+	})
+
+	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
+		pubsub.Send(clientChannelName(clientID), msg)
+	}
+}
+
+func (c *Client) registerWebClientCore(request *RegisterWebClientRequestPayload) (
+	session *model.Session,
+	sessionCreated bool,
+	response *RegisterWebClientResponsePayload) {
+
+	response = &RegisterWebClientResponsePayload{
 		Error: "",
 	}
 
+	sessionCreated = false
+
+	// get page
+	page := store.GetPageByName(request.PageName)
 	if page == nil {
 		response.Error = pageNotFoundMessage
-	} else {
-		var session *model.Session
+		return
+	}
 
-		// func: check if "Sign in required" response should be sent
-		requireSignin := func() bool {
-			if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
-				log.Debugln("Required page permissions:", page.Permissions)
-				response.Error = signinRequiredMessage
-				response.SigninOptions = auth.GetSigninOptions(page.Permissions)
-				return true
-			}
-			return false
+	// func: check if "Sign in required" response should be sent
+	requireSignin := func() bool {
+		if page.Permissions != "" && (c.principal == nil || !c.principal.HasPermissions(page.Permissions)) {
+			log.Debugln("Required page permissions:", page.Permissions)
+			response.Error = signinRequiredMessage
+			response.SigninOptions = auth.GetSigninOptions(page.Permissions)
+			return true
+		}
+		return false
+	}
+
+	// func: update session's principal and notify page of sign in/sign out events
+	updateSessionPrincipal := func() {
+		userProps := map[string]string{
+			"userauthprovider": "",
+			"userid":           "",
+			"userlogin":        "",
+			"username":         "",
+			"useremail":        "",
+			"userclientip":     "",
 		}
 
-		// func: update session's principal and notify page of sign in/sign out events
-		updateSessionPrincipal := func() {
-			userProps := map[string]string{
-				"userid":       "",
-				"userlogin":    "",
-				"username":     "",
-				"useremail":    "",
-				"userclientip": "",
+		principalID := ""
+		if c.principal != nil {
+			principalID = c.principal.UID
+
+			userProps = map[string]string{
+				"userauthprovider": c.principal.AuthProvider,
+				"userid":           c.principal.ID,
+				"userlogin":        c.principal.Login,
+				"username":         c.principal.Name,
+				"useremail":        c.principal.Email,
+				"userclientip":     c.principal.ClientIP,
 			}
+		}
 
-			principalID := ""
-			if c.principal != nil {
-				principalID = c.principal.UID
+		if session.PrincipalID != principalID && !(session.PrincipalID == "" && principalID == "") {
 
-				userProps = map[string]string{
-					"userid":       c.principal.ID,
-					"userlogin":    c.principal.Login,
-					"username":     c.principal.Name,
-					"useremail":    c.principal.Email,
-					"userclientip": c.principal.ClientIP,
-				}
+			log.Debugf("Updating session principal for %s:%s\n", page.Name, session.ID)
+
+			pctl := store.GetSessionControl(session, "page")
+			for k, v := range userProps {
+				pctl.SetAttr(k, v)
 			}
+			store.SetSessionControl(session, pctl)
 
-			if session.PrincipalID != principalID && !(session.PrincipalID == "" && principalID == "") {
+			// update session's principal
+			store.SetSessionPrincipalID(session, principalID)
 
-				log.Debugf("Updating session principal for %s:%s\n", page.Name, session.ID)
+			authEventName := "signout"
 
+			if session.PrincipalID != "" {
+
+				authEventName = "signin"
+
+				// hide signin dialog
 				pctl := store.GetSessionControl(session, "page")
-				for k, v := range userProps {
-					pctl.SetAttr(k, v)
-				}
+				pctl.SetAttr("signin", "")
 				store.SetSessionControl(session, pctl)
-
-				// update session's principal
-				store.SetSessionPrincipalID(session, principalID)
-
-				authEventName := "signout"
-
-				if session.PrincipalID != "" {
-
-					authEventName = "signin"
-
-					// hide signin dialog
-					pctl := store.GetSessionControl(session, "page")
-					pctl.SetAttr("signin", "")
-					store.SetSessionControl(session, pctl)
-				}
-
-				changeEventProps := map[string]interface{}{
-					"i":      "page",
-					"signin": "",
-				}
-
-				// inject user props
-				for k, v := range userProps {
-					changeEventProps[k] = v
-				}
-
-				eventData := []map[string]interface{}{
-					changeEventProps,
-				}
-
-				data, _ := json.Marshal(eventData)
-				msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-					PageName:    session.Page.Name,
-					SessionID:   session.ID,
-					EventTarget: "page",
-					EventName:   "change",
-					EventData:   string(data),
-				})
-
-				for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
-
-				// fire "page.signin/signout" event
-				msg = NewMessageData("", PageEventToHostAction, &PageEventPayload{
-					PageName:    page.Name,
-					SessionID:   session.ID,
-					EventTarget: "page",
-					EventName:   authEventName,
-				})
-
-				for _, clientID := range store.GetSessionHostClients(page.ID, session.ID) {
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
-			}
-		}
-
-		if page.IsApp {
-			// app page
-
-			if len(store.GetPageHostClients(page.ID)) == 0 {
-				response.Error = inactiveAppMessage
-				goto response
 			}
 
-			// lookup for existing session
-			if request.SessionID != "" {
-				if sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP); err == nil {
-					session = store.GetSession(page, sessionID)
-				} else {
-					log.Errorf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
-				}
+			changeEventProps := map[string]interface{}{
+				"i":      "page",
+				"signin": "",
 			}
 
-			var sessionCreated bool
-
-			if session == nil {
-				// create new session
-				if sessionsRateLimitReached(c.clientIP) {
-					response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
-					goto response
-				}
-
-				if requireSignin() {
-					goto response
-				}
-
-				session = newSession(page, uuid.New().String(), c.clientIP,
-					request.PageHash, request.WinWidth, request.WinHeight)
-				sessionCreated = true
-			} else {
-				log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
-
-				updateSessionPrincipal()
-
-				if requireSignin() {
-					goto response
-				}
+			// inject user props
+			for k, v := range userProps {
+				changeEventProps[k] = v
 			}
 
-			c.register(WebClient)
-			c.registerSession(session)
-
-			if sessionCreated {
-				// pick connected host client from page pool and notify about new session created
-				msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
-					PageName:  page.Name,
-					SessionID: session.ID,
-				})
-
-				// TODO
-				// pick first host client for now
-				// in the future we will implement load distribution algorithm
-				for _, clientID := range store.GetPageHostClients(page.ID) {
-					store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
-					pubsub.Send(clientChannelName(clientID), msg)
-					break
-				}
-
-				log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
-
-				updateSessionPrincipal()
+			eventData := []map[string]interface{}{
+				changeEventProps,
 			}
 
-		} else {
-			// shared page
+			data, _ := json.Marshal(eventData)
 
-			if requireSignin() {
-				goto response
-			}
+			// update page props
+			sendPageEventToSession(session, "change", string(data))
 
-			// retrieve zero session
-			session = store.GetSession(page, ZeroSession)
-			c.register(WebClient)
-			c.registerSession(session)
-
-			log.Debugf("Connected to zero session of %s page\n", page.Name)
-		}
-
-		sessionID, err := c.encryptSensitiveData(session.ID, c.clientIP)
-		if err != nil {
-			log.Errorf("error encrypting session.ID: %s", err)
-		}
-
-		response.Session = &SessionPayload{
-			ID:       sessionID,
-			Controls: store.GetAllSessionControls(session),
+			// fire "page.signin/signout" event
+			sendPageEventToSession(session, authEventName, "")
 		}
 	}
 
-response:
+	// is it app page?
+	if page.IsApp {
+		if len(store.GetPageHostClients(page.ID)) == 0 {
+			response.Error = inactiveAppMessage
+			return
+		}
 
-	responseMsg := NewMessageData(message.ID, RegisterWebClientAction, response)
-	c.send(responseMsg)
+		// lookup for existing session
+		if request.SessionID != "" {
+			if sessionID, err := c.decryptSensitiveData(request.SessionID, c.clientIP); err == nil {
+				session = store.GetSession(page, sessionID)
+			} else {
+				response.Error = fmt.Sprintf("error decrypting request.SessionID %s from %s: %s", request.SessionID, c.clientIP, err)
+				return
+			}
+		}
+
+		if session == nil {
+			// create new session
+			if sessionsRateLimitReached(c.clientIP) {
+				response.Error = fmt.Sprintf("A limit of %d new sessions per hour has been reached", config.LimitSessionsPerHour())
+				return
+			}
+
+			if requireSignin() {
+				return
+			}
+
+			session = newSession(page, uuid.New().String(), c.clientIP,
+				request.PageHash, request.WinWidth, request.WinHeight)
+			sessionCreated = true
+		} else {
+			log.Debugf("Existing session %s found for %s page\n", session.ID, page.Name)
+
+			updateSessionPrincipal()
+
+			if requireSignin() {
+				return
+			}
+		}
+
+		c.register(WebClient)
+		c.registerSession(session)
+
+		if sessionCreated {
+			// pick connected host client from page pool and notify about new session created
+			msg := NewMessageData("", SessionCreatedAction, &SessionCreatedPayload{
+				PageName:  page.Name,
+				SessionID: session.ID,
+			})
+
+			// TODO
+			// pick first host client for now
+			// in the future we will implement load distribution algorithm
+			for _, clientID := range store.GetPageHostClients(page.ID) {
+				store.AddSessionHostClient(session.Page.ID, session.ID, clientID)
+				pubsub.Send(clientChannelName(clientID), msg)
+				break
+			}
+
+			log.Debugf("New session %s started for %s page\n", session.ID, page.Name)
+
+			updateSessionPrincipal()
+		}
+
+	} else {
+		// shared page
+
+		if requireSignin() {
+			return
+		}
+
+		// retrieve zero session
+		session = store.GetSession(page, ZeroSession)
+		c.register(WebClient)
+		c.registerSession(session)
+
+		log.Debugf("Connected to zero session of %s page\n", page.Name)
+	}
+
+	sessionID, err := c.encryptSensitiveData(session.ID, c.clientIP)
+	if err != nil {
+		response.Error = fmt.Sprintf("error encrypting session.ID: %s", err)
+		return
+	}
+
+	response.Session = &SessionPayload{
+		ID:       sessionID,
+		Controls: store.GetAllSessionControls(session),
+	}
+
+	return
 }
 
 func (c *Client) registerHostClient(message *Message) {
@@ -407,10 +416,10 @@ func (c *Client) registerHostClient(message *Message) {
 	}
 
 	if !config.AllowRemoteHostClients() && c.clientIP != "" && c.clientIP != "::1" && c.clientIP != "127.0.0.1" {
-		err = fmt.Errorf("Remote host clients are not allowed")
+		err = fmt.Errorf("remote host clients are not allowed")
 		goto response
 	} else if config.HostClientsAuthToken() != "" && config.HostClientsAuthToken() != request.AuthToken {
-		err = fmt.Errorf("Invalid auth token")
+		err = fmt.Errorf("invalid auth token")
 		goto response
 	}
 
@@ -426,13 +435,13 @@ func (c *Client) registerHostClient(message *Message) {
 
 	if page == nil {
 		if pagesRateLimitReached(c.clientIP) {
-			err = fmt.Errorf("A limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
+			err = fmt.Errorf("a limit of %d new pages per hour has been reached", config.LimitPagesPerHour())
 			goto response
 		}
 
 		// filter page name
 		if pageName.IsReserved() {
-			err = fmt.Errorf("Account or page name is reserved")
+			err = fmt.Errorf("account or page name is reserved")
 			goto response
 		}
 
@@ -443,7 +452,7 @@ func (c *Client) registerHostClient(message *Message) {
 
 	// make sure unauth client has access to a given page
 	if config.CheckPageIP() && page.ClientIP != c.clientIP {
-		err = errors.New("Page name is already taken")
+		err = errors.New("page name is already taken")
 		goto response
 	}
 
@@ -469,6 +478,11 @@ func (c *Client) registerHostClient(message *Message) {
 		session := store.GetSession(page, ZeroSession)
 		if session == nil {
 			session = newSession(page, ZeroSession, c.clientIP, "", "", "")
+		} else if !request.Update {
+			err = cleanPage(session)
+			if err != nil {
+				goto response
+			}
 		}
 		c.registerSession(session)
 		response.SessionID = session.ID
@@ -490,6 +504,33 @@ response:
 	}
 
 	c.send(NewMessageData(message.ID, "", response))
+}
+
+func cleanPage(session *model.Session) error {
+	handler := newSessionHandler(session)
+	_, err := handler.executeBatch([]*command.Command{
+		{
+			Name:   "clean",
+			Values: []string{"page"},
+		},
+		{
+			Name:   "set",
+			Values: []string{"page"},
+			Attrs: map[string]string{
+				"verticalFill":         "",
+				"horizontalAlign":      "",
+				"verticalAlign":        "",
+				"gap":                  "",
+				"padding":              "",
+				"bgcolor":              "",
+				"theme":                "",
+				"themePrimaryColor":    "",
+				"themeTextColor":       "",
+				"themeBackgroundColor": "",
+			},
+		},
+	})
+	return err
 }
 
 func (c *Client) encryptSensitiveData(data string, clientIP string) (string, error) {
@@ -605,6 +646,8 @@ func (c *Client) executeCommandsBatchFromHostClient(message *Message) {
 
 	// send response
 	c.send(NewMessageData(message.ID, "", responsePayload))
+
+	log.Debugf("Page commands batch response to %s - %v\n", c.id, responsePayload)
 }
 
 func (c *Client) processPageEventFromWebClient(message *Message) {
@@ -661,18 +704,9 @@ func (c *Client) updateControlPropsFromWebClient(message *Message) error {
 		return err
 	}
 
+	// update page props
 	data, _ := json.Marshal(payload.Props)
-	msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-		PageName:    session.Page.Name,
-		SessionID:   session.ID,
-		EventTarget: "page",
-		EventName:   "change",
-		EventData:   string(data),
-	})
-
-	for _, clientID := range store.GetSessionHostClients(session.Page.ID, session.ID) {
-		pubsub.Send(clientChannelName(clientID), msg)
-	}
+	sendPageEventToSession(session, "change", string(data))
 
 	// re-send the message to all connected web clients
 	go func() {
@@ -713,9 +747,7 @@ func (c *Client) handleInactiveAppFromHostClient(message *Message) {
 					store.RemoveSessionWebClient(session.Page.ID, session.ID, clientID)
 				}
 
-				if _, ok := c.sessions[sessionID]; ok {
-					delete(c.sessions, sessionID)
-				}
+				delete(c.sessions, sessionID)
 
 				log.Debugln("Delete inactive app session:", page.ID, sessionID)
 				store.DeleteSession(page.ID, sessionID)
@@ -783,6 +815,7 @@ func (c *Client) unregister(normalClosure bool) {
 
 		if c.role == WebClient {
 			store.RemoveSessionWebClient(session.Page.ID, session.ID, c.id)
+			sendPageEventToSession(session, "disconnect", "")
 		} else {
 			store.RemoveSessionHostClient(session.Page.ID, session.ID, c.id)
 		}
@@ -795,7 +828,7 @@ func (c *Client) unregister(normalClosure bool) {
 
 	// expire client immediately
 	if normalClosure {
-		deleteExpiredClient(c.id)
+		deleteExpiredClient(c.id, true)
 	}
 }
 

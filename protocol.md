@@ -25,6 +25,7 @@ Request:
     "hostClientID": "", // set if re-connecting to the same host client
     "pageName": "",
     "isApp": true,
+    "update": true, // the page should be updated; otherwise it's cleaned
     "authToken": "",
     "permissions": ""
 }

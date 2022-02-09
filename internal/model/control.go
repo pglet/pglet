@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/pglet/pglet/internal/utils"
 )
@@ -13,6 +14,10 @@ var (
 		"to",
 		"from",
 		"at",
+		"t",
+		"p",
+		"i",
+		"c",
 	}
 )
 
@@ -25,7 +30,7 @@ func NewControl(controlType string, parentID string, id string) *Control {
 	ctl["t"] = controlType
 	ctl["p"] = parentID
 	ctl["i"] = id
-	ctl["c"] = make([]string, 0, 0)
+	ctl["c"] = make([]string, 0)
 	return &ctl
 }
 
@@ -40,19 +45,29 @@ func NewControlFromJSON(jsonCtrl string) (*Control, error) {
 }
 
 func (ctl *Control) GetAttr(name string) interface{} {
-	return (*ctl)[name]
+	return (*ctl)[strings.ToLower(name)]
 }
 
 func (ctl *Control) SetAttr(name string, value string) {
+	lname := strings.ToLower(name)
 	if value != "" {
-		(*ctl)[name] = value
+		(*ctl)[lname] = value
 	} else {
-		delete((*ctl), name)
+		delete((*ctl), lname)
 	}
 }
 
 func (ctl *Control) AppendAttr(name string, value string) {
-	(*ctl)[name] = (*ctl)[name].(string) + value
+	lname := strings.ToLower(name)
+	(*ctl)[lname] = (*ctl)[lname].(string) + value
+}
+
+func (ctl *Control) CleanAttrs() {
+	for name := range *ctl {
+		if !IsSystemAttr(name) {
+			delete((*ctl), name)
+		}
+	}
 }
 
 // ID returns control's ID.
@@ -92,7 +107,7 @@ func (ctl *Control) RemoveChild(childID string) {
 }
 
 func (ctl *Control) RemoveChildren() {
-	(*ctl)["c"] = make([][]interface{}, 0, 0)
+	(*ctl)["c"] = make([][]interface{}, 0)
 }
 
 func (ctl *Control) GetChildrenIds() []string {
@@ -113,6 +128,6 @@ func (ctl *Control) CopyChildren(srcCtl *Control) {
 	(*ctl)["c"] = copy
 }
 
-func IsSystemAttr(attr string) bool {
-	return utils.ContainsString(systemAttrs, attr)
+func IsSystemAttr(name string) bool {
+	return utils.ContainsString(systemAttrs, strings.ToLower(name))
 }

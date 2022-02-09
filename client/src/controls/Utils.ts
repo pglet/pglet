@@ -54,14 +54,14 @@ export function getWindowHash() {
   return hash.length > 0 ? hash.substring(1) : hash;
 }
 
-export function isTrue(value:any) {
-    return value !== undefined && value != null && value.toString().toLowerCase() === "true";
+export function isTrue(value: any) {
+  return value !== undefined && value != null && value.toString().toLowerCase() === "true";
 }
 
-export function isFalse(value:any) {
+export function isFalse(value: any) {
   return value !== undefined && value != null && value.toString().toLowerCase() === "false";
 }
 
-export function getId(value:any) {
+export function getId(value: any) {
   return value.toString().replace(/:/g, "_");
 }

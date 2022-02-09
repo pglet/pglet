@@ -215,7 +215,17 @@ func TestSet(t *testing.T) {
 		t.Errorf("SetGet returned %d entries, want %d", count, 2)
 	}
 
-	SetRemove("set1", "v2")
+	removed := SetRemove("set1", "v2")
+	if removed != 1 {
+		t.Errorf("SetGet remove result returned %d, want %d", removed, 1)
+	}
+
+	// delete again
+	removed = SetRemove("set1", "v2")
+	if removed != 0 {
+		t.Errorf("Second SetGet remove result returned %d, want %d", removed, 0)
+	}
+
 	items = SetGet("set1")
 	count = len(items)
 	if count != 1 {

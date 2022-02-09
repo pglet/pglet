@@ -1,9 +1,8 @@
 package auth
 
 import (
+	"context"
 	"errors"
-
-	"golang.org/x/oauth2"
 )
 
 type GoogleUser struct {
@@ -26,7 +25,7 @@ func (p *SecurityPrincipal) updateFromGoogle() error {
 
 	// Google client
 	oauthConfig := GetOauthConfig(p.AuthProvider, p.Groups != nil)
-	client := oauthConfig.Client(oauth2.NoContext, token)
+	client := oauthConfig.Client(context.Background(), token)
 
 	// get user details
 	googleUser := &GoogleUser{}

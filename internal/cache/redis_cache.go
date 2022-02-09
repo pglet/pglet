@@ -203,7 +203,7 @@ func (c *redisCache) inc(key string, by int, expires time.Duration) int {
 	if expires > 0 {
 		conn.Send("EXPIRE", key, expires.Seconds())
 	}
-	value, err := redis.MultiBulk(conn.Do("EXEC"))
+	value, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -347,14 +347,15 @@ func (c *redisCache) setAdd(key string, value string) {
 	}
 }
 
-func (c *redisCache) setRemove(key string, value string) {
+func (c *redisCache) setRemove(key string, value string) int {
 	conn := c.pool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("SREM", key, value)
+	result, err := redis.Int(conn.Do("SREM", key, value))
 	if err != nil {
 		log.Fatal(err)
 	}
+	return result
 }
 
 //

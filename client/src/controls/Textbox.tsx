@@ -2,18 +2,18 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { TextField, ITextFieldProps, useTheme } from '@fluentui/react';
+import { TextField, ITextFieldProps, useTheme, ITextField } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { defaultPixels, getId, getThemeColor, isTrue } from './Utils'
 
-export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
   const ws = React.useContext(WebSocketContext);
   const dispatch = useDispatch();
   const theme = useTheme();
 
   let disabled = isTrue(control.disabled) || parentDisabled;
-  
+
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 
     let payload: any = {}
@@ -34,6 +34,14 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     if (isTrue(control.onchange)) {
       ws.pageEventFromWeb(control.i, 'change', control.data ? `${control.data}|${newValue!}` : newValue!)
     }
+  }
+
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
   }
 
   const textFieldProps: ITextFieldProps = {
@@ -59,7 +67,7 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
         width: control.width !== undefined ? defaultPixels(control.width) : undefined,
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
-        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined  
+        margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
       },
       field: {
         textAlign: control.align !== undefined ? control.align : undefined,
@@ -73,12 +81,27 @@ export const Textbox = React.memo<IControlProps>(({control, parentDisabled}) => 
     }
     if (control.iconcolor !== undefined) {
       textFieldProps.iconProps!.styles = {
-          root: {
-              color: getThemeColor(theme, control.iconcolor)
-          }
+        root: {
+          color: getThemeColor(theme, control.iconcolor)
+        }
       }
-    }    
+    }
   }
 
-  return <TextField {...textFieldProps} onChange={handleChange} />;
+  const ctrlRef = React.useRef<ITextField | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <TextField
+    componentRef={ctrlRef}
+    {...textFieldProps}
+    onChange={handleChange}
+    onFocus={handleFocus}
+    onBlur={handleBlur} />
 })

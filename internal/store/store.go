@@ -125,9 +125,11 @@ func GetClientSessions(clientID string) []string {
 	return cache.SetGet(fmt.Sprintf(clientSessionsKey, clientID))
 }
 
-func DeleteExpiredClient(clientID string) []string {
-	cache.SortedSetRemove(clientsExpiredKey, clientID)
-	clients := make([]string, 0)
+func DeleteExpiredClient(clientID string, removeExpiredClient bool) (webClients []string) {
+	if removeExpiredClient {
+		cache.SortedSetRemove(clientsExpiredKey, clientID)
+	}
+	webClients = make([]string, 0)
 	for _, fullSessionID := range GetClientSessions(clientID) {
 		pageID, sessionID := model.ParseSessionID(fullSessionID)
 		cache.SetRemove(fmt.Sprintf(sessionHostClientsKey, pageID, sessionID), clientID)
@@ -141,7 +143,7 @@ func DeleteExpiredClient(clientID string) []string {
 
 				sessionClients := GetSessionWebClients(pageID, sessionID)
 				for _, clientID := range sessionClients {
-					clients = append(clients, clientID)
+					webClients = append(webClients, clientID)
 					RemoveSessionWebClient(pageID, sessionID, clientID)
 				}
 
@@ -155,8 +157,7 @@ func DeleteExpiredClient(clientID string) []string {
 		}
 	}
 	cache.Remove(fmt.Sprintf(clientSessionsKey, clientID))
-	cache.SortedSetRemove(clientsExpiredKey, clientID)
-	return clients
+	return
 }
 
 //
@@ -239,7 +240,7 @@ func SetSessionControl(session *model.Session, ctrl *model.Control) error {
 		fmt.Sprintf(sessionKey, session.Page.ID, session.ID),
 		fmt.Sprintf(sessionControlsKey, session.Page.ID, session.ID), ctrl.ID(), cj, config.LimitSessionSizeBytes())
 	if !success {
-		return fmt.Errorf("Session %d:%s size exceeds the maximum of %d bytes", session.Page.ID, session.ID, config.LimitSessionSizeBytes())
+		return fmt.Errorf("session %d:%s size exceeds the maximum of %d bytes", session.Page.ID, session.ID, config.LimitSessionSizeBytes())
 	}
 	return nil
 }

@@ -61,7 +61,7 @@ func (pc *unixDomainSocket) commandLoop() {
 	sockAddr := filepath.Join(os.TempDir(), coreFxSocketPrefix+pc.commandPipeName)
 	pc.commandListener, err = net.Listen("unix", sockAddr)
 	if err != nil {
-		// handle error
+		log.Fatalln("Error listening command loop Unix domain socket", sockAddr, err)
 	}
 
 	for {
@@ -100,25 +100,23 @@ func (pc *unixDomainSocket) read() string {
 
 	r := bufio.NewReader(pc.conn)
 
+	var result []byte
+
 	for {
-		var result []byte
 
-		for {
+		bytesRead, err = r.Read(buf)
 
-			bytesRead, err = r.Read(buf)
-
-			if err == io.EOF {
-				return ""
-			}
-
-			result = append(result, buf[0:bytesRead]...)
-
-			if bytesRead < readsize {
-				break
-			}
+		if err == io.EOF {
+			return ""
 		}
-		return strings.TrimSuffix(strings.TrimSuffix(string(result), "\n"), "\r")
+
+		result = append(result, buf[0:bytesRead]...)
+
+		if bytesRead < readsize {
+			break
+		}
 	}
+	return strings.TrimSuffix(strings.TrimSuffix(string(result), "\n"), "\r")
 }
 
 func (pc *unixDomainSocket) writeResult(result string) {
@@ -151,7 +149,7 @@ func (pc *unixDomainSocket) eventLoop() {
 	sockAddr := filepath.Join(os.TempDir(), coreFxSocketPrefix+pc.eventPipeName)
 	pc.eventListener, err = net.Listen("unix", sockAddr)
 	if err != nil {
-		// handle error
+		log.Fatalln("Error listening event loop Unix domain socket", sockAddr, err)
 	}
 
 	for {
@@ -168,33 +166,31 @@ func (pc *unixDomainSocket) eventLoop() {
 			defer log.Println("Disconnected from event pipe")
 
 			for {
-				select {
-				case evt, more := <-pc.events:
+				evt, more := <-pc.events
 
-					w := bufio.NewWriter(conn)
+				w := bufio.NewWriter(conn)
 
-					_, err = w.WriteString(evt + "\n")
-					if err != nil {
-						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
-							continue
-						}
-						return
+				_, err = w.WriteString(evt + "\n")
+				if err != nil {
+					if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
+						continue
 					}
+					return
+				}
 
-					//conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
-					err = w.Flush()
-					if err != nil {
-						if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
-							continue
-						}
-						return
+				//conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+				err = w.Flush()
+				if err != nil {
+					if strings.Contains(err.Error(), "Pipe IO timed out waiting") {
+						continue
 					}
+					return
+				}
 
-					log.Debugln("event written:", evt)
+				log.Debugln("event written:", evt)
 
-					if !more {
-						return
-					}
+				if !more {
+					return
 				}
 			}
 

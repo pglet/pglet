@@ -4,7 +4,7 @@ import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import { Stack, IStackProps, IStackTokens, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, defaultPixels, isTrue } from './Utils'
+import { getThemeColor, defaultPixels, isTrue, getId } from './Utils'
 
 export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -41,12 +41,10 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
                 padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
                 margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined,
                 backgroundColor: control.bgcolor ? getThemeColor(theme, control.bgcolor) : undefined,
-                border: control.border ? control.border : undefined,
+                borderStyle: control.borderstyle ? control.borderstyle : undefined,
+                borderWidth: control.borderwidth ? defaultPixels(control.borderwidth) : undefined,
+                borderColor: control.bordercolor ? getThemeColor(theme, control.bordercolor) : undefined,
                 borderRadius: control.borderradius ? defaultPixels(control.borderradius) : undefined,
-                borderLeft: control.borderleft ? control.borderleft : undefined,
-                borderRight: control.borderright ? control.borderright : undefined,
-                borderTop: control.bordertop ? control.bordertop : undefined,
-                borderBottom: control.borderbottom ? control.borderbottom : undefined,
                 overflowX: isTrue(control.scrollx) ? "auto" : undefined,
                 overflowY: isTrue(control.scrolly) ? "auto" : undefined,
                 overflow: control.borderradius ? "hidden" : undefined
@@ -64,6 +62,20 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     if (isTrue(control.onsubmit)) {
         stackProps.onKeyPress = handleKeyPress;
+    }
+
+    if (isTrue(control.autoscroll)) {
+        const id = getId(control.i);
+
+        stackProps.id = id;
+
+        window.requestAnimationFrame(() => {
+            //console.log("window.requestAnimationFrame()")
+            const div = document.getElementById(id);
+            if (div != null) {
+                div.scrollTop = div.scrollHeight - div.clientHeight;
+            }
+        });
     }
 
     const stackTokens: IStackTokens = {

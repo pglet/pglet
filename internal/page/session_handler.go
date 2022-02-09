@@ -35,8 +35,7 @@ const (
 type commandHandlerFn = func(*command.Command) (string, error)
 
 type sessionHandler struct {
-	session  *model.Session
-	handlers map[string]commandHandlerFn
+	session *model.Session
 }
 
 func newSessionHandler(session *model.Session) sessionHandler {
@@ -63,8 +62,8 @@ func newSession(page *model.Page, id string, clientIP string,
 	h := newSessionHandler(s)
 	p := model.NewControl("page", "", ReservedPageID)
 	p.SetAttr("hash", pageHash)
-	p.SetAttr("win_width", winWidth)
-	p.SetAttr("win_height", winHeight)
+	p.SetAttr("winwidth", winWidth)
+	p.SetAttr("winheight", winHeight)
 	h.addControl(p)
 
 	return s
@@ -109,7 +108,7 @@ func (h *sessionHandler) execute(cmd *command.Command) (result string, err error
 
 	handler := handlers[strings.ToLower(cmd.Name)]
 	if handler == nil {
-		return "", fmt.Errorf("Unknown command: %s", cmd.Name)
+		return "", fmt.Errorf("unknown command: %s", cmd.Name)
 	}
 
 	return handler(cmd)
@@ -251,7 +250,7 @@ func (h *sessionHandler) addInternal(cmd *command.Command) (ids []string, trimID
 
 		// first value must be control type
 		if len(batchItem.command.Values) == 0 {
-			return nil, nil, nil, errors.New("Control type is not specified")
+			return nil, nil, nil, errors.New("control type is not specified")
 		}
 
 		controlType := strings.ToLower(batchItem.command.Values[0])
@@ -360,6 +359,10 @@ func (h *sessionHandler) replace(cmd *command.Command) (result string, err error
 		allIDs, err = h.removeInternal([]string{parentID}, at)
 	}
 
+	if err != nil {
+		return "", err
+	}
+
 	cmd.Name = "add"
 	ids, _, controls, err := h.addInternal(cmd)
 	if err != nil {
@@ -445,7 +448,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 	}
 
 	payload := &UpdateControlPropsPayload{
-		Props: make([]map[string]string, 0, 0),
+		Props: make([]map[string]string, 0),
 	}
 
 	for _, batchCmd := range batch {
@@ -477,7 +480,7 @@ func (h *sessionHandler) setInternal(cmd *command.Command) (result *UpdateContro
 		for n, v := range batchCmd.Attrs {
 			if !model.IsSystemAttr(n) {
 				ctrl.SetAttr(n, v)
-				props[n] = v
+				props[strings.ToLower(n)] = v
 			}
 		}
 		err = store.SetSessionControl(h.session, ctrl)
@@ -533,7 +536,7 @@ func (h *sessionHandler) appendHandlerInternal(cmd *command.Command) (result *Ap
 	}
 
 	payload := &AppendControlPropsPayload{
-		Props: make([]map[string]string, 0, 0),
+		Props: make([]map[string]string, 0),
 	}
 
 	for _, batchCmd := range batch {
@@ -873,7 +876,7 @@ func (h *sessionHandler) deleteControl(ctrl *model.Control) {
 }
 
 func (h *sessionHandler) getAllDescendantIds(ctrl *model.Control) []string {
-	return h.getAllDescendantIdsRecursively(make([]string, 0, 0), ctrl.ID())
+	return h.getAllDescendantIdsRecursively(make([]string, 0), ctrl.ID())
 }
 
 func (h *sessionHandler) getAllDescendantIdsRecursively(descendantIds []string, ID string) []string {
@@ -881,7 +884,7 @@ func (h *sessionHandler) getAllDescendantIdsRecursively(descendantIds []string, 
 	childrenIds := ctrl.GetChildrenIds()
 	result := append(descendantIds, childrenIds...)
 	for _, childID := range childrenIds {
-		result = append(result, h.getAllDescendantIdsRecursively(make([]string, 0, 0), childID)...)
+		result = append(result, h.getAllDescendantIdsRecursively(make([]string, 0), childID)...)
 	}
 	return result
 }

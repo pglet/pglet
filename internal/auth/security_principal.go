@@ -131,7 +131,7 @@ func (p *SecurityPrincipal) HasPermissions(permissions string) bool {
 
 		pg := glob.MustCompile(strings.ToLower(permission))
 
-		if strings.Index(permission, "/") != -1 && p.Groups != nil && len(p.Groups) > 0 {
+		if strings.Contains(permission, "/") && p.Groups != nil && len(p.Groups) > 0 {
 			// check group
 			for _, group := range p.Groups {
 				if pg.Match(strings.ToLower(group)) {

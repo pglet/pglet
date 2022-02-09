@@ -24,7 +24,7 @@ type cacher interface {
 	// sets
 	setGet(key string) []string
 	setAdd(key string, value string)
-	setRemove(key string, value string)
+	setRemove(key string, value string) int
 	// sorted sets
 	sortedSetAdd(key string, value string, score int64)
 	sortedSetPopRange(key string, min int64, max int64) []string
@@ -110,8 +110,8 @@ func SetAdd(key string, value string) {
 	cache.setAdd(key, value)
 }
 
-func SetRemove(key string, value string) {
-	cache.setRemove(key, value)
+func SetRemove(key string, value string) int {
+	return cache.setRemove(key, value)
 }
 
 func Remove(keys ...string) {

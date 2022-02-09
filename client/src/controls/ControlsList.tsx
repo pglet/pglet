@@ -32,7 +32,9 @@ import { MyVerticalBarChart } from './VerticalBarChart'
 import { MyHorizontalBarChart } from './HorizontalBarChart'
 import { MyPieChart } from './PieChart'
 import { MyLineChart } from './LineChart'
+import { MyPersona } from './Persona'
 import { isFalse } from './Utils'
+import { MyComboBox } from './ComboBox'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -43,6 +45,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'checkbox': MyCheckbox,
         'toggle': MyToggle,
         'dropdown': MyDropdown,
+        'combobox': MyComboBox,
         'choicegroup': MyChoiceGroup,
         'progress': Progress,
         'spinner': MySpinner,
@@ -68,6 +71,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'barchart': MyHorizontalBarChart,
         'piechart': MyPieChart,
         'linechart': MyLineChart,
+        'persona': MyPersona,
     }
 
     const renderChild = (control: any) => {
@@ -79,7 +83,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
             const props = Object.getOwnPropertyNames(control)
                 .filter(p => p.length > 1)
                 .map(p => `${p}="${control[p]}"`).join(' ');
-            return <MessageBar key={control.i} messageBarType={MessageBarType.error} messageBarIconProps={ { iconName: 'WebComponents'} }
+            return <MessageBar key={control.i} messageBarType={MessageBarType.error} messageBarIconProps={{ iconName: 'WebComponents' }}
                 isMultiline><b>Unknown control:</b> {`${control.t} ${props}`}</MessageBar>
         }
         return <ControlType key={control.f ? control.f : control.i} control={control} parentDisabled={parentDisabled} />

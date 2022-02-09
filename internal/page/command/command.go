@@ -11,24 +11,24 @@ import (
 
 const (
 	Add       string = "add"
-	Addf             = "addf"
-	Replace          = "replace"
-	Replacef         = "replacef"
-	Set              = "set"
-	Setf             = "setf"
-	Append           = "append"
-	Appendf          = "appendf"
-	Get              = "get"
-	Clean            = "clean"
-	Cleanf           = "cleanf"
-	Remove           = "remove"
-	Removef          = "removef"
-	Begin            = "begin"
-	End              = "end"
-	CanAccess        = "canaccess"
-	Signout          = "signout"
-	Close            = "close"
-	Error            = "error"
+	Addf      string = "addf"
+	Replace   string = "replace"
+	Replacef  string = "replacef"
+	Set       string = "set"
+	Setf      string = "setf"
+	Append    string = "append"
+	Appendf   string = "appendf"
+	Get       string = "get"
+	Clean     string = "clean"
+	Cleanf    string = "cleanf"
+	Remove    string = "remove"
+	Removef   string = "removef"
+	Begin     string = "begin"
+	End       string = "end"
+	CanAccess string = "canaccess"
+	Signout   string = "signout"
+	Close     string = "close"
+	Error     string = "error"
 )
 
 var (
@@ -171,14 +171,11 @@ func parseCommandLine(line string, parseName bool) (*Command, error) {
 func (cmd *Command) IsSupported() bool {
 	name := strings.ToLower(cmd.Name)
 	_, commandExists := supportedCommands[name]
-	if commandExists {
-		return true
-	}
-	return false
+	return commandExists
 }
 
 func (cmd *Command) ShouldReturn() bool {
-	cmdMeta, _ := supportedCommands[strings.ToLower(cmd.Name)]
+	cmdMeta := supportedCommands[strings.ToLower(cmd.Name)]
 	return cmdMeta.ShouldReturn
 }
 

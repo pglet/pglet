@@ -36,16 +36,10 @@ func cleanupPagesAndSessions() {
 				}
 
 				// notify host client about expired session
-				msg := NewMessageData("", PageEventToHostAction, &PageEventPayload{
-					PageName:    page.Name,
-					SessionID:   sessionID,
-					EventTarget: "page",
-					EventName:   "close",
-				})
-
-				for _, clientID := range store.GetSessionHostClients(pageID, sessionID) {
-					pubsub.Send(clientChannelName(clientID), msg)
-				}
+				sendPageEventToSession(&model.Session{
+					Page: page,
+					ID:   sessionID,
+				}, "close", "")
 
 				store.DeleteSession(pageID, sessionID)
 
@@ -67,14 +61,14 @@ func cleanupExpiredClients() {
 
 		clients := store.GetExpiredClients()
 		for _, clientID := range clients {
-			deleteExpiredClient(clientID)
+			deleteExpiredClient(clientID, false)
 		}
 	}
 }
 
-func deleteExpiredClient(clientID string) {
+func deleteExpiredClient(clientID string, removeExpiredClient bool) {
 	log.Debugln("Delete expired client:", clientID)
-	webClients := store.DeleteExpiredClient(clientID)
+	webClients := store.DeleteExpiredClient(clientID, removeExpiredClient)
 	go notifyInactiveWebClients(webClients)
 }
 

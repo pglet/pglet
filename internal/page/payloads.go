@@ -37,6 +37,7 @@ type RegisterHostClientRequestPayload struct {
 	HostClientID string `json:"hostClientID"`
 	PageName     string `json:"pageName"`
 	IsApp        bool   `json:"isApp"`
+	Update       bool   `json:"update"`
 	AuthToken    string `json:"authToken"`
 	Permissions  string `json:"permissions"`
 }

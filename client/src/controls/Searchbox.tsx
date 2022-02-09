@@ -2,7 +2,7 @@ import React from 'react';
 import { WebSocketContext } from '../WebSocket';
 import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
-import { SearchBox, ISearchBoxProps, useTheme } from '@fluentui/react';
+import { SearchBox, ISearchBoxProps, useTheme, ISearchBox } from '@fluentui/react';
 import { IControlProps } from './Control.types'
 import { getThemeColor, defaultPixels, getId, isTrue } from './Utils'
 
@@ -54,7 +54,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
 
   const handleSearch = (newValue: any) => {
     ws.pageEventFromWeb(control.i, 'search', control.data ? `${control.data}|${newValue!}` : newValue!)
-  }  
+  }
 
   // https://stackoverflow.com/questions/56696136/how-to-change-iconbutton-color
 
@@ -83,8 +83,31 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
     }
   }
 
-  return <SearchBox {...props}
+  const handleFocus = () => {
+    ws.pageEventFromWeb(control.i, 'focus', control.data)
+  }
+
+  const handleBlur = () => {
+    ws.pageEventFromWeb(control.i, 'blur', control.data)
+  }
+
+  const ctrlRef = React.useRef<ISearchBox | null>(null);
+  const [focused, setFocused] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (isTrue(control.focused) && !focused) {
+      ctrlRef.current?.focus();
+      setFocused(true);
+    }
+  }, [control.focused, focused]);
+
+  return <SearchBox
+    componentRef={ctrlRef}
+    {...props}
     onChange={handleChange}
     onClear={handleClear}
-    onSearch={handleSearch} />;
+    onSearch={handleSearch}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
+  />
 })

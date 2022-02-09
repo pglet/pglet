@@ -70,10 +70,7 @@ func (c *memoryCache) exists(key string) bool {
 	defer c.RUnlock()
 
 	entry := c.getEntry(key)
-	if entry != nil {
-		return true
-	}
-	return false
+	return entry != nil
 }
 
 func (c *memoryCache) getString(key string) string {
@@ -286,19 +283,24 @@ func (c *memoryCache) setAdd(key string, value string) {
 	hash[value] = true
 }
 
-func (c *memoryCache) setRemove(key string, value string) {
+func (c *memoryCache) setRemove(key string, value string) int {
 	c.Lock()
 	defer c.Unlock()
 
 	entry := c.getEntry(key)
 	if entry == nil {
-		return
+		return 0
 	}
 	hash := entry.data.(map[string]bool)
-	delete(hash, value)
+	result := 0
+	if _, exists := hash[value]; exists {
+		delete(hash, value)
+		result = 1
+	}
 	if len(hash) == 0 {
 		c.deleteEntry(key)
 	}
+	return result
 }
 
 //

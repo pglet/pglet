@@ -14,8 +14,6 @@ import (
 
 type namedPipe struct {
 	id              string
-	pageName        string
-	sessionID       string
 	commandPipeName string
 	eventPipeName   string
 	events          chan string
@@ -63,24 +61,22 @@ func (pc *namedPipe) nextCommand() string {
 func (pc *namedPipe) read() string {
 	var bytesRead int
 	buf := make([]byte, readsize)
-	for {
-		var result []byte
-		input, err := openFifo(pc.commandPipeName, os.O_RDONLY)
-		if err != nil {
+
+	var result []byte
+	input, err := openFifo(pc.commandPipeName, os.O_RDONLY)
+	if err != nil {
+		return ""
+	}
+	for err == nil {
+		bytesRead, err = input.Read(buf)
+		result = append(result, buf[0:bytesRead]...)
+
+		if err == io.EOF {
 			break
 		}
-		for err == nil {
-			bytesRead, err = input.Read(buf)
-			result = append(result, buf[0:bytesRead]...)
-
-			if err == io.EOF {
-				break
-			}
-		}
-		input.Close()
-		return string(result)
 	}
-	return ""
+	input.Close()
+	return string(result)
 }
 
 func (pc *namedPipe) writeResult(result string) {
@@ -122,11 +118,9 @@ func (pc *namedPipe) eventLoop() {
 			return
 		}
 
-		select {
-		case evt := <-pc.events:
-			output.WriteString(evt + "\n")
-			output.Close()
-		}
+		evt := <-pc.events
+		output.WriteString(evt + "\n")
+		output.Close()
 	}
 }
 
