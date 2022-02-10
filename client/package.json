@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react": "8.54.0",
-    "@fluentui/react-charting": "5.7.11",
+    "@fluentui/react": "8.55.0",
+    "@fluentui/react-charting": "5.7.12",
     "@reduxjs/toolkit": "^1.4.0",
     "@types/http-proxy-middleware": "^0.19.3",
     "@types/jest": "26.0.15",

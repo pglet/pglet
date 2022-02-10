@@ -1201,10 +1201,10 @@
     "@fluentui/set-version" "^8.1.5"
     tslib "^2.1.0"
 
-"@fluentui/react-charting@5.7.11":
-  version "5.7.11"
-  resolved "https://registry.yarnpkg.com/@fluentui/react-charting/-/react-charting-5.7.11.tgz#0da53a90d882f8613a1333783d0d86c6260a4896"
-  integrity sha512-/xhaxEN09Sc3QYi31htkU4OnYBs8pQ1GcAvE/Gin40izvFdsrpCf4lg9Jcx04M+YEbaFaRLpkovBIbOb/UTXbg==
+"@fluentui/react-charting@5.7.12":
+  version "5.7.12"
+  resolved "https://registry.yarnpkg.com/@fluentui/react-charting/-/react-charting-5.7.12.tgz#6a78ca4f3d37586483b05bfe047b700f808dabe2"
+  integrity sha512-86iyAxX/rDDeAEVVBf+F1IZsmlnxDGRM9ipd8TdalSAFboTqDnP3xJoBwOkFDwd5LEjcMX0j3SI5qSOBWjGJFA==
   dependencies:
     "@fluentui/react-focus" "^8.3.17"
     "@fluentui/set-version" "^8.1.5"
@@ -1257,10 +1257,10 @@
     "@fluentui/set-version" "^8.1.5"
     tslib "^2.1.0"
 
-"@fluentui/react@8.54.0":
-  version "8.54.0"
-  resolved "https://registry.yarnpkg.com/@fluentui/react/-/react-8.54.0.tgz#8cfd96b99a9407bf42f203b1462b310da540e664"
-  integrity sha512-loXraIbCRciUXp5JNQPV/82YrjNBgOLXhLLmbseVnIEzkcdmZMXZx9c4JVbeInUZZQRI8JS78Ca+CNKihBb3Bw==
+"@fluentui/react@8.55.0":
+  version "8.55.0"
+  resolved "https://registry.yarnpkg.com/@fluentui/react/-/react-8.55.0.tgz#f3bb48df8ec493f6a22383adecfd4e2eeb2b3de2"
+  integrity sha512-vat2CgrtwtgBhFvCsE64USR91e5eJHVb0yE+Y5bAFatmAeUhrFCUjB8sGExpjxE3nnaY9XM2JsaRwCUjcAfuzw==
   dependencies:
     "@fluentui/date-time-utilities" "^8.3.0"
     "@fluentui/font-icons-mdl2" "^8.1.22"
