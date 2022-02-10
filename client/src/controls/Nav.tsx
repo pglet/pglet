@@ -4,7 +4,7 @@ import { changeProps } from '../slices/pageSlice'
 import { useDispatch, shallowEqual, useSelector } from 'react-redux'
 import { Nav, INavProps, INavLink, mergeStyles, useTheme } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { getThemeColor, isFalse, isTrue } from './Utils'
+import { getThemeColor, isTrue } from './Utils'
 
 export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -35,8 +35,7 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
           title: itemControls[i].title ? itemControls[i].title : undefined,
           target: isTrue(itemControls[i].newwindow) ? '_blank' : undefined,
           disabled: disabled,
-          isExpanded: isTrue(itemControls[i].expanded),
-          collapseByDefault: isFalse(itemControls[i].expanded), // groups only
+          isExpanded: itemControls[i].expanded ? isTrue(itemControls[i].expanded) : undefined,
         };
 
         item.links = getNavLinks(itemControls[i]);
@@ -69,12 +68,32 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
         height: control.height !== undefined ? control.height : undefined,
         padding: control.padding !== undefined ? control.padding : undefined,
         margin: control.margin !== undefined ? control.margin : undefined
+      },
+      groupContent: {
+        marginBottom: "0"
       }
     }
   };
 
+  const handleGroupHeaderClick = (item: any, isCollapsed?: boolean) => {
+    //console.log("GROUP CLICK:", item, isCollapsed)
+
+    const eventName = isCollapsed ? "expand" : "collapse";
+
+    const payload = [
+      {
+        i: item!.id,
+        "expanded": String(!isCollapsed)
+      }
+    ];
+
+    dispatch(changeProps(payload));
+    ws.updateControlProps(payload);
+    ws.pageEventFromWeb(control.i, eventName, selectedKey)
+  }
+
   const handleExpandLink = (ev?: React.MouseEvent<HTMLElement>, item?: INavLink) => {
-    //console.log("EXPAND:", item!.isExpanded!.toString())
+    //console.log("EXPAND:", item)
 
     const selectedKey = item!.key as string
     const eventName = item!.isExpanded ? "collapse" : "expand";
@@ -111,6 +130,10 @@ export const MyNav = React.memo<IControlProps>(({ control, parentDisabled }) => 
     ws.pageEventFromWeb(control.i, 'change', selectedKey)
     setPrevSelectedKey(selectedKey)
   }
+
+  navProps.groups?.forEach(group => {
+    group.onHeaderClick = (e, isCollapsed) => handleGroupHeaderClick(group, isCollapsed)
+  })
 
   const selectedKey = control.value !== undefined ? control.value : "";
 
