@@ -16,15 +16,7 @@ export const Searchbox = React.memo<IControlProps>(({ control, parentDisabled })
 
   let disabled = isTrue(control.disabled) || parentDisabled;
 
-  let _lastChangeValue: string | undefined;
-
   const handleChange = (event?: React.ChangeEvent<HTMLInputElement>, newValue?: string) => {
-
-    if (newValue === _lastChangeValue) {
-      _lastChangeValue = undefined;
-      return;
-    }
-    _lastChangeValue = newValue;
 
     //console.log("Searchbox handleChange:", newValue);
 
