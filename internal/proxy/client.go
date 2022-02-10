@@ -31,6 +31,7 @@ type Client struct {
 type ConnectPageArgs struct {
 	PageName       string
 	Web            bool
+	Update         bool
 	Server         string
 	Token          string
 	Permissions    string

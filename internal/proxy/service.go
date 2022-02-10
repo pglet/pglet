@@ -83,6 +83,7 @@ func (ps *Service) ConnectSharedPage(ctx context.Context, args *ConnectPageArgs,
 	result, err := hc.RegisterPage(ctx, &page.RegisterHostClientRequestPayload{
 		PageName:    pageName,
 		IsApp:       false,
+		Update:      args.Update,
 		AuthToken:   args.Token,
 		Permissions: args.Permissions,
 	})

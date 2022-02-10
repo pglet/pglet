@@ -21,6 +21,7 @@ func newPageCommand() *cobra.Command {
 	var uds bool
 	var tickerDuration int
 	var noWindow bool
+	var update bool
 	var allEvents bool
 	var window string
 
@@ -39,6 +40,7 @@ func newPageCommand() *cobra.Command {
 
 			results, err := client.ConnectSharedPage(cmd.Context(), &proxy.ConnectPageArgs{
 				PageName:       pageName,
+				Update:         update,
 				Web:            web,
 				Server:         server,
 				Token:          token,
@@ -62,6 +64,7 @@ func newPageCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&web, "web", "", false, "run the page on the hosted Pglet service")
+	cmd.Flags().BoolVarP(&update, "update", "u", false, "connect to the page in update mode")
 	cmd.Flags().StringVarP(&server, "server", "s", "", "connects to the page on a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&token, "token", "t", "", "authentication token for pglet.io service or a self-hosted Pglet server")
 	cmd.Flags().StringVarP(&permissions, "permissions", "", "", "comma-separated list of users and groups allowed to access this app")
