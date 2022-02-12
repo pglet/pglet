@@ -1,6 +1,6 @@
 # Change Log - Pglet Server
 
-## [0.5.7](https://github.com/pglet/pglet/releases/tag/v0.5.7)
+## [0.6.0](https://github.com/pglet/pglet/releases/tag/v0.6.0)
 
 * `Stack` automatically scrolls to bottom if `autoscroll` property set to `true`.
 * Set `page.UserAuthProvider` to a used authentication method (`github`, `google` or `azure`).
