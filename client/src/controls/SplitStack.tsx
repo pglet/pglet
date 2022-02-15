@@ -1,11 +1,12 @@
 import React from 'react'
-import { shallowEqual, useSelector } from 'react-redux'
+import { shallowEqual, useDispatch, useSelector } from 'react-redux'
 import { ControlsList } from './ControlsList'
 import { WebSocketContext } from '../WebSocket';
 import Split from 'split.js'
 import { IControlProps } from './Control.types'
 import { getThemeColor, isTrue, parseNumber } from './Utils'
 import { mergeStyles, useTheme } from '@fluentui/react';
+import { changeProps } from '../slices/pageSlice';
 
 export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -13,6 +14,7 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
 
     let disabled = isTrue(control.disabled) || parentDisabled;
     const ws = React.useContext(WebSocketContext);
+    const dispatch = useDispatch();
     const theme = useTheme();
 
     const childControls = useSelector((state: any) => {
@@ -20,14 +22,28 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
     }, shallowEqual);
 
     const isHorizontal = isTrue(control.horizontal);
-    console.log("isVertical", isHorizontal)
-    console.log("child controls:", childControls)
+    // console.log("isVertical", isHorizontal)
+    // console.log("child controls:", childControls)
 
     const splitRef = React.useRef<HTMLDivElement>(null);
 
+    function handleResize(sizes: number[]) {
+        let payload: any[] = []
+        for (let i = 0; i < sizes.length; i++) {
+            let props: any = {
+                i: childControls[i].i
+            }
+            props[isHorizontal ? "width" : "height"] = `${sizes[i]}%`
+            payload.push(props)
+        }
+
+        dispatch(changeProps(payload));
+        ws.updateControlProps(payload);
+        ws.pageEventFromWeb(control.i, 'resize', sizes.join(","));
+    }
+
     React.useEffect(() => {
 
-        console.log("div", splitRef.current)
         if (splitRef.current && childControls.length === splitRef.current.children.length) {
 
             // go through child elements and calculate sizes
@@ -39,7 +55,6 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
             let unsetSizes = 0;
 
             const containerSize = isHorizontal ? splitRef.current.offsetWidth : splitRef.current.offsetHeight;
-            console.log("containerSize", containerSize);
 
             for (let i = 0; i < splitRef.current.children.length; i++) {
                 const elem: any = splitRef.current.children[i]
@@ -54,7 +69,7 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
                 if (sizeStr === undefined || sizeStr === "") {
                     sizes.push(Infinity)
                     unsetSizes++
-                } else if (sizeStr.indexOf('%') != -1) {
+                } else if (sizeStr.indexOf('%') !== -1) {
                     sizes.push(parseNumber(sizeStr.trim().slice(0, -1)))
                 } else {
                     sizes.push(parseNumber(sizeStr) / containerSize * 100)
@@ -78,10 +93,10 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
                 }
             }
 
-            console.log("elems", elems)
-            console.log("sizes", sizes)
-            console.log("minSizes", minSizes)
-            console.log("maxSizes", maxSizes)
+            // console.log("elems", elems)
+            // console.log("sizes", sizes)
+            // console.log("minSizes", minSizes)
+            // console.log("maxSizes", maxSizes)
 
             if (elems.length > 0) {
                 Split(elems, {
@@ -91,7 +106,7 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
                     gutterSize: control.guttersize ? parseNumber(control.guttersize) : 4,
                     direction: isHorizontal ? "horizontal" : "vertical",
                     onDragEnd: (sizes) => {
-                        console.log("sizes:", sizes)
+                        handleResize(sizes)
                     }
                 })
             }
