@@ -10,7 +10,7 @@ import { changeProps } from '../slices/pageSlice';
 
 export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
-    //console.log("Render stack", control.i);
+    //console.log("Render splitstack", control.i);
 
     let disabled = isTrue(control.disabled) || parentDisabled;
     const ws = React.useContext(WebSocketContext);
@@ -22,8 +22,6 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
     }, shallowEqual);
 
     const isHorizontal = isTrue(control.horizontal);
-    // console.log("isVertical", isHorizontal)
-    // console.log("child controls:", childControls)
 
     const splitRef = React.useRef<HTMLDivElement>(null);
 
@@ -93,11 +91,6 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
                 }
             }
 
-            // console.log("elems", elems)
-            // console.log("sizes", sizes)
-            // console.log("minSizes", minSizes)
-            // console.log("maxSizes", maxSizes)
-
             if (elems.length > 0) {
                 Split(elems, {
                     sizes: sizes,
@@ -121,9 +114,7 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
         height: control.height ? control.height : undefined,
         width: control.width ? control.width : undefined,
         ".gutter": {
-            backgroundColor: control.guttercolor ? getThemeColor(theme, control.guttercolor) : undefined,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "50%"
+            backgroundColor: control.guttercolor ? getThemeColor(theme, control.guttercolor) : undefined
         },
         ".gutter:hover": {
             backgroundColor: control.gutterhovercolor ? getThemeColor(theme, control.gutterhovercolor) : getThemeColor(theme, "themeLighter"),
@@ -137,7 +128,6 @@ export const SplitStack = React.memo<IControlProps>(({ control, parentDisabled }
             cursor: "col-resize"
         },
         ".gutter.gutter-vertical": {
-            //backgroundImage: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==')",
             cursor: "row-resize"
         }
     });
