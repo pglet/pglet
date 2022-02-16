@@ -16,14 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	lockFilename string
-)
-
-func init() {
-	lockFilename = filepath.Join(os.TempDir(), "pglet.lock")
-}
-
 func newServerCommand() *cobra.Command {
 
 	var serverPort int
@@ -42,14 +34,14 @@ func newServerCommand() *cobra.Command {
 			}
 
 			// ensure one executable instance is running
-			m, err := filemutex.New(lockFilename)
+			m, err := filemutex.New(getLockFilename(serverPort))
 			if err != nil {
 				log.Fatalln("Cannot create mutex - directory did not exist or file could not be created")
 			}
 
 			err = m.TryLock()
 			if err != nil {
-				log.Fatalln("Another Pglet Server process has already started")
+				log.Fatalf("Another instance of Pglet Server is already listening on port %d", serverPort)
 			}
 
 			defer m.Unlock()
@@ -93,4 +85,8 @@ func startServerService(attached bool) {
 	}
 
 	log.Traceln("Server process started with PID:", cmd.Process.Pid)
+}
+
+func getLockFilename(serverPort int) string {
+	return filepath.Join(os.TempDir(), fmt.Sprintf("pglet-%d.lock", serverPort))
 }

@@ -35,6 +35,7 @@ import { MyLineChart } from './LineChart'
 import { MyPersona } from './Persona'
 import { isFalse } from './Utils'
 import { MyComboBox } from './ComboBox'
+import { SplitStack } from './SplitStack'
 
 export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ controls, parentDisabled }) => {
 
@@ -72,6 +73,7 @@ export const ControlsList: React.FunctionComponent<IControlsListProps> = ({ cont
         'piechart': MyPieChart,
         'linechart': MyLineChart,
         'persona': MyPersona,
+        'splitstack': SplitStack
     }
 
     const renderChild = (control: any) => {
