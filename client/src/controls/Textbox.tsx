@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField, ITextFieldProps, useTheme, ITextField } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId, getThemeColor, isFalse, isTrue, parseNumber } from './Utils'
+import { defaultPixels, getId, getThemeColor, isTrue, parseNumber } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
