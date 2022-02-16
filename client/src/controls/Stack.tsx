@@ -17,7 +17,8 @@ export const MyStack = React.memo<IControlProps>(({ control, parentDisabled }) =
     const ws = React.useContext(WebSocketContext);
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
-        if (event.code === "Enter" && (event.target as any).tagName === "INPUT") {
+        if (event.code === "Enter" && ((event.target as HTMLElement).tagName === "INPUT" ||
+            (event.target as HTMLElement).tagName === "TEXTAREA")) {
             ws.pageEventFromWeb(control.i, 'submit', control.data);
             event.stopPropagation();
         }
