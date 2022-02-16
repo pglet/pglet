@@ -25,14 +25,14 @@ func newClientCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// ensure one executable instance is running
-			m, err := filemutex.New(lockFilename)
+			m, err := filemutex.New(getLockFilename(serverPort))
 			if err != nil {
 				log.Fatalln("Cannot create mutex - directory did not exist or file could not be created")
 			}
 
 			err = m.TryLock()
 			if err != nil {
-				log.Fatalln("Another Pglet Server process has already started")
+				log.Fatalf("Another instance of Pglet Server is already listening on port %d", serverPort)
 			}
 
 			defer m.Unlock()
