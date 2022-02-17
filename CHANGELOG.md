@@ -13,7 +13,7 @@ New `SplitStack` control (based on [split.js](https://split.js.org/)) added with
 New `TextBox` properties:
 * `shiftEnter` (bool) - blocks ENTER button in `multiline` TextBox, but pops up the event, so `Stack.submit` could be triggered. New line could still be entered with SHIFT+ENTER. This is to build Discord-like message box.
 * `rows` (int) - sets initial size in rows of `multiline` TextBox.
-* `resizable` (bool) - controls whether `multiline` TextBox is resizable by the user. Default is `true`.
+* `resizable` (bool) - controls whether `multiline` TextBox is resizable by the user. Default is `true`. `autoAdjustHeight` is still respected even if `resizable` is `false`.
 
 `Panel` control changes:
 * `blocking` (bool) is now `true` by default.
