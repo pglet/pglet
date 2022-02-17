@@ -7,16 +7,16 @@ import { Dialog, DialogFooter, DialogType, IDialogProps } from '@fluentui/react'
 import { IControlProps } from './Control.types'
 import { defaultPixels, isTrue } from './Utils'
 
-export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) => {
+export const MyDialog = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
     const ws = React.useContext(WebSocketContext);
     const dispatch = useDispatch();
 
     let disabled = isTrue(control.disabled) || parentDisabled;
-  
+
     const handleDismiss = (ev?: React.MouseEvent<HTMLButtonElement>) => {
-  
-        const autoDismiss = !control.autodismiss || isTrue(control.autodismiss);
+
+        const autoDismiss = control.autodismiss ? isTrue(control.autodismiss) : true;
 
         if (autoDismiss) {
             const val = "false"
@@ -32,7 +32,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
                 payload["i"] = control.i
                 payload["open"] = val
             }
-    
+
             dispatch(changeProps([payload]));
             ws.updateControlProps([payload]);
         }
@@ -47,8 +47,8 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
 
     let dialogType: DialogType = DialogType.normal;
     switch (control.type ? control.type.toLowerCase() : '') {
-      case 'largeheader': dialogType = DialogType.largeHeader; break;
-      case 'close': dialogType = DialogType.close; break;
+        case 'largeheader': dialogType = DialogType.largeHeader; break;
+        case 'close': dialogType = DialogType.close; break;
     }
 
     // dialog props
@@ -63,7 +63,7 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
         dialogContentProps: {
             type: dialogType,
             title: control.title ? control.title : undefined,
-            subText: control.subtext ? control.subtext : undefined,          
+            subText: control.subtext ? control.subtext : undefined,
         },
         styles: {
             main: {
@@ -74,22 +74,22 @@ export const MyDialog = React.memo<IControlProps>(({control, parentDisabled}) =>
 
     const bodyControls = useSelector((state: any) =>
         (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
-        .filter((oc: any) => oc.t !== 'footer'), shallowEqual);
+            .filter((oc: any) => oc.t !== 'footer'), shallowEqual);
 
     const footerControls = useSelector((state: any) =>
         (control.children !== undefined ? control.children : control.c.map((childId: any) => state.page.controls[childId]))
-        .filter((oc: any) => oc.t === 'footer')
-        .map((footer: any) => footer.children !== undefined ? footer.children : footer.c.map((childId: any) => state.page.controls[childId]))
-        .reduce((acc: any, footerControls: any) => ([...acc, ...footerControls])), shallowEqual);
+            .filter((oc: any) => oc.t === 'footer')
+            .map((footer: any) => footer.children !== undefined ? footer.children : footer.c.map((childId: any) => state.page.controls[childId]))
+            .reduce((acc: any, footerControls: any) => ([...acc, ...footerControls])), shallowEqual);
 
     let key = 0;
 
     return <Dialog {...props} onDismiss={handleDismiss}>
         <ControlsList controls={bodyControls} parentDisabled={disabled} />
-        { footerControls.length > 0 ? <DialogFooter>
+        {footerControls.length > 0 ? <DialogFooter>
             {
-                footerControls.map((c:any) => <ControlsList key={key++} controls={[c]} parentDisabled={disabled} />)
+                footerControls.map((c: any) => <ControlsList key={key++} controls={[c]} parentDisabled={disabled} />)
             }
-        </DialogFooter> : "" }
+        </DialogFooter> : ""}
     </Dialog>
 })

@@ -13,12 +13,12 @@ export function defaultPixels(size: any) {
   return size;
 }
 
-export function parseNumber(n: any): number {
+export function parseNumber(n: any, def: number = 0): number {
   try {
     const v = parseFloat(n.toString());
-    return isNaN(v) ? 0 : v;
+    return isNaN(v) ? def : v;
   } catch {
-    return 0;
+    return def;
   }
 }
 

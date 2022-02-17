@@ -16,7 +16,7 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
 
     const handleDismiss = (ev?: React.SyntheticEvent<HTMLElement> | KeyboardEvent) => {
 
-        const autoDismiss = !control.autodismiss || isTrue(control.autodismiss);
+        const autoDismiss = control.autodismiss ? isTrue(control.autodismiss) : true;
 
         if (autoDismiss) {
             const val = "false"
@@ -32,7 +32,7 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
                 payload["i"] = control.i
                 payload["open"] = val
             }
-    
+
             dispatch(changeProps([payload]));
             ws.updateControlProps([payload]);
         }
@@ -49,7 +49,7 @@ export const MyPanel = React.memo<IControlProps>(({ control, parentDisabled }) =
     const props: IPanelProps = {
         isOpen: isTrue(control.open),
         isLightDismiss: isTrue(control.lightdismiss),
-        isBlocking: control.blocking !== 'false',
+        isBlocking: isTrue(control.blocking),
         headerText: control.title ? control.title : undefined,
     };
 

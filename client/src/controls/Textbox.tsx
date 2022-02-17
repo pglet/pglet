@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { changeProps } from '../slices/pageSlice'
 import { TextField, ITextFieldProps, useTheme, ITextField } from '@fluentui/react';
 import { IControlProps } from './Control.types'
-import { defaultPixels, getId, getThemeColor, isTrue } from './Utils'
+import { defaultPixels, getId, getThemeColor, isTrue, parseNumber } from './Utils'
 
 export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) => {
 
@@ -13,6 +13,21 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
   const theme = useTheme();
 
   let disabled = isTrue(control.disabled) || parentDisabled;
+
+  const ctrlRef = React.useRef<ITextField | null>(null);
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (isTrue(control.shiftenter)) {
+      if (event.code === "Enter") {
+        //console.log("Textbox key press", event)
+        if (event.shiftKey) {
+          event.stopPropagation();
+        } else {
+          event.preventDefault();
+        }
+      }
+    }
+  }
 
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
 
@@ -44,8 +59,11 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     ws.pageEventFromWeb(control.i, 'blur', control.data)
   }
 
+  const rows: number | undefined = control.rows ? parseNumber(control.rows, 1) : undefined
+
   const textFieldProps: ITextFieldProps = {
     id: getId(control.f ? control.f : control.i),
+    rows: rows,
     value: control.value ? control.value : "",
     label: control.label ? control.label : null,
     placeholder: control.placeholder ? control.placeholder : null,
@@ -57,6 +75,7 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     required: isTrue(control.required),
     readOnly: isTrue(control.readonly),
     autoAdjustHeight: isTrue(control.autoadjustheight),
+    resizable: control.resizable ? isTrue(control.resizable) : undefined,
     underlined: isTrue(control.underlined),
     borderless: isTrue(control.borderless),
     prefix: control.prefix ? control.prefix : undefined,
@@ -68,6 +87,9 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
         height: control.height !== undefined ? defaultPixels(control.height) : undefined,
         padding: control.padding !== undefined ? defaultPixels(control.padding) : undefined,
         margin: control.margin !== undefined ? defaultPixels(control.margin) : undefined
+      },
+      fieldGroup: {
+        minHeight: rows === 1 ? '30px' : undefined
       },
       field: {
         textAlign: control.align !== undefined ? control.align : undefined,
@@ -88,7 +110,6 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
     }
   }
 
-  const ctrlRef = React.useRef<ITextField | null>(null);
   const [focused, setFocused] = React.useState<boolean>(false);
 
   React.useEffect(() => {
@@ -101,6 +122,7 @@ export const Textbox = React.memo<IControlProps>(({ control, parentDisabled }) =
   return <TextField
     componentRef={ctrlRef}
     {...textFieldProps}
+    onKeyPress={handleKeyPress}
     onChange={handleChange}
     onFocus={handleFocus}
     onBlur={handleBlur} />
